@@ -1,7 +1,8 @@
 # TriPay — Proje Çalışma Dokümanı (pwd)
 
 > Güncel mimari ve kurallar: [docs/TriPay_Proje_Dokumani.md](./docs/TriPay_Proje_Dokumani.md) · §6 Kullanılabilir Sanal POS  
-> Entegrasyon: [docs/TriPay_Kullanim_Kilavuzu.md](./docs/TriPay_Kullanim_Kilavuzu.md)
+> Entegrasyon: [docs/TriPay_Kullanim_Kilavuzu.md](./docs/TriPay_Kullanim_Kilavuzu.md)  
+> **Dış config örnekleri (tüm bankalar):** [Kılavuz §7.4–7.8](./docs/TriPay_Kullanim_Kilavuzu.md#74-çoklu-banka-yapılandırması-neden-farklı)
 
 ---
 

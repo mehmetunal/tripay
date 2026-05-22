@@ -18,6 +18,11 @@ Bu kılavuz, TriPay’i projene entegre eden geliştiriciler içindir: **NuGet /
 5. [NuGet ile kurulum](#5-nuget-ile-kurulum)
 6. [Doğrudan DLL referansı](#6-doğrudan-dll-referansı)
 7. [DI kaydı ve yapılandırma](#7-di-kaydı-ve-yapılandırma)
+   - [7.4 Çoklu banka config modeli](#74-çoklu-banka-yapılandırması-neden-farklı)
+   - [7.5 Dışarıdan config verme](#75-dışarıdan-config-verme-üç-katman)
+   - [7.6 Merkezi `appsettings` şeması](#76-merkezi-appsettings-şeması-tüm-kanallar)
+   - [7.7 Config şablonları (A–F)](#77-config-şablonları-af)
+   - [7.8 §6 Sanal POS config örnekleri](#78-olması-gerekenler--kullanılabilir-sanal-pos-config-örnekleri-§6)
 8. [Provider (banka) seçimi](#8-provider-banka-seçimi)
 9. [Temel kavramlar ve modeller](#9-temel-kavramlar-ve-modeller)
 10. [Ödeme başlatma (Initialize)](#10-ödeme-başlatma-initialize)
@@ -237,28 +242,385 @@ public class CheckoutController : Controller
 }
 ```
 
-### 7.3. Yapılandırma (`appsettings.json`) — önerilen
+### 7.3. Yapılandırma (`appsettings.json`) — hızlı örnek (tek kanal)
 
-Provider credential’ları **üretimde** veritabanı / Key Vault’tan okunmalıdır. Geliştirme için örnek:
+Geliştirme için yalnızca **VakıfPayS** (mevcut kod):
 
 ```json
 {
   "TriPay": {
     "DefaultGateway": "VakifPays",
-    "VakifPays": {
-      "Merchant": "10009011",
-      "MerchantUser": "api@firma.com",
-      "MerchantPassword": "***",
-      "TestPlatform": true
+    "Gateways": {
+      "VakifPays": {
+        "Enabled": true,
+        "IsTestMode": true,
+        "Settings": {
+          "Merchant": "10009011",
+          "MerchantUser": "api@firma.com",
+          "MerchantPassword": "***"
+        }
+      }
     }
   }
 }
 ```
 
-> **Not:** Mevcut `VakifPaysService` sabit test credential kullanabilir; production’da `IOptions<TriPayOptions>` ile dışarıdan verilecek şekilde genişletilir.
+> **Not:** Şu an `VakifPaysService` içinde sabit test credential olabilir. Çoklu banka için [§7.4–7.8](#74-çoklu-banka-yapılandırması-neden-farklı) hedef modeldir.
 
 ---
 
+### 7.4. Çoklu banka yapılandırması (neden farklı?)
+
+Türkiye'de her sanal POS / ödeme kuruluşu **farklı kimlik bilgisi** ve **farklı API sözleşmesi** kullanır:
+
+| Grup | Tipik alanlar | Örnek kanallar |
+| :--- | :--- | :--- |
+| **A — REST API Key** | `ApiKey`, `SecretKey`, `IsTestMode` | Iyzico, Sipay, ParamPos, Paynet, Vepara, … |
+| **B — Nestpay / EST 3D** | `MerchantId`, `TerminalId`, `Username`, `Password`, `StoreKey` | Akbank, İş Bankası, Halkbank, Ziraat, YKB, … |
+| **C — Garanti PROV** | `MerchantId`, `TerminalId`, `ProvUserId`, `ProvPassword`, `StoreKey` | Garanti BBVA |
+| **D — Vakıfbank MPI + VPOS** | `MerchantId`, `MerchantPassword`, `TerminalNo`, URL'ler, `InstallmentCounts` | Vakıfbank |
+| **E — VakıfPayS REST** | `Merchant`, `MerchantUser`, `MerchantPassword` | VakıfPayS |
+| **F — PayTR** | `MerchantId`, `MerchantKey`, `MerchantSalt` | PayTR |
+
+TriPay'de **tek tip dış config** hedeflenir; provider içinde kanala özel alanlar `Settings` sözlüğünden okunur:
+
+```text
+Sizin uygulama
+    └── TriPay:Gateways:{PaymentGatewayNames.*}
+            └── Settings: { "ApiKey": "...", "MerchantId": "..." }
+                    └── IyzicoGatewayProvider / VakifbankGatewayProvider / …
+```
+
+**Önemli:** Ödeme isteğinde yalnızca **`GatewayName`** (hangi kanal) gönderilir; **API key / şifre istek gövdesinde taşınmaz.**
+
+---
+
+### 7.5. Dışarıdan config verme (üç katman)
+
+| Katman | Ne zaman | Nasıl |
+| :--- | :--- | :--- |
+| **1 — `appsettings` / ortam değişkeni** | Geliştirme, tek merchant | `TriPay:Gateways:{Kod}:Settings` |
+| **2 — `MerchantGateways` (MSSQL)** | Üretim, çok üye işyeri | Şifreli credential JSON (proje dokümanı §9) |
+| **3 — Key Vault / secret store** | Üretim | `Settings` vault'tan doldurulur |
+
+**Ortam değişkeni örneği:**
+
+```bash
+export TriPay__Gateways__Iyzico__Settings__ApiKey="sandbox-xxx"
+export TriPay__Gateways__Iyzico__Settings__SecretKey="sandbox-yyy"
+export TriPay__Gateways__Iyzico__IsTestMode="true"
+```
+
+**C# bağlama (hedef — provider port sonrası):**
+
+```csharp
+builder.Services.AddTriPay();
+builder.Services.Configure<TriPayOptions>(builder.Configuration.GetSection("TriPay"));
+```
+
+**Üye işyeri paneli (hedef — `MerchantGateways`):**
+
+```json
+{
+  "gatewayCode": "Vakifbank",
+  "isEnabled": true,
+  "isDefault": false,
+  "settings": {
+    "MerchantId": "000000000000001",
+    "MerchantPassword": "***",
+    "TerminalNo": "VP000001"
+  }
+}
+```
+
+---
+
+### 7.6. Merkezi `appsettings` şeması (tüm kanallar)
+
+Anahtar = `PaymentGatewayNames` değeri (`"Iyzico"`, `"Vakifbank"`, …).
+
+```json
+{
+  "TriPay": {
+    "DefaultGateway": "VakifPays",
+    "Gateways": {
+      "VakifPays": { "Enabled": true, "IsDefault": true, "IsTestMode": true, "Settings": {} },
+      "Iyzico": { "Enabled": true, "IsTestMode": true, "Settings": {} },
+      "Vakifbank": { "Enabled": true, "IsTestMode": true, "Settings": {} }
+    }
+  }
+}
+```
+
+| Alan | Zorunlu | Açıklama |
+| :--- | :---: | :--- |
+| `DefaultGateway` | ✔️ | `PaymentGatewayNames.*` |
+| `Gateways` | ✔️ | Kanal kodu → ayar bloğu |
+| `Enabled` | ✔️ | `false` ise provider devre dışı |
+| `IsTestMode` | ✔️ | Sandbox URL |
+| `Settings` | ✔️ | Kanala özel key-value (§7.7) |
+
+```csharp
+request.GatewayName = PaymentGatewayNames.Iyzico; // config değil — kanal seçimi
+```
+
+---
+
+### 7.7. Config şablonları (A–F)
+
+#### Şablon A — API Key + Secret
+
+```json
+"Iyzico": {
+  "Enabled": true,
+  "IsTestMode": true,
+  "Settings": {
+    "ApiKey": "sandbox-api-key",
+    "SecretKey": "sandbox-secret-key"
+  }
+}
+```
+
+#### Şablon B — Nestpay / EST (çoğu banka)
+
+```json
+"IsBankasi": {
+  "Enabled": true,
+  "IsTestMode": true,
+  "Settings": {
+    "MerchantId": "000000000000001",
+    "TerminalId": "00000001",
+    "Username": "api_user",
+    "Password": "***",
+    "StoreKey": "3d_store_key_hex"
+  }
+}
+```
+
+#### Şablon C — Garanti BBVA
+
+```json
+"Garanti": {
+  "Enabled": true,
+  "IsTestMode": true,
+  "Settings": {
+    "MerchantId": "000000000000001",
+    "TerminalId": "00000001",
+    "ProvUserId": "PROVAUT",
+    "ProvPassword": "***",
+    "StoreKey": "3d_store_key"
+  }
+}
+```
+
+#### Şablon D — Vakıfbank (MPI + VPOS XML)
+
+```json
+"Vakifbank": {
+  "Enabled": true,
+  "IsTestMode": true,
+  "Settings": {
+    "MerchantId": "000000000000001",
+    "MerchantPassword": "***",
+    "TerminalNo": "VP000001",
+    "EnrollmentUrl": "https://3dsecuretest.vakifbank.com.tr/MPIAPI/MPI_Enrollment.aspx",
+    "VerifyUrl": "https://onlineodemetest.vakifbank.com.tr/VposService/v3/Vposreq.aspx",
+    "InstallmentCounts": "3,6,9",
+    "BinPrefixes": "454360,411979"
+  }
+}
+```
+
+#### Şablon E — VakıfPayS
+
+```json
+"VakifPays": {
+  "Enabled": true,
+  "IsDefault": true,
+  "IsTestMode": true,
+  "Settings": {
+    "Merchant": "10009011",
+    "MerchantUser": "api@firma.com",
+    "MerchantPassword": "***"
+  }
+}
+```
+
+#### Şablon F — PayTR
+
+```json
+"PayTR": {
+  "Enabled": true,
+  "IsTestMode": true,
+  "Settings": {
+    "MerchantId": "000000",
+    "MerchantKey": "***",
+    "MerchantSalt": "***"
+  }
+}
+```
+
+---
+
+### 7.8. Olması gerekenler — Kullanılabilir Sanal POS config örnekleri (§6)
+
+Tam liste: [§6 proje dokümanı](./TriPay_Proje_Dokumani.md#6-olması-gerekenler--kullanılabilir-sanal-poslar) · MVP TODO: [pwd.md](../pwd.md)
+
+#### MVP (§6.1)
+
+| Sanal POS | `PaymentGatewayNames` | Şablon | Durum |
+| :--- | :--- | :---: | :--- |
+| Iyzico | `Iyzico` | A | TODO P1 |
+| Vakıfbank | `Vakifbank` | D | TODO P2 |
+| VakıfPayS | `VakifPays` | E | **Mevcut** |
+
+Iyzico test: `https://sandbox-api.iyzipay.com` · Prod: `https://api.iyzipay.com`
+
+#### Bankalar (planlanan)
+
+| Sanal POS | `PaymentGatewayNames` | Şablon |
+| :--- | :--- | :---: |
+| Akbank | `Akbank` | B |
+| Akbank Nestpay | `AkbankNestpay` | B |
+| Alternatif Bank | `AlternatifBank` | B |
+| Anadolubank | `Anadolubank` | B |
+| Denizbank | `Denizbank` | B |
+| QNB Finansbank | `QNBFinansbank` | B |
+| Finansbank Nestpay | `FinansbankNestpay` | B |
+| Garanti BBVA | `Garanti` | C |
+| Halkbank | `Halkbank` | B |
+| ING Bank | `ING` | B |
+| İş Bankası | `IsBankasi` | B |
+| Şekerbank | `Sekerbank` | B |
+| Türk Ekonomi Bankası | `TurkEkonomiBankasi` | B |
+| Türkiye Finans | `TurkiyeFinans` | B |
+| Yapı Kredi Bankası | `YapiKredi` | B |
+| Ziraat Bankası | `Ziraat` | B |
+| Kuveyt Türk | `KuveytTurk` | B |
+| Vakıf Katılım | `VakifKatilim` | B |
+
+Nestpay bankalarında §7.7 **Şablon B** kullanılır; yalnızca `Gateways` anahtarı (`"Halkbank"`, `"Ziraat"`, …) değişir.
+
+#### Ödeme kuruluşları (planlanan)
+
+| Sanal POS | `PaymentGatewayNames` | Şablon |
+| :--- | :--- | :---: |
+| Cardplus | `Cardplus` | A |
+| Paratika | `Paratika` | A |
+| Payten - MSU | `PaytenMsu` | A |
+| Sipay | `Sipay` | A |
+| QNBpay | `QNBpay` | A |
+| ParamPos | `ParamPos` | A |
+| PayBull | `PayBull` | A |
+| Parolapara | `Parolapara` | A |
+| IQmoney | `IQmoney` | A |
+| Ahlpay | `Ahlpay` | A |
+| Moka | `Moka` | A* |
+| Vepara | `Vepara` | A |
+| ZiraatPay | `ZiraatPay` | A |
+| Tami | `Tami` | A |
+| HalkÖde | `HalkOde` | A |
+| PayNKolay | `PayNKolay` | A |
+| Paynet | `Paynet` | A |
+| PayTR | `PayTR` | F |
+
+\* Moka: kuruluş dokümanına göre `DealerCode`, `Username`, `Password` eklenebilir.
+
+**Sipay tipi örnek:**
+
+```json
+"Sipay": {
+  "Enabled": false,
+  "IsTestMode": true,
+  "Settings": {
+    "MerchantId": "SP_MERCHANT",
+    "ApiKey": "sipay-api-key",
+    "SecretKey": "sipay-secret"
+  }
+}
+```
+
+#### Birden fazla kanal — tam `appsettings` örneği
+
+```json
+{
+  "TriPay": {
+    "DefaultGateway": "VakifPays",
+    "Gateways": {
+      "VakifPays": {
+        "Enabled": true,
+        "IsDefault": true,
+        "IsTestMode": true,
+        "Settings": {
+          "Merchant": "10009011",
+          "MerchantUser": "api@firma.com",
+          "MerchantPassword": "***"
+        }
+      },
+      "Iyzico": {
+        "Enabled": true,
+        "IsTestMode": true,
+        "Settings": {
+          "ApiKey": "sandbox-key",
+          "SecretKey": "sandbox-secret"
+        }
+      },
+      "Vakifbank": {
+        "Enabled": true,
+        "IsTestMode": true,
+        "Settings": {
+          "MerchantId": "000000000000001",
+          "MerchantPassword": "***",
+          "TerminalNo": "VP000001"
+        }
+      },
+      "Garanti": {
+        "Enabled": false,
+        "IsTestMode": true,
+        "Settings": {
+          "MerchantId": "GAR_ID",
+          "TerminalId": "GAR_TERM",
+          "ProvUserId": "PROVAUT",
+          "ProvPassword": "***",
+          "StoreKey": "store_key"
+        }
+      },
+      "IsBankasi": {
+        "Enabled": false,
+        "IsTestMode": true,
+        "Settings": {
+          "MerchantId": "ISB_ID",
+          "TerminalId": "ISB_TERM",
+          "Username": "user",
+          "Password": "***",
+          "StoreKey": "store_key"
+        }
+      },
+      "PayTR": {
+        "Enabled": false,
+        "IsTestMode": true,
+        "Settings": {
+          "MerchantId": "123456",
+          "MerchantKey": "***",
+          "MerchantSalt": "***"
+        }
+      }
+    }
+  }
+}
+```
+
+```mermaid
+flowchart LR
+    A[appsettings / DB / Vault] --> B[TriPay Gateways]
+    B --> C[PaymentGatewayFactory]
+    C --> D[Provider adaptörleri]
+    E[İstek GatewayName] --> C
+```
+
+> Trimango: her provider `Settings` sözlüğünü `GetGatewayConfigAsync()` ile okur. TriPay hedefi: `TriPay:Gateways:{code}:Settings` + `MerchantGateways`.
+
+---
 ## 8. Provider (banka) seçimi
 
 Developer hangi banka/kuruluşun kullanılacağını **üç şekilde** belirler (detay: proje dokümanı §5.5).

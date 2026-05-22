@@ -7,6 +7,7 @@
 | Doküman | İçerik |
 | :--- | :--- |
 | [**pwd.md**](./pwd.md) | **Öncelik TODO:** iyzico → Vakıfbank → VakıfPayS (✅) |
+| [**Kılavuz §7**](./docs/TriPay_Kullanim_Kilavuzu.md#74-çoklu-banka-yapılandırması-neden-farklı) | Tüm banka/kuruluş **dış config** örnekleri (`appsettings`) |
 | [**TriPay_Proje_Dokumani.md**](./docs/TriPay_Proje_Dokumani.md) | Mimari, POS listesi, veritabanı, kurallar |
 | [**TriPay_Kullanim_Kilavuzu.md**](./docs/TriPay_Kullanim_Kilavuzu.md) | **Kullanım kılavuzu A–Z:** NuGet, DLL, HttpClient, kod örnekleri |
 
