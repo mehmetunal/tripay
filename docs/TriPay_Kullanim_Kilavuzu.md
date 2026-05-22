@@ -3,7 +3,7 @@
 
 # TriPay Kullanım Kılavuzu (A–Z)
 
-**Versiyon:** 1.0 · **Tarih:** 22 Mayıs 2026
+**Versiyon:** 1.0 · **Tarih:** 22 Mayıs 2026 · **Web:** [https://tripay.com.tr](https://tripay.com.tr)
 
 Bu kılavuz, TriPay’i projene entegre eden geliştiriciler içindir: **NuGet / DLL** ile doğrudan kütüphane kullanımı ve **HttpClient** ile uzaktan API kullanımı.
 
@@ -45,6 +45,8 @@ Bu kılavuz, TriPay’i projene entegre eden geliştiriciler içindir: **NuGet /
 
 ## 1. TriPay nedir?
 
+**Resmi web sitesi:** [https://tripay.com.tr](https://tripay.com.tr)
+
 TriPay; banka ve ödeme kuruluşu sanal POS’larını tek arayüzde birleştiren bir **Payment Hub** kütüphanesidir. Entegrasyon developer’ı:
 
 - Hangi **provider**’ları kullanacağını belirler (`GatewayName`, `MerchantGateways` — bkz. proje dokümanı §5.5),
@@ -84,7 +86,7 @@ flowchart LR
 
 | Gereksinim | Değer |
 | :--- | :--- |
-| .NET | **10.0** veya üzeri (SDK ile uyumlu TFMs) |
+| .NET | **8.0 ve üzeri** — NuGet paketi `net8.0`, `net9.0`, `net10.0` hedefler (8 / 9 / 10 / sonraki LTS) |
 | Proje tipi | ASP.NET Core Web, Web API, Worker, Console |
 | NuGet | `Microsoft.Extensions.DependencyInjection`, `Microsoft.Extensions.Http` |
 | Opsiyonel | MSSQL (işlem/log — planlanan `TriPay.Data`) |
@@ -105,7 +107,7 @@ NuGet paket yapısı:
 **Derleme çıktısı (yerel geliştirme):**
 
 ```text
-TriPay.Services/bin/Release/net10.0/
+TriPay.Services/bin/Release/net8.0/   (veya net9.0 / net10.0 — proje TFM’ine göre)
 ├── TriPay.Services.dll          ← ana kütüphane
 ├── TriPay.Services.deps.json
 └── (bağımlılıklar)

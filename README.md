@@ -1,6 +1,7 @@
 # TriPay
 
-**Tüm Ödemeler Tek Platformda** — .NET 10 · SQL Server · Payment Hub
+**Web:** [https://tripay.com.tr](https://tripay.com.tr)  
+**Tüm Ödemeler Tek Platformda** — .NET 8+ (8 / 9 / 10) · SQL Server · Payment Hub
 
 ## Dokümantasyon
 
@@ -47,4 +48,4 @@ cd TriPay && dotnet run
 
 ---
 
-**TriPay Geliştirme Ekibi** · v3.0
+**TriPay** · [tripay.com.tr](https://tripay.com.tr) · v1.0

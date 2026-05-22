@@ -1,12 +1,21 @@
 <Project>
   <!-- Tüm projeler için ortak MSBuild ayarları -->
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+
+  <!-- NuGet kütüphanesi: .NET 8, 9, 10 ve üzeri (ileri SDK sürümleri net8.0 asset ile uyumludur) -->
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'TriPay.Services'">
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
+  </PropertyGroup>
+
+  <!-- Demo / web örneği -->
+  <PropertyGroup Condition="'$(MSBuildProjectName)' != 'TriPay.Services'">
+    <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
 
   <!-- NuGet paket meta verisi: yalnızca TriPay.Services (PackageId: TriPay) -->

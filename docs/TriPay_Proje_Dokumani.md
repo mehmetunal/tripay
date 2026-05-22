@@ -9,6 +9,7 @@
 | **Tarih** | 22 Mayıs 2026 |
 | **Proje Kodu** | TRIPAY-DOC-003 |
 | **Teknoloji Odağı** | Microsoft Ekosistemi (.NET Core MVC + MSSQL) |
+| **Web sitesi** | [https://tripay.com.tr](https://tripay.com.tr) |
 
 ---
 
@@ -73,11 +74,12 @@
 | Başlık | Açıklama |
 | :--- | :--- |
 | **Proje Adı** | TriPay |
+| **Web sitesi** | [https://tripay.com.tr](https://tripay.com.tr) |
 | **Slogan** | Tüm Ödemeler Tek Platformda |
 | **Proje Tipi** | FinTech / Ödeme Entegrasyon Merkezi (Payment Hub) |
 | **Hedef Kitle** | E-ticaret siteleri, pazaryerleri, SaaS firmaları, mobil uygulama geliştiricileri |
 | **Mimari** | Onion Architecture (Temiz Mimari) + MVC |
-| **Backend** | .NET 9.0 Core MVC (Razor Views) |
+| **Backend** | ASP.NET Core MVC (Razor Views) — uygulama .NET 8+; NuGet paketi `net8.0` / `net9.0` / `net10.0` |
 | **Veritabanı** | Microsoft SQL Server 2022+ |
 | **ORM** | Entity Framework Core 9.0 (Code-First) |
 | **Cache / Queue** | Redis ve RabbitMQ (ihtiyaca göre) |
@@ -1231,7 +1233,7 @@ TriPay'in farkı, yalnızca birkaç kuruluşu (örneğin iyzico + tek banka) de�
 | Kategori | Teknoloji |
 | :--- | :--- |
 | **IDE** | Visual Studio 2026 / JetBrains Rider |
-| **Backend** | ASP.NET Core 9.0 MVC |
+| **Backend** | ASP.NET Core MVC (.NET 8+) |
 | **Veritabanı** | Microsoft SQL Server 2022 |
 | **ORM** | Entity Framework Core 9.0 (Code-First) |
 | **Önbellek** | Redis (StackExchange.Redis) |
