@@ -130,18 +130,39 @@ TriPay, uzun vadede **mikroservis ve API Gateway** mantığıyla ölçeklenebili
 
 ### 5.2. Genel Akış Şeması (API Gateway)
 
-Üye işyeri tek tip istek atar; TriPay doğru kanala yönlendirir ve sonucu webhook ile bildirir.
+Üye işyeri tek tip istek atar; TriPay **akıllı yönlendirme** ile §6’daki kanallardan birine gider ve sonucu webhook ile bildirir.
 
 ```mermaid
 flowchart TD
     A[Müşteri / E-ticaret Sitesi] -->|Tek Tip İstek| B(TriPay API Gateway)
-    B -->|Akıllı Yönlendirme| C{Pos Seçimi}
-    C -->|Kanal 1| D[İyzico Konektör]
-    C -->|Kanal 2| E[Garanti Bankası Konektör]
-    C -->|Kanal 3| F[PayTR Konektör]
-    D & E & F -->|3D Secure / Ödeme| G[Tahsilat]
+    B --> C{Pos Seçimi / Smart Routing}
+    C --> BANK
+    C --> KURULUS
+    BANK --> G[Tahsilat]
+    KURULUS --> G
     G -->|Webhook| A
+
+    subgraph BANK["Banka Sanal POS Konektörleri"]
+        direction TB
+        B1[Akbank · Nestpay]
+        B2[Garanti BBVA]
+        B3[İş Bankası]
+        B4[Yapı Kredi]
+        B5[Vakıfbank · VakıfPayS]
+        B6[Ziraat · Halkbank · Denizbank]
+        B7[QNB Finansbank · TEB · ING · …]
+    end
+
+    subgraph KURULUS["Ödeme Kuruluşu Konektörleri"]
+        direction TB
+        K1[Iyzico]
+        K2[PayTR · ParamPos · Sipay]
+        K3[Moka · Paynet · Vepara]
+        K4[Paratika · Payten · …]
+    end
 ```
+
+> Tüm kanal listesi ve işlem tipleri: **§6** tablosu.
 
 ### 5.3. Katmanlar ve Solution Yapısı
 
@@ -201,8 +222,10 @@ TriPay.Service/
     ├── Models/
     │   └── PaymentGatewayModels.cs
     ├── Providers/
-    │   ├── VakifPaysGatewayProvider.cs
-    │   └── {Banka}GatewayProvider.cs
+    │   ├── VakifPaysGatewayProvider.cs      ← mevcut
+    │   ├── IyzicoGatewayProvider.cs         ← planlanan
+    │   ├── GarantiGatewayProvider.cs        ← planlanan
+    │   └── … (§6 — 37 kanal)
     ├── Services/
     │   └── PaymentGatewayService.cs
     └── PaymentGatewayFactory.cs
@@ -214,11 +237,11 @@ TriPay.Service/
 | :--- | :--- | :--- |
 | `IPaymentGatewayProvider` | Tüm ödeme kuruluşlarının uyması gereken sözleşme | Interface Segregation |
 | `PaymentGatewayBase` | Ortak işlevselliği barındıran soyut sınıf | Template Method |
-| `{Banka}GatewayProvider` | Kuruluşa özel adaptör (ör. `VakifPaysGatewayProvider`) | Adapter |
+| `{Kanal}GatewayProvider` | §6’daki her POS için adaptör (ör. `VakifPays`, `Iyzico`, `Garanti`…) | Adapter |
 | `PaymentGatewayFactory` | İhtiyaç duyulan adaptörü dinamik sağlar | Factory |
 | `IPaymentGatewayService` / `PaymentGatewayService` | İş mantığını yürüten facade | Facade |
 
-**Provider sözleşmesi (özet):**
+**Provider sözleşmesi (tüm POS adaptörleri):**
 
 ```mermaid
 classDiagram
@@ -228,51 +251,145 @@ classDiagram
         +DisplayName
         +InitializePaymentAsync()
         +ProcessCallbackAsync()
-        +GetPaymentStatusAsync()
         +GetInstallmentInfoAsync()
-        +Auth3DSAsync()
         +RefundPaymentAsync()
-        +NormalizeCallbackFromRawData()
     }
     class PaymentGatewayBase {
         <<abstract>>
     }
-    class VakifPaysGatewayProvider {
-        +GatewayName = VakifPays
-    }
     class PaymentGatewayFactory {
-        +CreateProvider(name)
+        +CreateProvider(gatewayName)
     }
     class PaymentGatewayService {
         +InitializePaymentAsync()
         +ProcessCallbackAsync()
     }
+    class BankProviders {
+        <<Banka POS>>
+        AkbankGatewayProvider
+        GarantiGatewayProvider
+        IsBankasiGatewayProvider
+        VakifPaysGatewayProvider
+        YapiKrediGatewayProvider
+        ZiraatGatewayProvider
+    }
+    class AggregatorProviders {
+        <<Ödeme kuruluşu>>
+        IyzicoGatewayProvider
+        PayTRGatewayProvider
+        SipayGatewayProvider
+        ParamPOSGatewayProvider
+        PaynetGatewayProvider
+    }
     IPaymentGatewayProvider <|.. PaymentGatewayBase
-    PaymentGatewayBase <|-- VakifPaysGatewayProvider
-    PaymentGatewayFactory ..> VakifPaysGatewayProvider : oluşturur
+    PaymentGatewayBase <|-- BankProviders
+    PaymentGatewayBase <|-- AggregatorProviders
+    PaymentGatewayFactory ..> BankProviders : seçer
+    PaymentGatewayFactory ..> AggregatorProviders : seçer
     PaymentGatewayService --> PaymentGatewayFactory
     PaymentGatewayService --> IPaymentGatewayProvider
 ```
 
-### 5.5. Akış Şeması (3D Secure — Controller)
+### 5.5. Tüm POS konektör haritası
 
-Mevcut MVC uygulamasındaki uç nokta ve sınıf akışı:
+`PaymentGatewayFactory` üzerinden erişilen hedef kanallar (§6 ile uyumlu):
+
+```mermaid
+flowchart LR
+    F[PaymentGatewayFactory]
+
+    subgraph BNK["Bankalar"]
+        direction TB
+        N1[Akbank]
+        N2[Akbank Nestpay]
+        N3[Alternatif Bank]
+        N4[Anadolubank]
+        N5[Denizbank]
+        N6[QNB Finansbank]
+        N7[Finansbank Nestpay]
+        N8[Garanti BBVA]
+        N9[Halkbank]
+        N10[ING Bank]
+        N11[İş Bankası]
+        N12[Şekerbank]
+        N13[Türk Ekonomi Bankası]
+        N14[Türkiye Finans]
+        N15[Vakıfbank]
+        N16[Yapı Kredi]
+        N17[Ziraat Bankası]
+        N18[Kuveyt Türk]
+        N19[Vakıf Katılım]
+    end
+
+    subgraph AGG["Ödeme kuruluşları"]
+        direction TB
+        A1[Cardplus]
+        A2[Paratika]
+        A3[Payten MSU]
+        A4[Iyzico]
+        A5[Sipay]
+        A6[QNBpay]
+        A7[ParamPos]
+        A8[PayBull]
+        A9[Parolapara]
+        A10[IQmoney]
+        A11[Ahlpay]
+        A12[Moka]
+        A13[Vepara]
+        A14[ZiraatPay]
+        A15[VakıfPayS]
+        A16[Tami]
+        A17[HalkÖde]
+        A18[PayNKolay]
+        A19[Paynet]
+    end
+
+    F --> BNK
+    F --> AGG
+```
+
+| Durum | Açıklama |
+| :--- | :--- |
+| **Mevcut (kod)** | Yalnızca **VakıfPayS** (`VakifPaysGatewayProvider`) |
+| **Planlanan** | Haritadaki diğer tüm kutular — §6 tablosu ile birebir |
+
+### 5.6. Akış Şeması (3D Secure — Controller)
+
+MVC uygulaması; seçilen POS’a göre ilgili provider ve 3D sayfası devreye girer (örnek: VakıfPayS **mevcut**, diğerleri **planlanan**):
 
 ```mermaid
 flowchart TD
-    A[Müşteri Tarayıcısı] -->|1. Ödeme Formu POST| B(HomeController.Pay)
-    B -->|2. Service'e Yönlendirir| C{PaymentGatewayService}
-    C -->|3. Factory'den Adaptör İster| D[PaymentGatewayFactory]
-    D -->|4. Sağlar| E[VakifPaysGatewayProvider]
-    E -->|5. 3D HTML Oluşturur| F[Auto-Post Form]
-    F -->|6. Tarayıcıyı Yönlendirir| G[Vakıfbank 3D Sayfası]
-    G -->|7. SMS/Onay| H[Müşteri]
-    H -->|8. Banka Callback| I(HomeController.Callback)
-    I -->|9. Sonucu İşler| J[Result Sayfası]
-    I -->|10. Harici Webhook| K[Üye İşyeri Backend]
+    A[Müşteri Tarayıcısı] -->|1. POST| B(HomeController.Pay)
+    B --> C{PaymentGatewayService}
+    C --> D[PaymentGatewayFactory]
+    D -->|2. gatewayName| E{Seçilen POS}
+    E --> P1[Banka Provider]
+    E --> P2[Kuruluş Provider]
+    P1 --> F[3D Auto-Post Form]
+    P2 --> F
+    F -->|3. Yönlendirme| G[İlgili POS 3D Sayfası]
+    G -->|4. Onay| H[Müşteri]
+    H -->|5. Callback| I(HomeController.Callback)
+    I --> J[Result.cshtml]
+    I -->|6. Webhook| K[Üye İşyeri Backend]
+
+    subgraph P1["Banka örnekleri"]
+        direction LR
+        pA[Garanti]
+        pB[İş Bankası]
+        pC[VakıfPayS ✓]
+        pD[Yapı Kredi · Akbank · …]
+    end
+
+    subgraph P2["Kuruluş örnekleri"]
+        direction LR
+        kA[Iyzico]
+        kB[PayTR]
+        kC[ParamPos · Sipay · …]
+    end
 ```
 
-### 5.6. Akış Şeması (3D Secure — Sequence)
+### 5.7. Akış Şeması (3D Secure — Sequence)
 
 ```mermaid
 sequenceDiagram
@@ -280,20 +397,22 @@ sequenceDiagram
     participant C as HomeController
     participant S as PaymentGatewayService
     participant F as PaymentGatewayFactory
-    participant P as VakifPaysGatewayProvider
-    participant B as Vakıfbank 3D Sayfası
+    participant P as Seçilen GatewayProvider
+    participant B as İlgili POS 3D Sayfası
     participant U as Üye İşyeri Backend
 
+    Note over F,P: Factory §6 kanallarından birini seçer<br/>(Akbank, Garanti, Iyzico, PayTR, VakıfPayS, …)
+
     M->>C: 1. Ödeme formu POST (Pay)
-    C->>S: 2. InitializePaymentAsync
-    S->>F: 3. Provider iste (VakifPays)
-    F->>P: 4. Adaptör oluştur
-    P->>P: 5. 3D HTML (auto-post form)
-    P-->>M: 6. Banka sayfasına yönlendir
+    C->>S: 2. InitializePaymentAsync(gatewayName)
+    S->>F: 3. Provider oluştur
+    F->>P: 4. {Banka|Kuruluş}GatewayProvider
+    P->>P: 5. 3D HTML (auto-post)
+    P-->>M: 6. POS 3D sayfasına yönlendir
     M->>B: 7. SMS / onay
     B->>C: 8. Callback POST
     C->>S: 9. ProcessCallbackAsync
-    S-->>C: Normalize + sonuç
+    S-->>C: NormalizeCallbackFromRawData
     C-->>M: 10. Result.cshtml
     C-->>U: 11. Webhook (planlanan)
 ```
@@ -305,7 +424,7 @@ sequenceDiagram
 TriPay'in **%100 adaptasyon** hedefi kapsamında desteklenmesi planlanan banka ve ödeme kuruluşu sanal POS listesi aşağıdadır. Her kanal için hedef işlem tipleri: **Satış**, **Satış 3D**, **İptal**, **İade**.
 
 > **Referans görsel** (ekosistem haritası):  
-> ![Bankalar ve ödeme kuruluşları](https://raw.githubusercontent.com/cempehlivan/CP.VPOS/master/bankalar.png)
+![Bankalar ve ödeme kuruluşları](./bankalar.png)
 
 **Semboller:** ✔️ Desteklenecek · ❌ İlk fazda desteklenmeyecek (API kısıtı veya sonraki faz)
 
