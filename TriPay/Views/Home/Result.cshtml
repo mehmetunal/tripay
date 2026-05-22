@@ -1,0 +1,18 @@
+@{
+    ViewData["Title"] = "Ödeme Sonucu";
+}
+
+<h2>Ödeme Sonucu</h2>
+<p><strong>Durum:</strong> @ViewBag.Status</p>
+<p><strong>Mesaj:</strong> @ViewBag.Message</p>
+<p><strong>Tutar:</strong> @ViewBag.Amount</p>
+<p><strong>Sipariş No:</strong> @ViewBag.OrderNumber</p>
+<p><strong>İşlem No:</strong> @ViewBag.TransactionId</p>
+<hr />
+<p><strong>Callback responseCode:</strong> @ViewBag.ResponseCode</p>
+<p><strong>Callback responseMsg:</strong> @ViewBag.ResponseMsg</p>
+<p><strong>Callback errorMsg:</strong> @ViewBag.ErrorMsg</p>
+<p><strong>Query responseCode:</strong> @ViewBag.QueryCode</p>
+<pre>@ViewBag.CallbackFields</pre>
+
+<a asp-controller="Home" asp-action="Index">Yeni ödeme dene</a>
