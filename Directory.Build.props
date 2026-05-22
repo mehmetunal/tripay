@@ -1,0 +1,15 @@
+<Project>
+  <!-- Tüm projeler için ortak MSBuild ayarları -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+
+  <!-- NuGet paket meta verisi: yalnızca TriPay.Services (PackageId: TriPay) -->
+  <Import Project="$(MSBuildThisFileDirectory)build\TriPay.NuGet.props"
+          Condition="'$(MSBuildProjectName)' == 'TriPay.Services'" />
+</Project>

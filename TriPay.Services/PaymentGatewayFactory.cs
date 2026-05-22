@@ -1,15 +1,15 @@
 using Microsoft.Extensions.DependencyInjection;
-using TriPay.Services.PaymentGateways.Interfaces;
-using TriPay.Services.PaymentGateways.Providers;
+using TriPay.Services.Interfaces;
+using TriPay.Services.Providers;
 
-namespace TriPay.Services.PaymentGateways;
+namespace TriPay.Services;
 
 public class PaymentGatewayFactory
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly Dictionary<string, Type> _providers = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["VakifPays"] = typeof(VakifPaysGatewayProvider)
+        [PaymentGatewayNames.VakifPays] = typeof(VakifPaysGatewayProvider)
     };
 
     public PaymentGatewayFactory(IServiceProvider serviceProvider)
@@ -19,7 +19,7 @@ public class PaymentGatewayFactory
 
     public IPaymentGatewayProvider? GetProvider(string? gatewayName = null)
     {
-        var name = string.IsNullOrWhiteSpace(gatewayName) ? "VakifPays" : gatewayName;
+        var name = string.IsNullOrWhiteSpace(gatewayName) ? PaymentGatewayNames.Default : gatewayName;
         return _providers.TryGetValue(name, out var providerType)
             ? _serviceProvider.GetService(providerType) as IPaymentGatewayProvider
             : null;
@@ -36,7 +36,7 @@ public class PaymentGatewayFactory
 
     public async Task<IPaymentGatewayProvider?> GetActiveGatewayProviderAsync()
     {
-        return await GetGatewayProviderAsync("VakifPays");
+        return await GetGatewayProviderAsync(PaymentGatewayNames.VakifPays);
     }
 
     public IReadOnlyList<string> GetAllAvailableGateways()

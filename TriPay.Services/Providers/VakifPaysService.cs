@@ -2,7 +2,7 @@ using System.Globalization;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 
-namespace TriPay.Services.PaymentGateways.Providers;
+namespace TriPay.Services.Providers;
 
 public class VakifPaysService
 {

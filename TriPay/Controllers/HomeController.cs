@@ -3,9 +3,9 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TriPay.Models;
-using TriPay.Services.PaymentGateways.Interfaces;
-using TriPay.Services.PaymentGateways.Models;
-using TriPay.Services.PaymentGateways.Providers;
+using TriPay.Services.Interfaces;
+using TriPay.Services.Models;
+using TriPay.Services.Providers;
 
 namespace TriPay.Controllers;
 

@@ -1,14 +1,12 @@
 using Microsoft.Extensions.DependencyInjection;
-using TriPay.Services.PaymentGateways;
-using TriPay.Services.PaymentGateways.Interfaces;
-using TriPay.Services.PaymentGateways.Providers;
-using TriPay.Services.PaymentGateways.Services;
+using TriPay.Services.Interfaces;
+using TriPay.Services.Providers;
 
 namespace TriPay.Services.DependencyInjection;
 
 public static class PaymentGatewayServiceCollectionExtensions
 {
-    public static IServiceCollection AddTriPayPaymentGateways(this IServiceCollection services)
+    public static IServiceCollection AddTriPay(this IServiceCollection services)
     {
         services.AddHttpClient<VakifPaysService>();
         services.AddScoped<PaymentGatewayFactory>();
@@ -17,4 +15,8 @@ public static class PaymentGatewayServiceCollectionExtensions
 
         return services;
     }
+
+    /// <summary>Eski extension adı; <see cref="AddTriPay"/> kullanın.</summary>
+    public static IServiceCollection AddTriPayPaymentGateways(this IServiceCollection services)
+        => services.AddTriPay();
 }

@@ -30,6 +30,9 @@
 | 6 | Güvenlik (PCI-DSS, callback `[IgnoreAntiforgeryToken]`, kart verisinin DB'ye yazılmaması, webhook imzası) **§8 ve §10** ile çelişen kod üretilmez. |
 | 7 | Hedef sanal POS listesi **§6** tablosundadır; tabloda olmayan kanal için provider eklenmez (önce doküman güncellenir). |
 | 8 | İstek/cevap logu **§9.3** `TransactionLogs` şemasına uygun yazılır; ham log yalnızca `Transactions` özetinde değil log tablosundadır. |
+| 9 | Provider seçimi **§5.5** `IPaymentGatewaySelector` + `MerchantGateways`; controller’da doğrudan `new VakifPays…` yasak. |
+| 10 | NuGet/DLL/HttpClient entegrasyonu **yalnızca** [TriPay_Kullanim_Kilavuzu.md](./TriPay_Kullanim_Kilavuzu.md) ile uyumlu olmalıdır. |
+| 11 | `GatewayName` atamalarında `PaymentGatewayNames` sabitleri kullanılır; `"VakifPays"` gibi magic string yasak. |
 
 **Kontrol listesi (kod öncesi):**
 
@@ -60,6 +63,8 @@
 13. [İş Modeli](#13-iş-modeli)
 14. [Teknoloji Yığını](#14-teknoloji-yığını)
 15. [Sonuç](#15-sonuç)
+
+**Entegrasyon kılavuzu (NuGet, DLL, HttpClient, A–Z):** [TriPay_Kullanim_Kilavuzu.md](./TriPay_Kullanim_Kilavuzu.md)
 
 ---
 
@@ -209,28 +214,46 @@ flowchart TB
 
 > **Not — Payment alt yapısı (Trimango ile uyum)**  
 > TriPay'deki **Payment** modülü; servisler, `interface`'ler, `controller` uçları ve provider kayıt/DI düzeni **Trimango** projesindeki `PaymentGateways` yapısıyla aynı modelde olacaktır. Yani `IPaymentGatewayProvider`, `PaymentGatewayBase`, `PaymentGatewayFactory`, `IPaymentGatewayService` / `PaymentGatewayService` ve controller tarafındaki `InitializePayment`, `ProcessCallback`, `GetInstallmentInfo` akışları Trimango'daki payment provider desenine birebir uyumlu tutulur; yeni banka/kuruluş eklemek Trimango'daki gibi provider + factory kaydı ile yapılır.
+>
+> **Klasör notu:** Trimango’da `PaymentGateways/` ayrı bir modül klasörüdür; `TriPay.Services` projesinin tamamı zaten yalnızca ödeme hub’ı olduğu için ek bir `PaymentGateways/` katmanı gereksizdir. Desen aynıdır; fiziksel yapı düz `TriPay.Services/{Common,Interfaces,Models,Providers}` şeklindedir (§5.4 ağaç).
 
 **Klasör yapısı (hedef):**
 
 ```text
-TriPay.Service/
-└── PaymentGateways/
-    ├── Common/
-    │   └── PaymentGatewayBase.cs
-    ├── Interfaces/
-    │   ├── IPaymentGatewayProvider.cs
-    │   └── IPaymentGatewayService.cs
-    ├── Models/
-    │   └── PaymentGatewayModels.cs
-    ├── Providers/
-    │   ├── VakifPaysGatewayProvider.cs      ← mevcut
-    │   ├── IyzicoGatewayProvider.cs         ← planlanan
-    │   ├── GarantiGatewayProvider.cs        ← planlanan
-    │   └── … (§6 — 37 kanal)
-    ├── Services/
-    │   └── PaymentGatewayService.cs
-    └── PaymentGatewayFactory.cs
+TriPay.Services/                    ← NuGet paketi TriPay; tüm proje ödeme hub’ıdır
+├── Common/
+│   ├── Result.cs
+│   └── PaymentGatewayBase.cs
+├── Interfaces/
+│   ├── IPaymentGatewayProvider.cs
+│   └── IPaymentGatewayService.cs
+├── Models/
+│   └── PaymentGatewayModels.cs
+├── Providers/
+│   ├── VakifPaysGatewayProvider.cs      ← mevcut
+│   ├── IyzicoGatewayProvider.cs         ← TODO P1 (Trimango port)
+│   ├── VakifbankGatewayProvider.cs    ← TODO P2 (Trimango port)
+│   ├── GarantiGatewayProvider.cs        ← planlanan
+│   └── … (§6 — 37 kanal)
+├── DependencyInjection/
+│   └── PaymentGatewayServiceCollectionExtensions.cs   → AddTriPay()
+├── PaymentGatewayService.cs
+├── PaymentGatewayFactory.cs
+└── PaymentGatewayNames.cs
+    └── PaymentGatewayNames.cs          ← gateway kod sabitleri (const)
 ```
+
+**Gateway sabitleri (`PaymentGatewayNames`):**
+
+```csharp
+// Magic string yasak — örnek:
+PaymentGatewayNames.VakifPays
+PaymentGatewayNames.Iyzico
+PaymentGatewayNames.Garanti
+PaymentGatewayNames.Default   // varsayılan (= VakifPays)
+```
+
+Yeni provider eklerken: `PaymentGatewayNames` + `PaymentGatewayFactory` + provider sınıfı birlikte güncellenir.
 
 **Desen ve sorumluluklar:**
 
@@ -291,7 +314,192 @@ classDiagram
     PaymentGatewayService --> IPaymentGatewayProvider
 ```
 
-### 5.5. Tüm POS konektör haritası
+### 5.5. Geliştirici / üye işyeri provider seçimi (SOLID)
+
+TriPay’i entegre eden **geliştirici (üye işyeri)**, hangi banka ve ödeme kuruluşu provider’larının kullanılacağını **açıkça belirtebilmeli**; sistem bunu merkezi policy ile doğrular. Tasarım **Trimango `PaymentGateways` + ayar modeli** ile uyumludur.
+
+#### İş kuralları (özet)
+
+| Kural | Açıklama |
+| :--- | :--- |
+| Kayıt | Provider yalnızca `PaymentGatewayFactory`’de kayıtlı ve §6 listesinde ise seçilebilir |
+| Üye işyeri yetkisi | Merchant yalnızca **kendi aktif ettiği** kanalları kullanır (`MerchantGateways`) |
+| İstek bazlı seçim | Ödeme isteğinde `GatewayName` verilebilir; verilmezse **varsayılan kanal** |
+| Doğrulama | Seçilen kanal: kayıtlı + merchant’ta aktif + `IsSystemActive` + `IsSupportedAsync` |
+| Smart routing | İleride: başarısız kanalda sıradaki **enabled** kanala fallback (Faz 2+) |
+
+#### Üç katmanlı seçim modeli
+
+```mermaid
+flowchart TD
+    subgraph L1["1. Sistem katmanı — Open/Closed"]
+        F[PaymentGatewayFactory<br/>tüm *GatewayProvider kayıtları]
+    end
+    subgraph L2["2. Üye işyeri katmanı — konfigürasyon"]
+        M[Merchants]
+        MG[MerchantGateways<br/>Enabled + Credentials + IsDefault]
+        M --> MG
+    end
+    subgraph L3["3. İşlem katmanı — runtime"]
+        R[PaymentGatewayInitializeRequestDto.GatewayName]
+        S[IPaymentGatewaySelector]
+        R --> S
+        S --> F
+        MG --> S
+    end
+    S --> P[IPaymentGatewayProvider]
+```
+
+| Katman | Kim belirler? | Nerede saklanır? |
+| :--- | :--- | :--- |
+| **Sistem** | TriPay platformu (hangi adaptörler kodda var) | Factory dictionary + `PaymentGateways` tablosu |
+| **Üye işyeri** | Entegrasyon yapan developer / merchant admin | `MerchantGateways` (+ panel veya API) |
+| **İşlem** | Checkout veya backend API çağrısı | `GatewayName` alanı (DTO) |
+
+#### SOLID prensiplere uyum
+
+| Prensip | TriPay uygulaması |
+| :--- | :--- |
+| **S** — Single Responsibility | `IPaymentGatewayProvider`: yalnızca banka/kuruluş API çağrıları. `IMerchantGatewayCatalog`: merchant’ın aktif kanal listesi. `IPaymentGatewaySelector`: hangi provider’ın bu istekte kullanılacağına karar verir. `PaymentGatewayService`: orkestrasyon (Facade). |
+| **O** — Open/Closed | Yeni banka = yeni `*GatewayProvider` + Factory kaydı; `PaymentGatewayService` ve selector **değiştirilmeden** genişler. |
+| **L** — Liskov Substitution | Tüm kanallar `IPaymentGatewayProvider` üzerinden değiştirilebilir; çağıran kod konkret banka sınıfına bağımlı değildir. |
+| **I** — Interface Segregation | Ödeme işlemi arayüzü ile merchant konfig arayüzü ayrıdır; admin listeleme için `IReadOnlyList<GatewayOptionDto>` yeterlidir. |
+| **D** — Dependency Inversion | Controller ve servisler `IPaymentGatewayService`, `IPaymentGatewaySelector`, `IMerchantGatewayCatalog` abstraction’larına bağlanır; somut `VakifPaysGatewayProvider`’a değil. |
+
+#### Hedef arayüzler (`TriPay.Core` / `TriPay.Service`)
+
+```text
+TriPay.Core/Abstractions/Payments/
+├── IPaymentGatewayProvider.cs          (mevcut — adaptör sözleşmesi)
+├── IMerchantGatewayCatalog.cs          (merchant’ın enabled gateway listesi)
+├── IPaymentGatewaySelector.cs          (istek + policy → provider)
+└── IGatewayEligibilityPolicy.cs        (opsiyonel: smart routing kuralları)
+
+TriPay.Services/                      (kök — ayrı PaymentGateways/ klasörü yok)
+├── PaymentGatewayFactory.cs
+├── PaymentGatewaySelector.cs           (IMerchantGatewayCatalog + Factory)
+├── MerchantGatewayCatalog.cs           (DB: MerchantGateways)
+└── Policies/
+    └── DefaultOrRequestedGatewayPolicy.cs
+```
+
+**`IMerchantGatewayCatalog` (sorumluluk):**
+
+```csharp
+public interface IMerchantGatewayCatalog
+{
+    Task<IReadOnlyList<MerchantGatewayDto>> GetEnabledGatewaysAsync(int merchantId, CancellationToken ct = default);
+    Task<MerchantGatewayDto?> GetDefaultGatewayAsync(int merchantId, CancellationToken ct = default);
+    Task<bool> IsGatewayEnabledForMerchantAsync(int merchantId, string gatewayName, CancellationToken ct = default);
+}
+```
+
+**`IPaymentGatewaySelector` (sorumluluk):**
+
+```csharp
+public interface IPaymentGatewaySelector
+{
+    Task<IPaymentGatewayProvider?> ResolveAsync(
+        int merchantId,
+        string? requestedGatewayName,
+        CancellationToken ct = default);
+}
+```
+
+**Çözümleme sırası (ResolveAsync):**
+
+1. `requestedGatewayName` doluysa → merchant’ta enabled mi kontrol et → Factory’den provider al.  
+2. Boşsa → `MerchantGateways.IsDefault = true` kaydı.  
+3. Hâlâ yoksa → merchant’ın ilk `Enabled` kanalı.  
+4. Provider `IsSystemActive` ve `IsSupportedAsync` değilse → `null` + anlamlı hata (`Result`).
+
+#### Developer API ve konfigürasyon
+
+**A) Üye işyeri paneli / REST (kanal yönetimi)**
+
+| Metot | Endpoint (örnek) | Açıklama |
+| :--- | :--- | :--- |
+| `GET` | `/api/merchants/{merchantId}/gateways` | Aktif ve kullanılabilir kanal listesi |
+| `PUT` | `/api/merchants/{merchantId}/gateways/{code}` | Kanalı aç/kapa, credential, varsayılan işaretle |
+| `GET` | `/api/gateways/available` | Sistemde kayıtlı tüm kanallar (§6 ile kesişim) |
+
+**Örnek yanıt — kullanılabilir kanallar:**
+
+```json
+{
+  "merchantId": 42,
+  "defaultGateway": "VakifPays",
+  "gateways": [
+    { "code": "VakifPays", "displayName": "VakıfPayS", "enabled": true, "isDefault": true },
+    { "code": "Iyzico", "displayName": "iyzico", "enabled": true, "isDefault": false },
+    { "code": "Garanti", "displayName": "Garanti BBVA", "enabled": false, "isDefault": false }
+  ]
+}
+```
+
+**B) Ödeme isteğinde kanal seçimi (entegrasyon developer’ı)**
+
+Mevcut DTO alanı (genişletilecek):
+
+```csharp
+public class PaymentGatewayInitializeRequestDto
+{
+    public PaymentRequest Payment { get; set; } = new();
+    /// <summary>Üye işyerinin seçtiği kanal: VakifPays, Iyzico, Garanti, …</summary>
+    public string? GatewayName { get; set; }
+}
+```
+
+| Senaryo | `GatewayName` | Sonuç |
+| :--- | :--- | :--- |
+| Müşteri bankayı seçti (hosted page) | `"Garanti"` | Garanti provider |
+| Tek kanal entegrasyonu | `null` | Merchant varsayılanı |
+| Smart routing (ileri) | `null` + policy | Motor enabled kanallardan seçer |
+
+**C) Veritabanı — `MerchantGateways` (§9.3)**
+
+| Kolon | Açıklama |
+| :--- | :--- |
+| `MerchantId` | Üye işyeri |
+| `PaymentGatewayId` | Kanal tanımı |
+| `IsEnabled` | Developer’ın bu kanalı kullanıma açması |
+| `IsDefault` | Varsayılan kanal (merchant başına tek) |
+| `EncryptedCredentials` | POS API anahtarları |
+| `Priority` | Smart routing önceliği (opsiyonel) |
+
+**Unique:** `(MerchantId, PaymentGatewayId)` — aynı kanal iki kez eklenemez.
+
+#### Hosted Payment Page — kullanıcı seçimi
+
+Checkout’ta yalnızca `IsEnabled = true` kanalların logoları listelenir; kullanıcı seçimi `GatewayName` olarak POST edilir. Developer, panelden hangi logoların görüneceğini **MerchantGateways** ile kontrol eder.
+
+```mermaid
+sequenceDiagram
+    participant Dev as Entegrasyon Developer
+    participant API as TriPay API
+    participant DB as MerchantGateways
+    participant Shop as Son Kullanıcı
+
+    Dev->>API: PUT gateways/Iyzico enabled=true
+    API->>DB: Kaydet
+    Shop->>API: POST Pay GatewayName=Iyzico
+    API->>API: IPaymentGatewaySelector.ResolveAsync
+    API->>API: IyzicoGatewayProvider.InitializePaymentAsync
+```
+
+#### Hata kodları (öneri)
+
+| Kod | Durum |
+| :--- | :--- |
+| `GATEWAY_NOT_REGISTERED` | Factory’de yok |
+| `GATEWAY_NOT_ENABLED_FOR_MERCHANT` | Merchant bu kanalı açmamış |
+| `GATEWAY_NOT_SUPPORTED` | `IsSupportedAsync` false |
+| `GATEWAY_INACTIVE` | `IsSystemActive` false |
+| `DEFAULT_GATEWAY_NOT_CONFIGURED` | Varsayılan yok ve istekte ad verilmemiş |
+
+> **Zorunlu:** Yeni özellik veya endpoint yazan AI/geliştirici, provider seçimini **bu bölüm ve §9.3 `MerchantGateways`** dışında özel/if/else ile çözemez; `IPaymentGatewaySelector` kullanılır.
+
+### 5.6. Tüm POS konektör haritası
 
 `PaymentGatewayFactory` üzerinden erişilen hedef kanallar (§6 ile uyumlu):
 
@@ -354,7 +562,7 @@ flowchart LR
 | **Mevcut (kod)** | Yalnızca **VakıfPayS** (`VakifPaysGatewayProvider`) |
 | **Planlanan** | Haritadaki diğer tüm kutular — §6 tablosu ile birebir |
 
-### 5.6. Akış Şeması (3D Secure — Controller)
+### 5.7. Akış Şeması (3D Secure — Controller)
 
 MVC uygulaması; seçilen POS’a göre ilgili provider ve 3D sayfası devreye girer (örnek: VakıfPayS **mevcut**, diğerleri **planlanan**):
 
@@ -390,7 +598,7 @@ flowchart TD
     end
 ```
 
-### 5.7. Akış Şeması (3D Secure — Sequence)
+### 5.8. Akış Şeması (3D Secure — Sequence)
 
 ```mermaid
 sequenceDiagram
@@ -424,12 +632,52 @@ sequenceDiagram
 
 TriPay'in **%100 adaptasyon** hedefi kapsamında desteklenmesi planlanan banka ve ödeme kuruluşu sanal POS listesi aşağıdadır. Her kanal için hedef işlem tipleri: **Satış**, **Satış 3D**, **İptal**, **İade**.
 
+### 6.1. Öncelik TODO — MVP provider'lar (yapılacaklar)
+
+> **Canlı checklist:** [pwd.md](../pwd.md) (proje kökü — öncelik sırası ve checkbox’lar)
+
+Aşağıdaki sıra **bağlayıcı önceliktir**. Yeni adaptörler Trimango `PaymentGateways/Providers` implementasyonlarından port edilir; TriPay’de `PaymentGatewayNames`, `PaymentGatewayFactory`, `AddTriPay()` DI kaydı ve gerekirse `{Kanal}Service` (HTTP) tamamlanır.
+
+| Öncelik | Kanal | `PaymentGatewayNames` | TriPay hedef dosya | Trimango kaynak (port) | Durum |
+| :---: | :--- | :--- | :--- | :--- | :---: |
+| **1** | **iyzico** | `Iyzico` | `TriPay.Services/Providers/IyzicoGatewayProvider.cs` (+ gerekirse `IyzicoService.cs`) | `trimango/.../PaymentGateways/Providers/IyzicoGatewayProvider.cs` | ⬜ TODO |
+| **2** | **Vakıfbank** | `Vakifbank` | `TriPay.Services/Providers/VakifbankGatewayProvider.cs` (+ gerekirse `VakifbankService.cs`) | `trimango/.../PaymentGateways/Providers/VakifbankGatewayProvider.cs` | ⬜ TODO |
+| **3** | **VakıfPayS** | `VakifPays` | `TriPay.Services/Providers/VakifPaysGatewayProvider.cs`, `VakifPaysService.cs` | — (TriPay’de mevcut) | ✅ Tamamlandı |
+
+**Öncelik 1 — iyzico (TODO)**
+
+- [ ] `IyzicoGatewayProvider` Trimango’dan uyarlanacak (`InitializePayment`, `ProcessCallback`, taksit, iade/iptal, 3DS)
+- [ ] `PaymentGatewayFactory`: `[PaymentGatewayNames.Iyzico] = typeof(IyzicoGatewayProvider)`
+- [ ] `AddTriPay()`: `IyzicoGatewayProvider` + `HttpClient` kaydı
+- [ ] Ayarlar: `ApiKey`, `SecretKey`, test/prod URL (`sandbox-api.iyzipay.com` / `api.iyzipay.com`) — Trimango `IPaymentSettingsService` yerine TriPay `IOptions` / config
+- [ ] Tablo §6: **Iyzico** satırı → `Mevcut`
+
+**Öncelik 2 — Vakıfbank (TODO)**
+
+- [ ] `VakifbankGatewayProvider` Trimango’dan uyarlanacak (MPI Enrollment + Vpos Verify, XML, 3D)
+- [ ] `PaymentGatewayFactory`: `[PaymentGatewayNames.Vakifbank] = typeof(VakifbankGatewayProvider)`
+- [ ] `AddTriPay()`: provider + cache/bin servisleri (Trimango `ICache`, `IPaymentGatewayBinPrefixService` TriPay karşılığı veya sadeleştirme)
+- [ ] Ayarlar: `MerchantId`, `MerchantPassword`, `TerminalNo`, enrollment/verify URL’leri
+- [ ] Tablo §6: **Vakıfbank** satırı → `Mevcut`
+
+**Öncelik 3 — VakıfPayS (tamamlandı)**
+
+- [x] `VakifPaysGatewayProvider` + `VakifPaysService`
+- [x] Factory + DI kaydı
+- [x] `PaymentGatewayNames.VakifPays` / `Default`
+
+> Trimango tam yolları (geliştirici makinesi):  
+> `/Users/mehmet/Project/trimango/src/Libraries/Trimango.Services/PaymentGateways/Providers/IyzicoGatewayProvider.cs`  
+> `/Users/mehmet/Project/trimango/src/Libraries/Trimango.Services/PaymentGateways/Providers/VakifbankGatewayProvider.cs`
+
+---
+
 > **Referans görsel** (ekosistem haritası):  
 ![Bankalar ve ödeme kuruluşları](./bankalar.png)
 
 **Semboller:** ✔️ Desteklenecek · ❌ İlk fazda desteklenmeyecek (API kısıtı veya sonraki faz)
 
-**TriPay kod durumu:** `Mevcut` = adaptör yazıldı · `Planlanan` = hedef listede, henüz yok
+**TriPay kod durumu:** `Mevcut` = adaptör yazıldı · `TODO P1/P2` = §6.1 öncelik sırası · `Planlanan` = hedef listede, henüz yok
 
 | Sanal POS | Satış | Satış 3D | İptal | İade | TriPay |
 | :--- | :---: | :---: | :---: | :---: | :---: |
@@ -447,13 +695,13 @@ TriPay'in **%100 adaptasyon** hedefi kapsamında desteklenmesi planlanan banka v
 | Şekerbank | ✔️ | ✔️ | ✔️ | ✔️ | Planlanan |
 | Türk Ekonomi Bankası | ✔️ | ✔️ | ✔️ | ✔️ | Planlanan |
 | Türkiye Finans | ✔️ | ✔️ | ✔️ | ✔️ | Planlanan |
-| Vakıfbank | ✔️ | ✔️ | ✔️ | ✔️ | Planlanan |
+| Vakıfbank | ✔️ | ✔️ | ✔️ | ✔️ | **TODO P2** (§6.1) |
 | Yapı Kredi Bankası | ✔️ | ✔️ | ❌ | ❌ | Planlanan |
 | Ziraat Bankası | ✔️ | ✔️ | ✔️ | ✔️ | Planlanan |
 | Cardplus | ✔️ | ✔️ | ✔️ | ✔️ | Planlanan |
 | Paratika | ✔️ | ✔️ | ✔️ | ✔️ | Planlanan |
 | Payten - MSU | ✔️ | ✔️ | ✔️ | ✔️ | Planlanan |
-| Iyzico | ✔️ | ✔️ | ✔️ | ✔️ | Planlanan |
+| Iyzico | ✔️ | ✔️ | ✔️ | ✔️ | **TODO P1** (§6.1) |
 | Sipay | ✔️ | ✔️ | ✔️ | ✔️ | Planlanan |
 | QNBpay | ✔️ | ✔️ | ✔️ | ✔️ | Planlanan |
 | ParamPos | ✔️ | ✔️ | ✔️ | ✔️ | Planlanan |
@@ -476,7 +724,7 @@ TriPay'in **%100 adaptasyon** hedefi kapsamında desteklenmesi planlanan banka v
 
 - Garanti BBVA, Yapı Kredi, Kuveyt Türk ve Vakıf Katılım için iptal/iade (❌) sonraki faz veya banka API kısıtına göre değerlendirilir.
 - Yeni provider eklerken `GatewayName` bu tablodaki adlarla uyumlu olmalı; Trimango tarafındaki mevcut provider isimleri referans alınabilir.
-- Şu an kodda yalnızca **VakıfPayS** (`VakifPaysGatewayProvider`) aktiftir; diğer tüm satırlar genişleme backlog'udur.
+- Şu an kodda yalnızca **VakıfPayS** (`VakifPaysGatewayProvider`) aktiftir; **bir sonraki işler §6.1:** iyzico (P1), Vakıfbank (P2). Diğer satırlar genişleme backlog'udur.
 
 ---
 
@@ -727,7 +975,7 @@ Aşağıdaki şemalar implementasyon için **bağlayıcı** tablo tanımıdır. 
 | :--- | :--- |
 | `Merchants` | `Id`, `Name`, `ApiKey`, `WebhookUrl`, `IsActive`, `CreatedAt` |
 | `PaymentGateways` | `Id`, `Code`, `DisplayName`, `IsActive` |
-| `MerchantGateways` | `Id`, `MerchantId`, `PaymentGatewayId`, `EncryptedCredentials`, `IsDefault` |
+| `MerchantGateways` | `Id`, `MerchantId`, `PaymentGatewayId`, `IsEnabled`, `IsDefault`, `Priority`, `EncryptedCredentials` — §5.5 developer provider seçimi |
 | `WebhookLogs` | `Id`, `TransactionId`, `RequestPayload`, `ResponsePayload`, `HttpStatusCode`, `RetryCount`, `Status` |
 | `WebhookConfigurations` | `Id`, `MerchantId`, `WebhookUrl`, `WebhookSecret`, `IsActive` |
 | `Cards` | `Id`, `MerchantId`, `Token`, `LastFour`, `CardBrand` (PAN saklanmaz) |
@@ -808,6 +1056,9 @@ erDiagram
         int Id PK
         int MerchantId FK
         int PaymentGatewayId FK
+        bool IsEnabled
+        bool IsDefault
+        int Priority
         string EncryptedCredentials
     }
     Transactions {
@@ -880,7 +1131,7 @@ VakıfPayS entegrasyonu çalışır durumdadır (hedef POS listesinde **§6** �
 
 | Bileşen | Durum |
 | :--- | :--- |
-| `PaymentGatewayFactory` | `["VakifPays"] = typeof(VakifPaysGatewayProvider)` |
+| `PaymentGatewayFactory` | `[PaymentGatewayNames.VakifPays] = typeof(VakifPaysGatewayProvider)` |
 | `VakifPaysGatewayProvider` | `PaymentGatewayBase`'den türemiş, metotlar implemente |
 | `VakifPaysService` | HTTP istek/yanıt tamam |
 | `HomeController` | `Pay`, `Callback`, `Installments` aktif |
@@ -901,7 +1152,7 @@ VakıfPayS entegrasyonu çalışır durumdadır (hedef POS listesinde **§6** �
 **Adım 1 — Banka servisi:**
 
 ```csharp
-// TriPay.Service/PaymentGateways/Providers/IsBankasiService.cs
+// TriPay.Services/Providers/IsBankasiService.cs
 public class IsBankasiService
 {
     private readonly HttpClient _httpClient;
@@ -913,7 +1164,7 @@ public class IsBankasiService
 **Adım 2 — Gateway provider:**
 
 ```csharp
-// TriPay.Service/PaymentGateways/Providers/IsBankasiGatewayProvider.cs
+// TriPay.Services/Providers/IsBankasiGatewayProvider.cs
 public class IsBankasiGatewayProvider : PaymentGatewayBase
 {
     private readonly IsBankasiService _isBankasiService;
@@ -921,7 +1172,7 @@ public class IsBankasiGatewayProvider : PaymentGatewayBase
     public IsBankasiGatewayProvider(IsBankasiService isBankasiService, ILogger<IsBankasiGatewayProvider> logger)
         : base(logger) => _isBankasiService = isBankasiService;
 
-    public override string GatewayName => "IsBankasi";
+    public override string GatewayName => PaymentGatewayNames.IsBankasi;
     public override string DisplayName => "İş Bankası";
     // Override metotlar...
 }
@@ -933,8 +1184,8 @@ public class IsBankasiGatewayProvider : PaymentGatewayBase
 // PaymentGatewayFactory.cs
 private readonly Dictionary<string, Type> _providers = new(StringComparer.OrdinalIgnoreCase)
 {
-    ["VakifPays"] = typeof(VakifPaysGatewayProvider),
-    ["IsBankasi"] = typeof(IsBankasiGatewayProvider)
+    [PaymentGatewayNames.VakifPays] = typeof(VakifPaysGatewayProvider),
+    [PaymentGatewayNames.IsBankasi] = typeof(IsBankasiGatewayProvider)
 };
 ```
 
@@ -1019,7 +1270,7 @@ Mevcut kod tabanı **.NET Core MVC + MSSQL** üzerinde; Adapter ve Factory desen
 
 ### Planlanan özellikler (özet)
 
-- Faz 1 MVP: `TriPay.Data` + MSSQL (`Transactions`, `TransactionLogs`), iyzico, Garanti, Yapı Kredi, webhook
+- Faz 1 MVP: `TriPay.Data` + MSSQL, `IMerchantGatewayCatalog` + `IPaymentGatewaySelector`, iyzico/Garanti, webhook
 - Faz 2: Split payment, iade, link ile ödeme, abonelik, taksit yönetimi
 - Faz 3: AI tabanlı POS yönlendirme, dolandırıcılık tespiti
 - Admin dashboard ve raporlama

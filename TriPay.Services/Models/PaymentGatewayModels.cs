@@ -1,6 +1,6 @@
-using TriPay.Services.PaymentGateways.Providers;
+using TriPay.Services.Providers;
 
-namespace TriPay.Services.PaymentGateways.Models;
+namespace TriPay.Services.Models;
 
 public class PaymentInitializeRequest
 {

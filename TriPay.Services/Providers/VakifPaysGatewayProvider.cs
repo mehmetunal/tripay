@@ -1,11 +1,11 @@
 using Newtonsoft.Json.Linq;
 using Microsoft.Extensions.Logging;
+using TriPay.Services;
 using TriPay.Services.Common;
-using TriPay.Services.PaymentGateways.Common;
-using TriPay.Services.PaymentGateways.Interfaces;
-using TriPay.Services.PaymentGateways.Models;
+using TriPay.Services.Interfaces;
+using TriPay.Services.Models;
 
-namespace TriPay.Services.PaymentGateways.Providers;
+namespace TriPay.Services.Providers;
 
 public class VakifPaysGatewayProvider : PaymentGatewayBase
 {
@@ -18,7 +18,7 @@ public class VakifPaysGatewayProvider : PaymentGatewayBase
         _vakifPaysService = vakifPaysService;
     }
 
-    public override string GatewayName => "VakifPays";
+    public override string GatewayName => PaymentGatewayNames.VakifPays;
     public override string DisplayName => "VakıfPayS";
 
     public override async Task<Result<PaymentGatewayInitializeResponseDto>> InitializePaymentAsync(PaymentGatewayInitializeRequestDto request)

@@ -1,7 +1,7 @@
 using TriPay.Services.Common;
-using TriPay.Services.PaymentGateways.Models;
+using TriPay.Services.Models;
 
-namespace TriPay.Services.PaymentGateways.Interfaces;
+namespace TriPay.Services.Interfaces;
 
 public interface IPaymentGatewayProvider
 {

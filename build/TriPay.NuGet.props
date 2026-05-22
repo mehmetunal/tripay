@@ -1,0 +1,24 @@
+<Project>
+  <!-- TriPay NuGet paketi — sürüm ve meta veri tek kaynak -->
+  <PropertyGroup Label="TriPay NuGet Package">
+    <IsPackable>true</IsPackable>
+    <PackageId>TriPay</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>TriPay</Authors>
+    <Company>TriPay</Company>
+    <Product>TriPay Payment Hub</Product>
+    <Description>Türkiye sanal pos ve ödeme kuruluşları için birleşik Payment Hub kütüphanesi.</Description>
+    <PackageTags>payment;fintech;virtual-pos;iyzico;vakifbank;tripay</PackageTags>
+    <PackageProjectUrl>https://github.com/mehmetunal/tripay</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/mehmetunal/tripay</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>
