@@ -29,6 +29,7 @@
 | 5 | Yeni banka veya ödeme kuruluşu ekleme adımları **yalnızca §11.2** akışına göre yapılır. |
 | 6 | Güvenlik (PCI-DSS, callback `[IgnoreAntiforgeryToken]`, kart verisinin DB'ye yazılmaması, webhook imzası) **§8 ve §10** ile çelişen kod üretilmez. |
 | 7 | Hedef sanal POS listesi **§6** tablosundadır; tabloda olmayan kanal için provider eklenmez (önce doküman güncellenir). |
+| 8 | İstek/cevap logu **§9.3** `TransactionLogs` şemasına uygun yazılır; ham log yalnızca `Transactions` özetinde değil log tablosundadır. |
 
 **Kontrol listesi (kod öncesi):**
 
@@ -604,32 +605,191 @@ private static string ComputeHmacSha256(string data, string secret)
 
 ## 9. Veritabanı Mimarisi (MSSQL)
 
-MSSQL, **çoklu pos — tek müşteri** ilişkisini yönetmek üzere tasarlanır.
+TriPay için **birincil veritabanı: Microsoft SQL Server 2022+** (`TriPay.Data`, EF Core Code-First). Gelen istekler ve banka/POS cevapları **kalıcı olarak tutulacaktır** — özet `Transactions`, ham log `TransactionLogs`.
 
-### 9.1. Temel Tablolar
+### 9.1. Karar: İstek/cevap loglama ve veritabanı seçimi
+
+**Loglama kararı:** Tüm ödeme adımlarında (Pay, Callback, Query, Refund) **request ve response** veritabanına yazılır. Bu zorunludur; bellek içi `PendingPayments` yeterli değildir.
+
+| Neden | Açıklama |
+| :--- | :--- |
+| Hata ayıklama | Banka/POS formatları farklıdır; ham log şart |
+| İtiraz / chargeback | İşlem anı kanıtı |
+| Denetim | FinTech audit trail |
+| Operasyon | Webhook tekrarları, smart routing analitiği |
+
+**Veritabanı kararı: MSSQL** (MongoDB veya PostgreSQL ana DB olarak kullanılmaz; MVP tek DB).
+
+| Kriter | MSSQL ✅ Seçildi | PostgreSQL | MongoDB |
+| :--- | :--- | :--- | :--- |
+| .NET / EF Core uyumu | Çok güçlü | İyi | Orta |
+| Merchant → Transaction → Log ilişkisi | FK + ACID | FK + ACID | Zayıf |
+| POS şifreleri (Always Encrypted) | ✔️ | Farklı model | ✔️ yok |
+| Ham log (büyük JSON/form) | `NVARCHAR(MAX)` | `JSONB` | Doğal |
+| TriPay doküman / yığın | **Resmi seçim** | İleride alternatif | Sadece arşiv (ileri faz) |
+
+> **Not:** Yüksek hacimde eski log arşivi için ileride MSSQL + ayrı cold storage düşünülebilir; MVP’de tek MSSQL yeterlidir.
+
+### 9.2. Temel Tablolar
 
 | Tablo | Açıklama |
 | :--- | :--- |
 | `Merchants` | TriPay kullanan e-ticaret firmaları (üye işyerleri) |
 | `PaymentGateways` | iyzico, Garanti, PayTR, Vakıfbank vb. kanal tanımları |
 | `MerchantGateways` | Üye işyeri–banka eşlemesi; API anahtarları (Always Encrypted) |
-| `Transactions` | Tüm ödeme girişimleri (başarılı/başarısız) |
-| `TransactionLogs` | Bankaya giden ham istek/cevap (hata ayıklama) |
+| `Transactions` | Ödeme **özet kaydı** (sipariş no, tutar, durum, normalize edilmiş sonuç kodu) — **ham request/response burada tutulmaz** |
+| `TransactionLogs` | Her API adımının **request ve response** logları (Initialize, Callback, Query, Refund vb.) — hata ayıklama ve denetim |
 | `Cards` | PCI-DSS uyumlu tokenize kart bilgileri |
 | `SubMerchants` | Pazaryeri alt işletmeleri |
 | `WebhookLogs` | Üye işyerine gönderilen webhook kayıtları (planlanan) |
 | `WebhookConfigurations` | Webhook URL ve secret (planlanan) |
 
-### 9.2. ER Şeması
+### 9.3. Detaylı tablo şemaları (MSSQL)
+
+Aşağıdaki şemalar implementasyon için **bağlayıcı** tablo tanımıdır. Migration: FluentMigrator veya EF Core Migrations.
+
+#### `Transactions` — ödeme özeti (request/response **yok**)
+
+| Kolon | Tip | Zorunlu | Açıklama |
+| :--- | :--- | :---: | :--- |
+| `Id` | `INT` IDENTITY | ✔️ | PK |
+| `MerchantId` | `INT` | ✔️ | FK → `Merchants` |
+| `PaymentGatewayId` | `INT` | ✔️ | FK → `PaymentGateways` |
+| `MerchantGatewayId` | `INT` | | FK → `MerchantGateways` (kullanılan pos) |
+| `OrderNumber` | `NVARCHAR(64)` | ✔️ | Üye işyeri sipariş no (unique per merchant) |
+| `ExternalTransactionId` | `NVARCHAR(128)` | | Banka `pgTranId` vb. |
+| `Amount` | `DECIMAL(18,2)` | ✔️ | İşlem tutarı |
+| `Currency` | `NVARCHAR(3)` | ✔️ | Örn. `TRY` |
+| `InstallmentCount` | `INT` | | Taksit sayısı |
+| `Status` | `NVARCHAR(32)` | ✔️ | `Pending`, `Success`, `Failed`, `Cancelled` |
+| `ResponseCode` | `NVARCHAR(16)` | | Normalize kod (ör. `00`) |
+| `ResponseMessage` | `NVARCHAR(512)` | | Normalize mesaj |
+| `ClientIp` | `NVARCHAR(45)` | | Müşteri IP |
+| `CreatedAt` | `DATETIME2` | ✔️ | UTC |
+| `UpdatedAt` | `DATETIME2` | ✔️ | UTC |
+
+**İndeksler:** `IX_Transactions_OrderNumber` (MerchantId ile unique); `IX_Transactions_ExternalTransactionId`
+
+---
+
+#### `TransactionLogs` — istek ve cevap logları (**her API adımı 1+ satır**)
+
+| Kolon | Tip | Zorunlu | Açıklama |
+| :--- | :--- | :---: | :--- |
+| `Id` | `BIGINT` IDENTITY | ✔️ | PK |
+| `TransactionId` | `INT` | ✔️ | FK → `Transactions` |
+| `LogType` | `NVARCHAR(64)` | ✔️ | Aşağıdaki enum değerleri |
+| `Direction` | `NVARCHAR(16)` | ✔️ | `Outbound` (TriPay→banka), `Inbound` (banka→TriPay) |
+| `RequestPayload` | `NVARCHAR(MAX)` | | Giden istek (JSON veya form serialize); **kart maskeli** |
+| `ResponsePayload` | `NVARCHAR(MAX)` | | Gelen cevap (ham body) |
+| `HttpStatusCode` | `INT` | | HTTP durum kodu |
+| `GatewayCode` | `NVARCHAR(32)` | | Seçilen gateway kodu (ör. `VakifPays`) |
+| `ErrorCode` | `NVARCHAR(64)` | | Hata kodu |
+| `ErrorMessage` | `NVARCHAR(1024)` | | Hata mesajı |
+| `DurationMs` | `INT` | | İstek süresi (ms) |
+| `CreatedAt` | `DATETIME2` | ✔️ | UTC |
+
+**`LogType` değerleri:**
+
+| LogType | Ne zaman yazılır? |
+| :--- | :--- |
+| `PayRequest` | `HomeController.Pay` — gelen ödeme formu/DTO (kart maskeli) |
+| `InitializeRequest` | Provider → banka ödeme başlatma isteği |
+| `InitializeResponse` | Banka ödeme başlatma cevabı (3D HTML dahil) |
+| `CallbackRequest` | `HomeController.Callback` — bankanın POST formu |
+| `CallbackResponse` | Callback işleme sonucu (normalize edilmiş özet JSON) |
+| `QueryRequest` | `GetPaymentStatusAsync` isteği |
+| `QueryResponse` | Sorgu cevabı |
+| `RefundRequest` | İade isteği |
+| `RefundResponse` | İade cevabı |
+| `InstallmentRequest` | Taksit sorgu isteği |
+| `InstallmentResponse` | Taksit sorgu cevabı |
+
+**İndeksler:** `IX_TransactionLogs_TransactionId_CreatedAt`; `IX_TransactionLogs_LogType`
+
+**Örnek kayıt akışı (tek ödeme):**
+
+| Sıra | LogType | RequestPayload | ResponsePayload |
+| :---: | :--- | :--- | :--- |
+| 1 | `PayRequest` | MVC `PaymentRequest` JSON | — |
+| 2 | `InitializeRequest` | VakıfPayS API body | — |
+| 3 | `InitializeResponse` | — | Banka cevabı / 3D HTML meta |
+| 4 | `CallbackRequest` | Banka `IFormCollection` | — |
+| 5 | `CallbackResponse` | — | Normalize sonuç |
+| 6 | `QueryRequest` | Sorgu parametreleri | — |
+| 7 | `QueryResponse` | — | Sorgu cevabı |
+
+---
+
+#### Diğer tablolar (özet)
+
+| Tablo | Önemli kolonlar |
+| :--- | :--- |
+| `Merchants` | `Id`, `Name`, `ApiKey`, `WebhookUrl`, `IsActive`, `CreatedAt` |
+| `PaymentGateways` | `Id`, `Code`, `DisplayName`, `IsActive` |
+| `MerchantGateways` | `Id`, `MerchantId`, `PaymentGatewayId`, `EncryptedCredentials`, `IsDefault` |
+| `WebhookLogs` | `Id`, `TransactionId`, `RequestPayload`, `ResponsePayload`, `HttpStatusCode`, `RetryCount`, `Status` |
+| `WebhookConfigurations` | `Id`, `MerchantId`, `WebhookUrl`, `WebhookSecret`, `IsActive` |
+| `Cards` | `Id`, `MerchantId`, `Token`, `LastFour`, `CardBrand` (PAN saklanmaz) |
+| `SubMerchants` | `Id`, `MerchantId`, `ExternalId`, `Name`, `CommissionRate` |
+
+### 9.4. Mevcut kodda veritabanı kaydı var mı?
+
+**Hayır.** Şu anki TriPay kodunda gelen istek ve sonuçlar **hiçbir tabloda tutulmuyor**:
+
+| Ne var? | Açıklama |
+| :--- | :--- |
+| `TriPay.Data` / EF Core / MSSQL | Projede **yok** — henüz eklenmedi |
+| `Transactions` / `TransactionLogs` | Yalnızca **§9 hedef model**; implemente değil |
+| `PendingPayments` (`HomeController`) | Sadece **bellek içi** `ConcurrentDictionary` — callback’te tutar doğrulaması için; uygulama yeniden başlayınca silinir |
+| Callback alanları | Yalnızca `Result.cshtml` ekranında `ViewBag` ile gösterilir |
+| `ILogger` | Provider tabanında var; yapılandırılmış DB/Serilog sink **yok** |
+
+İstek/cevap kalıcı logu için **§9.3** tablo şemaları ve `TriPay.Data` katmanının implemente edilmesi gerekir.
+
+### 9.5. Transactions ve TransactionLogs ayrımı (özet)
+
+Bir ödeme denemesi **tek satır** `Transactions` kaydı açar; banka/POS ile yapılan **her HTTP çağrısı** ayrı `TransactionLogs` satırı üretir.
+
+| Veri | `Transactions` | `TransactionLogs` |
+| :--- | :---: | :---: |
+| Sipariş no, tutar, para birimi | ✔️ | — |
+| İşlem durumu (Pending, Success, Failed) | ✔️ | — |
+| Banka `pgTranId` / normalize sonuç kodu | ✔️ (özet) | — |
+| Initialize istek gövdesi (JSON/form) | ❌ | ✔️ `RequestPayload` |
+| Initialize banka cevabı | ❌ | ✔️ `ResponsePayload` |
+| 3D Callback gelen POST alanları | ❌ | ✔️ `RequestPayload` |
+| Query / Refund istek ve cevapları | ❌ | ✔️ ayrı log satırları |
+| HTTP status, süre (ms), hata detayı | ❌ | ✔️ |
+
+**Log tipleri (`LogType` örnekleri):** `InitializeRequest`, `InitializeResponse`, `CallbackRequest`, `CallbackResponse`, `QueryRequest`, `QueryResponse`, `RefundRequest`, `RefundResponse`
+
+> **PCI-DSS:** `RequestPayload` / `ResponsePayload` içinde kart numarası, CVV vb. **maskelenmiş** veya hiç yazılmaz; ham kart verisi loglanmaz.
+
+**Akış özeti:**
+
+```mermaid
+flowchart LR
+    T[Transactions<br/>1 işlem = 1 özet satır]
+    L1[TransactionLogs<br/>Initialize req/res]
+    L2[TransactionLogs<br/>Callback req/res]
+    L3[TransactionLogs<br/>Query / Refund ...]
+    T --> L1
+    T --> L2
+    T --> L3
+```
+
+### 9.6. ER Şeması
 
 ```mermaid
 erDiagram
     Merchants ||--o{ MerchantGateways : "pos tanımları"
     PaymentGateways ||--o{ MerchantGateways : "kanal"
     Merchants ||--o{ Transactions : "işlemler"
+    PaymentGateways ||--o{ Transactions : "kanal"
     Merchants ||--o{ SubMerchants : "alt işletme"
     Merchants ||--o| WebhookConfigurations : "webhook ayarı"
-    Transactions ||--o{ TransactionLogs : "detay log"
+    Transactions ||--o{ TransactionLogs : "request response logları"
     Merchants ||--o{ Cards : "tokenize kart"
     Transactions ||--o{ WebhookLogs : "bildirim log"
 
@@ -652,21 +812,50 @@ erDiagram
     }
     Transactions {
         int Id PK
-        string OrderNumber
-        string TransactionId
+        int MerchantId FK
+        int PaymentGatewayId FK
+        string OrderNumber UK
+        string ExternalTransactionId
         decimal Amount
+        string Currency
         string Status
+        string ResponseCode
+        string ResponseMessage
+        datetime CreatedAt
+        datetime UpdatedAt
+    }
+    TransactionLogs {
+        int Id PK
+        int TransactionId FK
+        string LogType
+        string Direction
+        string RequestPayload
+        string ResponsePayload
+        int HttpStatusCode
+        string ErrorCode
+        int DurationMs
+        datetime CreatedAt
+    }
+    WebhookLogs {
+        int Id PK
+        int TransactionId FK
+        string RequestPayload
+        string ResponsePayload
+        int HttpStatusCode
+        int RetryCount
+        datetime CreatedAt
     }
 ```
 
-### 9.3. Veritabanı Stratejileri
+### 9.7. Veritabanı Stratejileri
 
 | Strateji | Açıklama |
 | :--- | :--- |
 | **Always Encrypted** | `MerchantGateways` gizli anahtarları DB yöneticisinden de korunur |
 | **Row Level Security** | Bayiler yalnızca kendi alt işletme verisini görür |
 | **Sequence** | Yüksek performanslı işlem numarası üretimi |
-| **Indexing** | `Transactions.OrderNumber` ve `Transactions.TransactionId` üzerinde clustered index |
+| **Indexing** | `Transactions.OrderNumber`, `Transactions.ExternalTransactionId`; `TransactionLogs.TransactionId` + `LogType` |
+| **Log boyutu** | `TransactionLogs.RequestPayload` / `ResponsePayload` için `NVARCHAR(MAX)`; eski loglar arşivlenebilir |
 
 ---
 
@@ -695,6 +884,8 @@ VakıfPayS entegrasyonu çalışır durumdadır (hedef POS listesinde **§6** �
 | `VakifPaysGatewayProvider` | `PaymentGatewayBase`'den türemiş, metotlar implemente |
 | `VakifPaysService` | HTTP istek/yanıt tamam |
 | `HomeController` | `Pay`, `Callback`, `Installments` aktif |
+| İstek/cevap DB logu | **Yok** — §9.4; hedef §9.3 `TransactionLogs` |
+| `TriPay.Data` / MSSQL | **Planlanan** — §9.3 tablo şemaları hazır |
 | Üye işyeri webhook | Planlama aşamasında |
 
 ### 11.2. Yeni Banka Ekleme (Trimango ile aynı adımlar)
@@ -800,12 +991,12 @@ TriPay'in farkı, yalnızca birkaç kuruluşu (örneğin iyzico + tek banka) de�
 
 ### 14.2. Alternatif / Ölçeklenebilir Yığın Önerisi
 
-Yüksek eşzamanlılık ve mikroservis ayrımı için değerlendirilebilecek seçenekler:
+Ana veritabanı **MSSQL** olarak kalır (§9.1). Aşağıdakiler yalnızca ileri faz / yüksek ölçek senaryosu içindir:
 
 | Kategori | Öneri |
 | :--- | :--- |
 | **Backend** | Node.js (TypeScript) veya Golang |
-| **Veritabanı** | PostgreSQL (ilişkisel), MongoDB (log/anlık veri) |
+| **Veritabanı** | İlişkisel veri MSSQL’de kalır; isteğe bağlı PostgreSQL. MongoDB yalnızca eski log arşivi (opsiyonel) |
 | **Önbellek / kuyruk** | Redis, RabbitMQ (callback ve asenkron işlemler) |
 | **Güvenlik** | Hashicorp Vault, PCI-DSS uyumlu tokenization |
 | **Yönetim paneli** | React.js (admin dashboard) — veya mevcut Bootstrap 5 MVC paneli |
@@ -828,7 +1019,7 @@ Mevcut kod tabanı **.NET Core MVC + MSSQL** üzerinde; Adapter ve Factory desen
 
 ### Planlanan özellikler (özet)
 
-- Faz 1 MVP: iyzico, Garanti, Yapı Kredi, ortak ödeme formu, webhook
+- Faz 1 MVP: `TriPay.Data` + MSSQL (`Transactions`, `TransactionLogs`), iyzico, Garanti, Yapı Kredi, webhook
 - Faz 2: Split payment, iade, link ile ödeme, abonelik, taksit yönetimi
 - Faz 3: AI tabanlı POS yönlendirme, dolandırıcılık tespiti
 - Admin dashboard ve raporlama
