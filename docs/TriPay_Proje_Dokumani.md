@@ -10,6 +10,7 @@
 | **Proje Kodu** | TRIPAY-DOC-003 |
 | **Teknoloji Odağı** | Microsoft Ekosistemi (.NET Core MVC + MSSQL) |
 | **Web sitesi** | [https://tripay.com.tr](https://tripay.com.tr) |
+| **Kapsam / NuGet vs Hosted / KVKK** | [TriPay_Kapsam_ve_Entegrasyon_Modelleri.md](./TriPay_Kapsam_ve_Entegrasyon_Modelleri.md) |
 
 ---
 
@@ -34,6 +35,12 @@
 | 9 | Provider seçimi **§5.5** `IPaymentGatewaySelector` + `MerchantGateways`; controller’da doğrudan `new VakifPays…` yasak. |
 | 10 | NuGet/DLL/HttpClient entegrasyonu **yalnızca** [TriPay_Kullanim_Kilavuzu.md](./TriPay_Kullanim_Kilavuzu.md) ile uyumlu olmalıdır. |
 | 11 | `GatewayName` atamalarında `PaymentGatewayNames` sabitleri kullanılır; `"VakifPays"` gibi magic string yasak. |
+| 12 | Her kod değişikliğinden sonra refactoring kontrolü yapılır; tekrar, yanlış sorumluluk dağılımı, magic string, test edilemeyen metot ve SOLID ihlali bırakmak yasaktır. |
+| 13 | Her davranış değişikliği veya yeni provider/refactor sonrası **xUnit** test yazmak ve `dotnet test` ile çalıştırmak zorunludur; rehber: [TriPay_Test_Rehberi.md](./TriPay_Test_Rehberi.md). Test yazılamıyorsa nedeni dokümante edilmeden değişiklik tamamlanmış sayılmaz. |
+| 14 | **Bir `.cs` dosyasında yalnızca bir `public` tip** (class / record / struct / enum) bulunur; ikinci sınıf aynı dosyaya eklenmez — yeni tip için ayrı dosya açılır (`PaymentGatewayInitializeRequestDto.cs` gibi). |
+| 15 | **Ödeme MVC uçları** `CheckoutController` üzerindedir (`Pay`, `Callback`, `Installments`); `HomeController` ödeme işlemi içermez. Üye işyeri kendi projesinde aynı deseni kullanır (kılavuz §18). |
+| 16 | **Güvenlik, işlem, Redis, RabbitMQ, Docker/K8s** kararları [TriPay_Guvenlik_ve_Altrapi_Dokumani.md](./TriPay_Guvenlik_ve_Altrapi_Dokumani.md) ile uyumlu olmalıdır; idempotency ve PCI maskeleme atlanamaz. |
+| 17 | **Admin panel ve Identity** yalnızca **§17** sırasına göre ve ödeme hub tamamlandıktan **sonra** yapılır; FluentMigrator dışında Identity şeması uydurulmaz. |
 
 **Kontrol listesi (kod öncesi):**
 
@@ -41,6 +48,10 @@
 - [ ] Değişiklik ilgili bölümle (mimari, webhook, DB, genişleme planı) uyumlu mu?
 - [ ] Payment değişikliği Trimango uyumlu mu?
 - [ ] Planlanan özellik mi, mevcut özellik mi — **§6** POS tablosu ve durum tablolarına uygun mu?
+- [ ] Yeni eklenen her tip **kendi `.cs` dosyasında** mı? (Kural #14)
+- [ ] Ödeme action'ları `CheckoutController`'da mı? (Kural #15)
+- [ ] Değişiklik sonrası refactoring kontrolü yapıldı mı?
+- [ ] İlgili testler yazıldı ve çalıştırıldı mı?
 
 *Bu bölüm proje sahibi tarafından zorunlu tutulur; ihlal eden çıktılar geçersiz kabul edilir.*
 
@@ -64,8 +75,10 @@
 13. [İş Modeli](#13-iş-modeli)
 14. [Teknoloji Yığını](#14-teknoloji-yığını)
 15. [Sonuç](#15-sonuç)
+16. [Güvenlik ve altyapı (bağlayıcı)](#16-güvenlik-ve-altyapı-bağlayıcı)
 
-**Entegrasyon kılavuzu (NuGet, DLL, HttpClient, A–Z):** [TriPay_Kullanim_Kilavuzu.md](./TriPay_Kullanim_Kilavuzu.md)
+**Entegrasyon kılavuzu (NuGet, DLL, HttpClient, A–Z):** [TriPay_Kullanim_Kilavuzu.md](./TriPay_Kullanim_Kilavuzu.md)  
+**Güvenlik · işlem · RabbitMQ · Docker/K8s:** [TriPay_Guvenlik_ve_Altrapi_Dokumani.md](./TriPay_Guvenlik_ve_Altrapi_Dokumani.md)
 
 ---
 
@@ -172,19 +185,31 @@ flowchart TD
 
 > Tüm kanal listesi ve işlem tipleri: **§6** tablosu.
 
+### 5.6. Güvenlik, işlem motoru ve mesaj kuyruğu (özet)
+
+Tam mimari, tehdit modeli, Docker Compose ve Kubernetes manifestleri: **[TriPay_Guvenlik_ve_Altrapi_Dokumani.md](./TriPay_Guvenlik_ve_Altrapi_Dokumani.md)**.
+
+| Bileşen | Rol | Repo durumu |
+| :--- | :--- | :--- |
+| **Redis** | 3D state, idempotency, dağıtık kilit, rate limit | ✅ `TriPay.Infrastructure/Redis` — `AddTriPayRedis()` |
+| **RabbitMQ** | Üye işyeri webhook (async), DLQ, retry | ✅ Outbox + `OutboxDispatcherHostedService` (RabbitMQ.Client); MassTransit ileri faz |
+| **MSSQL** | `Transactions` + `TransactionLogs` (ACID) | ✅ `TriPay.Data` + FluentMigrator + EF Core |
+| **Idempotency** | Callback/Auth3DS replay engeli | ✅ `PaymentGatewayService` |
+| **PCI maskeleme** | Log payload | ✅ `PciDataMasker` |
+| **Webhook HMAC** | Üye işyeri bildirimi | ✅ `WebhookSignatureHelper` |
+| **docker-compose** | redis + rabbitmq + mssql (dev) | ✅ `docker-compose.yml` |
+| **Kubernetes** | tripay namespace, deployment, NetworkPolicy | ✅ `deploy/kubernetes/` |
+
 ### 5.3. Katmanlar ve Solution Yapısı
 
 ```text
 TriPay.sln
-├── TriPay.Core               (Entity'ler, Enum'lar, Interface'ler)
-├── TriPay.Data               (EF Core DbContext, Repository, UnitOfWork)
-├── TriPay.Service            (İş mantığı, Gateway adaptörleri, ödeme orkestrasyonu)
-├── TriPay.Infrastructure   (Redis, RabbitMQ, SMS, E-mail, Logging)
-└── TriPay.Web                (.NET Core MVC — Sunum katmanı)
-      ├── Controllers
-      ├── Views
-      ├── ViewModels
-      └── Middleware
+├── TriPay.Core               (Result, Redis sözleşmeleri, Idempotency, VakifbankSaleState)
+├── TriPay.Data               (EF Core, FluentMigrator, Repository)
+├── TriPay.Services           (Gateway provider'lar, PaymentGatewayService, Checkout)
+├── TriPay.Infrastructure     (Redis, RabbitMQ outbox, arka plan worker'lar)
+├── TriPay/                   (Demo MVC — AssemblyName: TriPay.Web)
+└── TriPay.Tests              (xUnit)
 ```
 
 **Katman bağımlılık yönü:**
@@ -230,12 +255,21 @@ TriPay.Services/                    ← NuGet paketi TriPay; tüm proje ödeme h
 │   ├── IPaymentGatewayProvider.cs
 │   └── IPaymentGatewayService.cs
 ├── Models/
-│   └── PaymentGatewayModels.cs
+│   ├── PaymentGatewayInitializeRequestDto.cs
+│   ├── PaymentGatewayCallbackResponseDto.cs
+│   └── … (her DTO **tek dosya** — Kural #14)
 ├── Providers/
-│   ├── VakifPaysGatewayProvider.cs      ← mevcut
-│   ├── IyzicoGatewayProvider.cs         ← TODO P1 (Trimango port)
-│   ├── VakifbankGatewayProvider.cs    ← TODO P2 (Trimango port)
-│   ├── GarantiGatewayProvider.cs        ← planlanan
+│   ├── VakifPays/
+│   │   ├── VakifPaysGatewayProvider.cs
+│   │   ├── Models/          (PaymentRequest.cs, SaleResponse.cs, …)
+│   │   └── Helpers/         (VakifPaysHttpHelper, AutoPostHtml)
+│   ├── Iyzico/              ← ✅ P1
+│   ├── Vakifbank/
+│   │   ├── VakifbankGatewayProvider.cs
+│   │   ├── Models/VakifbankSaleState.cs
+│   │   └── Services/
+│   │       ├── RedisVakifbankSaleStateStore.cs   ← Redis (IDistributedCache)
+│   │       └── IVakifbankSaleStateStore.cs
 │   └── … (§6 — 37 kanal)
 ├── DependencyInjection/
 │   └── PaymentGatewayServiceCollectionExtensions.cs   → AddTriPay()
@@ -561,7 +595,7 @@ flowchart LR
 
 | Durum | Açıklama |
 | :--- | :--- |
-| **Mevcut (kod)** | Yalnızca **VakıfPayS** (`VakifPaysGatewayProvider`) |
+| **Mevcut (kod)** | **VakıfPayS**, **iyzico**, **Vakıfbank** (Factory + `AddTriPay`) |
 | **Planlanan** | Haritadaki diğer tüm kutular — §6 tablosu ile birebir |
 
 ### 5.7. Akış Şeması (3D Secure — Controller)
@@ -570,7 +604,7 @@ MVC uygulaması; seçilen POS’a göre ilgili provider ve 3D sayfası devreye g
 
 ```mermaid
 flowchart TD
-    A[Müşteri Tarayıcısı] -->|1. POST| B(HomeController.Pay)
+    A[Müşteri Tarayıcısı] -->|1. POST| B(CheckoutController.Pay)
     B --> C{PaymentGatewayService}
     C --> D[PaymentGatewayFactory]
     D -->|2. gatewayName| E{Seçilen POS}
@@ -580,7 +614,7 @@ flowchart TD
     P2 --> F
     F -->|3. Yönlendirme| G[İlgili POS 3D Sayfası]
     G -->|4. Onay| H[Müşteri]
-    H -->|5. Callback| I(HomeController.Callback)
+    H -->|5. Callback| I(CheckoutController.Callback)
     I --> J[Result.cshtml]
     I -->|6. Webhook| K[Üye İşyeri Backend]
 
@@ -605,7 +639,7 @@ flowchart TD
 ```mermaid
 sequenceDiagram
     participant M as Müşteri Tarayıcısı
-    participant C as HomeController
+    participant C as CheckoutController
     participant S as PaymentGatewayService
     participant F as PaymentGatewayFactory
     participant P as Seçilen GatewayProvider
@@ -637,15 +671,15 @@ TriPay'in **%100 adaptasyon** hedefi kapsamında desteklenmesi planlanan banka v
 ### 6.1. Öncelik TODO — MVP provider'lar (yapılacaklar)
 
 > **Canlı checklist:** [pwd.md](../pwd.md) (proje kökü — öncelik sırası ve checkbox’lar)  
-> **Dış config (`appsettings` örnekleri, tüm §6 kanalları):** [Kullanım Kılavuzu §7.4–7.8](./TriPay_Kullanim_Kilavuzu.md#74-çoklu-banka-yapılandırması-neden-farklı)
+> **Dış config (`appsettings` örnekleri, tüm §6 kanalları):** [Kullanım Kılavuzu §7.7–7.12](./TriPay_Kullanim_Kilavuzu.md#77-çoklu-banka-yapılandırması-neden-farklı)
 
 Aşağıdaki sıra **bağlayıcı önceliktir**. Yeni adaptörler Trimango `PaymentGateways/Providers` implementasyonlarından port edilir; TriPay’de `PaymentGatewayNames`, `PaymentGatewayFactory`, `AddTriPay()` DI kaydı ve gerekirse `{Kanal}Service` (HTTP) tamamlanır.
 
 | Öncelik | Kanal | `PaymentGatewayNames` | TriPay hedef dosya | Trimango kaynak (port) | Durum |
 | :---: | :--- | :--- | :--- | :--- | :---: |
-| **1** | **iyzico** | `Iyzico` | `TriPay.Services/Providers/IyzicoGatewayProvider.cs` (+ gerekirse `IyzicoService.cs`) | `trimango/.../PaymentGateways/Providers/IyzicoGatewayProvider.cs` | ⬜ TODO |
-| **2** | **Vakıfbank** | `Vakifbank` | `TriPay.Services/Providers/VakifbankGatewayProvider.cs` (+ gerekirse `VakifbankService.cs`) | `trimango/.../PaymentGateways/Providers/VakifbankGatewayProvider.cs` | ⬜ TODO |
-| **3** | **VakıfPayS** | `VakifPays` | `TriPay.Services/Providers/VakifPaysGatewayProvider.cs`, `VakifPaysService.cs` | — (TriPay’de mevcut) | ✅ Tamamlandı |
+| **1** | **iyzico** | `Iyzico` | `TriPay.Services/Providers/Iyzico/` | `trimango/.../IyzicoGatewayProvider.cs` | ✅ Tamamlandı |
+| **2** | **Vakıfbank** | `Vakifbank` | `TriPay.Services/Providers/Vakifbank/` | `trimango/.../VakifbankGatewayProvider.cs` | ✅ Tamamlandı |
+| **3** | **VakıfPayS** | `VakifPays` | `TriPay.Services/Providers/VakifPays/` | — | ✅ Tamamlandı |
 
 **Öncelik 1 — iyzico (TODO)**
 
@@ -659,13 +693,13 @@ Aşağıdaki sıra **bağlayıcı önceliktir**. Yeni adaptörler Trimango `Paym
 
 - [ ] `VakifbankGatewayProvider` Trimango’dan uyarlanacak (MPI Enrollment + Vpos Verify, XML, 3D)
 - [ ] `PaymentGatewayFactory`: `[PaymentGatewayNames.Vakifbank] = typeof(VakifbankGatewayProvider)`
-- [ ] `AddTriPay()`: provider + cache/bin servisleri (Trimango `ICache`, `IPaymentGatewayBinPrefixService` TriPay karşılığı veya sadeleştirme)
+- [x] `AddTriPay()`: `RedisVakifbankSaleStateStore` + StackExchange.Redis (`TriPay:Redis`); taksit BIN listesi config (`BinPrefixes`)
 - [ ] Ayarlar: `MerchantId`, `MerchantPassword`, `TerminalNo`, enrollment/verify URL’leri
 - [ ] Tablo §6: **Vakıfbank** satırı → `Mevcut`
 
 **Öncelik 3 — VakıfPayS (tamamlandı)**
 
-- [x] `VakifPaysGatewayProvider` + `VakifPaysService`
+- [x] `VakifPaysGatewayProvider` (`HttpPaymentGatewayBase`, Iyzico ile aynı desen)
 - [x] Factory + DI kaydı
 - [x] `PaymentGatewayNames.VakifPays` / `Default`
 
@@ -698,13 +732,13 @@ Aşağıdaki sıra **bağlayıcı önceliktir**. Yeni adaptörler Trimango `Paym
 | Şekerbank | ✔️ | ✔️ | ✔️ | ✔️ | Planlanan |
 | Türk Ekonomi Bankası | ✔️ | ✔️ | ✔️ | ✔️ | Planlanan |
 | Türkiye Finans | ✔️ | ✔️ | ✔️ | ✔️ | Planlanan |
-| Vakıfbank | ✔️ | ✔️ | ✔️ | ✔️ | **TODO P2** (§6.1) |
+| Vakıfbank | ✔️ | ✔️ | ✔️ | ✔️ | **Mevcut** |
 | Yapı Kredi Bankası | ✔️ | ✔️ | ❌ | ❌ | Planlanan |
 | Ziraat Bankası | ✔️ | ✔️ | ✔️ | ✔️ | Planlanan |
 | Cardplus | ✔️ | ✔️ | ✔️ | ✔️ | Planlanan |
 | Paratika | ✔️ | ✔️ | ✔️ | ✔️ | Planlanan |
 | Payten - MSU | ✔️ | ✔️ | ✔️ | ✔️ | Planlanan |
-| Iyzico | ✔️ | ✔️ | ✔️ | ✔️ | **TODO P1** (§6.1) |
+| Iyzico | ✔️ | ✔️ | ✔️ | ✔️ | **Mevcut** |
 | Sipay | ✔️ | ✔️ | ✔️ | ✔️ | Planlanan |
 | QNBpay | ✔️ | ✔️ | ✔️ | ✔️ | Planlanan |
 | ParamPos | ✔️ | ✔️ | ✔️ | ✔️ | Planlanan |
@@ -727,7 +761,7 @@ Aşağıdaki sıra **bağlayıcı önceliktir**. Yeni adaptörler Trimango `Paym
 
 - Garanti BBVA, Yapı Kredi, Kuveyt Türk ve Vakıf Katılım için iptal/iade (❌) sonraki faz veya banka API kısıtına göre değerlendirilir.
 - Yeni provider eklerken `GatewayName` bu tablodaki adlarla uyumlu olmalı; Trimango tarafındaki mevcut provider isimleri referans alınabilir.
-- Şu an kodda yalnızca **VakıfPayS** (`VakifPaysGatewayProvider`) aktiftir; **bir sonraki işler §6.1:** iyzico (P1), Vakıfbank (P2). Diğer satırlar genişleme backlog'udur.
+- MVP §6.1 tamamlandı: **VakıfPayS**, **iyzico**, **Vakıfbank**. Diğer §6 satırları genişleme backlog'udur.
 
 ---
 
@@ -803,7 +837,7 @@ Başarılı callback sonrası üye işyerine HTTP POST ile bildirim.
 | Özellik | Detay |
 | :--- | :--- |
 | **Amaç** | Banka onayı sonrası üye işyerini bilgilendirme |
-| **Tetikleyici** | `HomeController.Callback` içinde başarılı işlem |
+| **Tetikleyici** | `CheckoutController.Callback` içinde başarılı işlem |
 | **Endpoint** | Üye işyerinin kaydettiği `WebhookUrl` |
 | **Yöntem** | `POST` (JSON) |
 | **İmza** | HMAC-SHA256 header doğrulaması |
@@ -944,10 +978,10 @@ Aşağıdaki şemalar implementasyon için **bağlayıcı** tablo tanımıdır. 
 
 | LogType | Ne zaman yazılır? |
 | :--- | :--- |
-| `PayRequest` | `HomeController.Pay` — gelen ödeme formu/DTO (kart maskeli) |
+| `PayRequest` | `CheckoutController.Pay` — gelen ödeme formu/DTO (kart maskeli) |
 | `InitializeRequest` | Provider → banka ödeme başlatma isteği |
 | `InitializeResponse` | Banka ödeme başlatma cevabı (3D HTML dahil) |
-| `CallbackRequest` | `HomeController.Callback` — bankanın POST formu |
+| `CallbackRequest` | `CheckoutController.Callback` — bankanın POST formu |
 | `CallbackResponse` | Callback işleme sonucu (normalize edilmiş özet JSON) |
 | `QueryRequest` | `GetPaymentStatusAsync` isteği |
 | `QueryResponse` | Sorgu cevabı |
@@ -983,20 +1017,24 @@ Aşağıdaki şemalar implementasyon için **bağlayıcı** tablo tanımıdır. 
 | `WebhookConfigurations` | `Id`, `MerchantId`, `WebhookUrl`, `WebhookSecret`, `IsActive` |
 | `Cards` | `Id`, `MerchantId`, `Token`, `LastFour`, `CardBrand` (PAN saklanmaz) |
 | `SubMerchants` | `Id`, `MerchantId`, `ExternalId`, `Name`, `CommissionRate` |
+| `GatewaySettings` | `PaymentGatewayId`, `SettingKey`, `SettingValue`, `Environment` — teknik URL/kodlar (admin §17) |
+| `GatewayErrorMappings` | `ProviderErrorCode`, `UserMessage`, `Locale`, `NormalizedCode` — provider hata sözlüğü |
+| `AspNetUsers` / `AspNetRoles` | Identity — **FluentMigrator ile en son faz** (§17) |
 
 ### 9.4. Mevcut kodda veritabanı kaydı var mı?
 
-**Hayır.** Şu anki TriPay kodunda gelen istek ve sonuçlar **hiçbir tabloda tutulmuyor**:
+**Evet (Faz 1.1).** Ödeme akışı `PaymentCheckoutService` üzerinden MSSQL / InMemory’e yazılır:
 
 | Ne var? | Açıklama |
 | :--- | :--- |
-| `TriPay.Data` / EF Core / MSSQL | Projede **yok** — henüz eklenmedi |
-| `Transactions` / `TransactionLogs` | Yalnızca **§9 hedef model**; implemente değil |
-| `PendingPayments` (`HomeController`) | Sadece **bellek içi** `ConcurrentDictionary` — callback’te tutar doğrulaması için; uygulama yeniden başlayınca silinir |
-| Callback alanları | Yalnızca `Result.cshtml` ekranında `ViewBag` ile gösterilir |
-| `ILogger` | Provider tabanında var; yapılandırılmış DB/Serilog sink **yok** |
+| `TriPay.Data` | EF Core `TriPayDbContext`, `PaymentTransactionRepository`, FluentMigrator `202605220001` / `202605220002` |
+| `Transactions` | `Pay` sırasında `Pending`; callback sonrası `Success` / `Failed` |
+| `TransactionLogs` | `PayRequest`, `Initialize*`, `Callback*`, `Query*` — `PciDataMasker` ile maskeli payload |
+| `OutboxMessages` | Başarılı ödeme sonrası `PaymentWebhookMessage` JSON; `TriPay.Infrastructure` RabbitMQ yayını |
+| `CheckoutController` | `IPaymentCheckoutService` — **bellek `PendingPayments` kaldırıldı**; tutar doğrulaması `Transactions.Amount` |
+| `ILogger` | Provider tabanında var; yapılandırılmış Serilog MSSQL sink **ileri faz** |
 
-İstek/cevap kalıcı logu için **§9.3** tablo şemaları ve `TriPay.Data` katmanının implemente edilmesi gerekir.
+**DI:** `AddTriPayData(configuration)` → `AddTriPay()` → `AddTriPayInfrastructure()`. Uygulama başında `RunTriPayMigrations()` (InMemory hariç).
 
 ### 9.5. Transactions ve TransactionLogs ayrımı (özet)
 
@@ -1136,11 +1174,12 @@ VakıfPayS entegrasyonu çalışır durumdadır (hedef POS listesinde **§6** �
 | :--- | :--- |
 | `PaymentGatewayFactory` | `[PaymentGatewayNames.VakifPays] = typeof(VakifPaysGatewayProvider)` |
 | `VakifPaysGatewayProvider` | `PaymentGatewayBase`'den türemiş, metotlar implemente |
-| `VakifPaysService` | HTTP istek/yanıt tamam |
-| `HomeController` | `Pay`, `Callback`, `Installments` aktif |
-| İstek/cevap DB logu | **Yok** — §9.4; hedef §9.3 `TransactionLogs` |
-| `TriPay.Data` / MSSQL | **Planlanan** — §9.3 tablo şemaları hazır |
-| Üye işyeri webhook | Planlama aşamasında |
+| `VakifPaysGatewayProvider` | HTTP istek/yanıt (`HttpPaymentGatewayBase`) |
+| `CheckoutController` | `Pay`, `Callback`, `Installments` aktif (referans demo) |
+| `HomeController` | Ana sayfa → `Checkout` yönlendirme, `Privacy`, `Error` |
+| İstek/cevap DB logu | ✅ `TransactionLogs` — `PaymentCheckoutService` |
+| `TriPay.Data` / MSSQL | ✅ FluentMigrator + EF Core; docker-compose `mssql` |
+| Üye işyeri webhook | ✅ Outbox → RabbitMQ (`payment.webhook`); HTTP worker **ileri faz** |
 
 ### 11.2. Yeni Banka Ekleme (Trimango ile aynı adımlar)
 
@@ -1257,6 +1296,23 @@ Ana veritabanı **MSSQL** olarak kalır (§9.1). Aşağıdakiler yalnızca ileri
 
 ---
 
+## 16. Güvenlik ve altyapı (bağlayıcı)
+
+Ödeme sistemlerinde **güvenlik ve işlem bütünlüğü** kod ile eşdeğer önceliktedir. Aşağıdaki doküman, ana dokümandaki §8–§10 ile birlikte okunur:
+
+- **[TriPay_Guvenlik_ve_Altrapi_Dokumani.md](./TriPay_Guvenlik_ve_Altrapi_Dokumani.md)** — state machine, idempotency, RabbitMQ outbox, Redis ayrımı, PCI, secrets, `docker-compose`, Kubernetes, faz planı.
+
+**Yerel altyapı başlatma:**
+
+```bash
+docker compose up -d
+dotnet run --project TriPay
+```
+
+**Üretim:** Gizliler `deploy/kubernetes/secret.yaml.example` şablonundan değil, Key Vault / External Secrets ile enjekte edilir.
+
+---
+
 ## 15. Sonuç
 
 TriPay, Türkiye fintek ekosistemindeki **parçalanma sorununu** çözmeyi hedefler. Geliştiricilere *«bir kere yaz, tüm bankalarda çalıştır»* özgürlüğü sunarak yeni nesil **ödeme orkestrasyonu** standardı olmayı amaçlar.
@@ -1276,7 +1332,186 @@ Mevcut kod tabanı **.NET Core MVC + MSSQL** üzerinde; Adapter ve Factory desen
 - Faz 1 MVP: `TriPay.Data` + MSSQL, `IMerchantGatewayCatalog` + `IPaymentGatewaySelector`, iyzico/Garanti, webhook
 - Faz 2: Split payment, iade, link ile ödeme, abonelik, taksit yönetimi
 - Faz 3: AI tabanlı POS yönlendirme, dolandırıcılık tespiti
-- Admin dashboard ve raporlama
+- **Yönetim paneli + Identity:** **§17** — ödeme hub, webhook ve gateway metadata tamamlandıktan **sonra** (en son faz)
+
+---
+
+## 17. Yönetim Paneli (Admin) — EN SON FAZ
+
+> **⚠️ Uygulama sırası:** Bu bölüm **tüm ödeme akışları, MSSQL kayıtları, gateway metadata (DB + Redis), webhook/outbox ve testler** tamamlandıktan sonra yapılır. Admin veya Identity kodu **önce** yazılmaz; önce bu doküman güncellenir, sonra implementasyon başlar.
+
+### 17.1. Amaç
+
+Operasyon ve destek ekiplerinin TriPay verilerini **okuyabilmesi**, gateway teknik ayarlarını ve hata sözlüğünü **yönetebilmesi**, işlem/log incelemesi yapabilmesi için ayrı bir **Bootstrap 5 MVC** yönetim uygulaması. Üye işyeri (merchant) self-servis paneli bu fazda **kapsam dışıdır**; yalnızca TriPay iç operasyon/admin kullanıcıları.
+
+### 17.2. Solution yapısı (hedef)
+
+```text
+TriPay.sln
+├── … (mevcut projeler)
+└── TriPay.Admin/              # YENİ — sadece yönetim paneli (public ödeme sitesinden ayrı)
+    ├── Controllers/
+    ├── Views/                 # Bootstrap 5, Türkçe arayüz
+    ├── Areas/Identity/        # ASP.NET Core Identity UI (isteğe bağlı scaffold)
+    └── Program.cs
+```
+
+| Proje | Rol |
+| :--- | :--- |
+| `TriPay` (`TriPay.Web`) | Hosted payment / demo checkout — **admin yok** |
+| `TriPay.Admin` | Giriş korumalı yönetim paneli |
+| `TriPay.Data` | Ortak DbContext, repository, **FluentMigrator** (Identity tabloları dahil) |
+| `TriPay.Infrastructure` | Redis cache invalidation, health |
+
+**Bağımlılık:** `TriPay.Admin` → `TriPay.Data` + `TriPay.Infrastructure` (+ gerekirse ince Application katmanı). Ödeme provider’ları admin projesine **taşınmaz**.
+
+### 17.3. Kimlik doğrulama — ASP.NET Core Identity
+
+| Karar | Açıklama |
+| :--- | :--- |
+| Kimlik | **Microsoft.AspNetCore.Identity** + EF Core store (`TriPayDbContext` veya `TriPayIdentityDbContext` aynı MSSQL) |
+| Migration aracı | **FluentMigrator** — Identity tabloları **EF migration ile değil**, `TriPay.Data/Migrations/` altında yeni sürüm (ör. `202605220010_IdentitySchema.cs`) |
+| Şifre politikası | Üretimde güçlü politika; geliştirme seed’inde dokümante edilen test hesabı |
+| Roller | En az `Admin`, ileride `Support`, `ReadOnly` |
+| Oturum | Cookie authentication; admin path’leri `[Authorize(Roles = "Admin")]` |
+
+**FluentMigrator ile oluşturulacak tablolar (standart Identity şeması):**
+
+| Tablo | Açıklama |
+| :--- | :--- |
+| `AspNetUsers` | Panel kullanıcıları |
+| `AspNetRoles` | Roller |
+| `AspNetUserRoles` | Kullanıcı–rol |
+| `AspNetUserClaims` | Ek claim’ler |
+| `AspNetRoleClaims` | Rol claim’leri |
+| `AspNetUserLogins` | Harici giriş (ileri faz) |
+| `AspNetUserTokens` | 2FA / reset token (ileri faz) |
+
+**Seed (FluentMigrator `Up()` veya ayrı `202605220011_IdentitySeed.cs`):**
+
+| Alan | Değer |
+| :--- | :--- |
+| E-posta | `admin@gmail.com` |
+| Şifre | `Super123!` |
+| Rol | `Admin` |
+
+> Seed yalnızca **Development** ortamında otomatik çalıştırılabilir; üretimde ilk admin kullanıcı güvenli kanalla oluşturulur.
+
+**DI (`TriPay.Admin/Program.cs` özet):**
+
+```csharp
+services.AddTriPayData(configuration);
+services.AddTriPayInfrastructure(configuration);
+services.AddIdentity<ApplicationUser, IdentityRole>()
+    .AddEntityFrameworkStores<TriPayDbContext>()
+    .AddDefaultTokenProviders();
+services.AddRazorPages(); // Identity UI kullanılırsa
+```
+
+`RunTriPayMigrations()` uygulama açılışında Identity migration’ını da uygular.
+
+### 17.4. Admin menüsü — görüntülenebilir / yönetilebilir modüller
+
+Mevcut ve planlanan veritabanı kayıtlarına göre panel modülleri:
+
+#### Dashboard (salt okunur)
+
+| Widget | Kaynak |
+| :--- | :--- |
+| Günlük / haftalık işlem hacmi | `Transactions` |
+| Başarı / başarısızlık oranı | `Transactions.Status` |
+| Kanal bazlı dağılım | `PaymentGateways` + `Transactions` |
+| Bekleyen outbox | `OutboxMessages` (gönderilmemiş) |
+| Sistem durumu | `/health/ready` benzeri internal check (Redis + MSSQL) |
+
+#### İşlemler
+
+| Ekran | Veri | Yetki |
+| :--- | :--- | :--- |
+| İşlem listesi | `Transactions` — filtre: tarih, merchant, gateway, durum, sipariş no | Liste |
+| İşlem detayı | Özet + ilişkili `TransactionLogs` | Detay |
+| Log satırı detayı | `RequestPayload` / `ResponsePayload` (**PCI maskeli** — ham PAN gösterilmez) | Detay |
+| Yeniden webhook (ileri faz) | `OutboxMessages` yeniden kuyruğa | Admin |
+
+#### Üye işyerleri
+
+| Ekran | Veri | Not |
+| :--- | :--- | :--- |
+| Merchant listesi | `Merchants` | `ApiKey` maskeli veya son 4 karakter |
+| Merchant detay | `Name`, `WebhookUrl`, `IsActive`, oluşturma tarihi | Düzenleme (aktif/pasif) |
+| Merchant–Gateway (ileri faz) | `MerchantGateways` | POS seçimi, öncelik, credential **vault** — panelde düz metin şifre saklanmaz |
+
+#### Ödeme kanalları (gateway)
+
+| Ekran | Veri | Not |
+| :--- | :--- | :--- |
+| Kanal listesi | `PaymentGateways` (`Code`, `DisplayName`, `IsActive`) | §6 ile uyumlu kodlar |
+| Gateway ayarları | `GatewaySettings` — `SettingKey`, `SettingValue`, `Environment` (All/Test/Production) | URL, `ResultCodeSuccess`, 3D durum kodları vb. **credential değil** |
+| Hata sözlüğü | `GatewayErrorMappings` — `ProviderErrorCode`, `UserMessage`, `Locale`, `NormalizedCode` | Provider cevabı → kullanıcı mesajı eşlemesi |
+| Ayar kaydı sonrası | Redis invalidation | `gateway:settings:*`, `gateway:errors:*` anahtarları silinir veya TTL kısaltılır |
+
+> **appsettings** içinde kalan alanlar (MerchantId, API secret, terminal şifresi) admin panelden **düzenlenmez**; Key Vault / ortam değişkeni kalır. Panel yalnızca **teknik/metadata** satırlarını yönetir.
+
+#### Outbox / webhook operasyonu
+
+| Ekran | Veri |
+| :--- | :--- |
+| Outbox kuyruğu | `OutboxMessages` — durum, deneme sayısı, `CreatedAt`, payload özeti |
+| Webhook logları (planlanan) | `WebhookLogs` — §9.3 |
+
+#### Sistem (salt okunur veya sınırlı)
+
+| Ekran | Açıklama |
+| :--- | :--- |
+| Redis önbellek | Metadata cache istatistiği; “tüm gateway cache temizle” (Admin) |
+| Migration durumu | Son FluentMigrator sürümü (salt okunur log) |
+| Kullanıcı yönetimi | Identity kullanıcı/rol CRUD (Admin rolü) |
+
+### 17.5. Teknik kurallar (admin kodu için)
+
+| # | Kural |
+| :---: | :--- |
+| 1 | UI: **yalnızca Bootstrap 5**; özel CSS minimum; inline style yok; etiketler **Türkçe** |
+| 2 | İş mantığı controller’da değil; liste/detay için **MediatR** query/command (ileride `TriPay.Application` ayrılırsa orada) |
+| 3 | Liste sayfalarında sayfalama + sunucu tarafı filtre (EF `IQueryable`) |
+| 4 | `TransactionLogs` export’unda PCI maskeleme zorunlu |
+| 5 | Hassas endpoint’lerde **IP kısıtlama** (§8) — yapılandırma `TriPay:Admin:AllowedIpRanges` |
+| 6 | Her admin özelliği için xUnit: handler + validator; Identity için entegrasyon testi (login + yetkisiz 403) |
+| 7 | Global API response wrapper ve exception middleware admin API’si için de geçerli (JSON endpoint eklenirse) |
+
+### 17.6. Redis ve metadata tutarlılığı
+
+Gateway ayarı veya hata eşlemesi panelden güncellendiğinde:
+
+1. MSSQL’de `GatewaySettings` / `GatewayErrorMappings` güncellenir  
+2. `IGatewayMetadataService` için ilgili Redis anahtarları **silinir** (`RedisKeyNames.GatewaySettings`, `GatewayErrors`)  
+3. Sonraki ödeme isteğinde `RedisCachedGatewayMetadataService` DB’den yeniden yükler  
+
+Bu davranış **§9** gateway metadata implementasyonu ile bağlantılıdır; admin fazında `InvalidateGatewayCacheCommand` gibi tek bir komut üzerinden yapılır.
+
+### 17.7. Uygulama checklist (sıra — bağlayıcı)
+
+Aşağıdaki sıra **değiştirilmez**:
+
+- [ ] 1. Ödeme MVP + `Transactions` / `TransactionLogs` / outbox **stabil** ve testler yeşil  
+- [ ] 2. `GatewaySettings` + `GatewayErrorMappings` + Redis metadata **tamam** (mevcut kod)  
+- [ ] 3. `MerchantGateways` + `IPaymentGatewaySelector` (doküman §5.5)  
+- [ ] 4. Webhook HTTP worker + `WebhookLogs` (planlanan)  
+- [ ] 5. **`TriPay.Admin` projesi** oluştur  
+- [ ] 6. FluentMigrator: **Identity tabloları** migration  
+- [ ] 7. FluentMigrator: **admin seed** (`admin@gmail.com` / `Super123!`)  
+- [ ] 8. Identity + login/logout + rol yetkilendirme  
+- [ ] 9. Dashboard + İşlemler + Merchants (okuma)  
+- [ ] 10. Gateway ayarları + hata sözlüğü CRUD + Redis invalidation  
+- [ ] 11. Outbox operasyon ekranı  
+- [ ] 12. Kullanıcı/rol yönetimi, IP kısıtı, üretim hardening  
+
+### 17.8. Kapsam dışı (bu fazda yapılmaz)
+
+- Üye işyeri self-servis portalı (ayrı ürün)  
+- React admin SPA (§14.2 alternatif yığın — isteğe bağlı ileri faz)  
+- Kart PAN / CVV görüntüleme  
+- Provider credential’ların panelden düz metin girilmesi  
 
 ---
 

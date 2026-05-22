@@ -1,0 +1,19 @@
+<Project>
+  <!--
+    TriPay.Tests derlendikten sonra tüm testleri çalıştırır.
+    Kapatmak için: dotnet build -p:RunTestsOnBuild=false
+  -->
+  <PropertyGroup>
+    <RunTestsOnBuild Condition="'$(RunTestsOnBuild)' == ''">true</RunTestsOnBuild>
+  </PropertyGroup>
+
+  <Target Name="RunTriPayTestsAfterBuild"
+          AfterTargets="Build"
+          Condition="'$(IsTestProject)' == 'true'
+                     AND '$(RunTestsOnBuild)' == 'true'
+                     AND '$(DesignTimeBuild)' != 'true'">
+    <Message Importance="high" Text="TriPay: $(MSBuildProjectName) — testler çalıştırılıyor..." />
+    <Exec Command="dotnet test &quot;$(MSBuildProjectFullPath)&quot; --no-build --verbosity minimal"
+          WorkingDirectory="$(MSBuildProjectDirectory)" />
+  </Target>
+</Project>

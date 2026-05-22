@@ -9,12 +9,12 @@
   </PropertyGroup>
 
   <!-- NuGet kütüphanesi: .NET 8, 9, 10 ve üzeri (ileri SDK sürümleri net8.0 asset ile uyumludur) -->
-  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'TriPay.Services'">
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'TriPay.Core' Or '$(MSBuildProjectName)' == 'TriPay.Services' Or '$(MSBuildProjectName)' == 'TriPay.Data' Or '$(MSBuildProjectName)' == 'TriPay.Infrastructure' Or '$(MSBuildProjectName)' == 'TriPay.Persistence'">
     <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
   </PropertyGroup>
 
   <!-- Demo / web örneği -->
-  <PropertyGroup Condition="'$(MSBuildProjectName)' != 'TriPay.Services'">
+  <PropertyGroup Condition="'$(MSBuildProjectName)' != 'TriPay.Core' And '$(MSBuildProjectName)' != 'TriPay.Services' And '$(MSBuildProjectName)' != 'TriPay.Data' And '$(MSBuildProjectName)' != 'TriPay.Infrastructure' And '$(MSBuildProjectName)' != 'TriPay.Persistence'">
     <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
 

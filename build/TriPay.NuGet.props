@@ -7,7 +7,7 @@
     <Authors>TriPay</Authors>
     <Company>TriPay</Company>
     <Product>TriPay Payment Hub</Product>
-    <Description>Türkiye sanal pos ve ödeme kuruluşları için birleşik Payment Hub kütüphanesi. .NET 8, 9, 10 ve üzeri (net8.0;net9.0;net10.0).</Description>
+    <Description>TriPay Payment Hub — sanal POS adaptörleri (Framework modu: kendi DB ve banka config'iniz; TriPay işlem saklamaz). Hosted mod için TriPay.Data ayrıca eklenir. .NET 8, 9, 10.</Description>
     <PackageTags>payment;fintech;virtual-pos;iyzico;vakifbank;tripay</PackageTags>
     <PackageProjectUrl>https://tripay.com.tr</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mehmetunal/tripay</RepositoryUrl>

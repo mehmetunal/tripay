@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tripay-config
+  namespace: tripay
+data:
+  ASPNETCORE_ENVIRONMENT: "Production"
+  TriPay__DefaultGateway: "VakifPays"
+  TriPay__Redis__InstanceName: "tripay:"
+  TriPay__Redis__SaleStateTtlHours: "24"
+  TriPay__Redis__IdempotencyTtlDays: "7"
+  TriPay__RabbitMq__Exchange: "tripay.events"
+  TriPay__RabbitMq__WebhookQueue: "tripay.webhook.dispatch"
+  TriPay__RabbitMq__DeadLetterQueue: "tripay.webhook.dlq"
+  # Gizli değerler Secret'ta — MerchantId, ApiKey vb.

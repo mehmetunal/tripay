@@ -1,22 +1,33 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+using TriPay.Services.Configuration;
 using TriPay.Services.Interfaces;
-using TriPay.Services.Providers;
+using TriPay.Services.Providers.Iyzico;
+using TriPay.Services.Providers.Vakifbank;
+using TriPay.Services.Providers.VakifPays;
 
 namespace TriPay.Services;
 
+/// <summary>Gateway koduna göre doğru <see cref="IPaymentGatewayProvider"/> örneğini DI'dan çözen fabrikadır.</summary>
 public class PaymentGatewayFactory
 {
     private readonly IServiceProvider _serviceProvider;
+    private readonly IOptionsMonitor<TriPayOptions> _options;
     private readonly Dictionary<string, Type> _providers = new(StringComparer.OrdinalIgnoreCase)
     {
-        [PaymentGatewayNames.VakifPays] = typeof(VakifPaysGatewayProvider)
+        [PaymentGatewayNames.VakifPays] = typeof(VakifPaysGatewayProvider),
+        [PaymentGatewayNames.Iyzico] = typeof(IyzicoGatewayProvider),
+        [PaymentGatewayNames.Vakifbank] = typeof(VakifbankGatewayProvider)
     };
 
-    public PaymentGatewayFactory(IServiceProvider serviceProvider)
+    /// <summary>DI ve yapılandırma seçenekleri ile fabrika örneği oluşturur.</summary>
+    public PaymentGatewayFactory(IServiceProvider serviceProvider, IOptionsMonitor<TriPayOptions> options)
     {
         _serviceProvider = serviceProvider;
+        _options = options;
     }
 
+    /// <summary>Gateway kodu için provider örneğini senkron döndürür (destek kontrolü yapmaz).</summary>
     public IPaymentGatewayProvider? GetProvider(string? gatewayName = null)
     {
         var name = string.IsNullOrWhiteSpace(gatewayName) ? PaymentGatewayNames.Default : gatewayName;
@@ -25,6 +36,7 @@ public class PaymentGatewayFactory
             : null;
     }
 
+    /// <summary>Provider'ın kayıtlı, aktif ve yapılandırmada desteklendiğini doğrulayarak döndürür.</summary>
     public async Task<IPaymentGatewayProvider?> GetGatewayProviderAsync(string? gatewayName = null)
     {
         var provider = GetProvider(gatewayName);
@@ -34,16 +46,21 @@ public class PaymentGatewayFactory
         return await provider.IsSupportedAsync() ? provider : null;
     }
 
+    /// <summary><see cref="TriPayOptions.DefaultGateway"/> veya VakıfPayS varsayılanı ile aktif provider döndürür.</summary>
     public async Task<IPaymentGatewayProvider?> GetActiveGatewayProviderAsync()
     {
-        return await GetGatewayProviderAsync(PaymentGatewayNames.VakifPays);
+        var defaultName = _options.CurrentValue.DefaultGateway;
+        return await GetGatewayProviderAsync(
+            string.IsNullOrWhiteSpace(defaultName) ? PaymentGatewayNames.VakifPays : defaultName);
     }
 
+    /// <summary>Kodda kayıtlı tüm gateway kodlarını listeler.</summary>
     public IReadOnlyList<string> GetAllAvailableGateways()
     {
         return _providers.Keys.ToList();
     }
 
+    /// <summary>Sistemde aktif işaretli provider gateway adlarını listeler.</summary>
     public IReadOnlyList<string> GetSystemActiveGatewayNames()
     {
         return _providers

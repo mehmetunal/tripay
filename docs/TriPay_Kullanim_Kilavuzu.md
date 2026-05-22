@@ -3,26 +3,34 @@
 
 # TriPay Kullanım Kılavuzu (A–Z)
 
-**Versiyon:** 1.0 · **Tarih:** 22 Mayıs 2026 · **Web:** [https://tripay.com.tr](https://tripay.com.tr)
+**Versiyon:** 1.1 · **Tarih:** 22 Mayıs 2026 · **Web:** [https://tripay.com.tr](https://tripay.com.tr)
 
-Bu kılavuz, TriPay’i projene entegre eden geliştiriciler içindir: **NuGet / DLL** ile doğrudan kütüphane kullanımı ve **HttpClient** ile uzaktan API kullanımı.
+Bu kılavuz, TriPay’in **tüm entegrasyon seçeneklerini** kapsar: Framework (NuGet), Hosted, HttpClient API ve yapılandırma modları.
+
+
+> **`Program.cs` ve DI için tek kaynak:** [**TriPay_Program_cs_ve_DI.md**](./TriPay_Program_cs_ve_DI.md) — mod seçimi, **`AddTriPay` vs `AddTriPayFramework` karşılaştırması (§2)**, tam kod örnekleri.
+
+| Ek doküman | Ne zaman okunur? |
+| :--- | :--- |
+| **[TriPay_Program_cs_ve_DI.md](./TriPay_Program_cs_ve_DI.md)** | **İlk okuyun** — `AddTriPayFramework` / `AddTriPayHosted` / `AddTriPay` |
+| [TriPay_Framework_Modu.md](./TriPay_Framework_Modu.md) | Framework: appsettings, API, KVKK |
+| [TriPay_Hosted_Modu.md](./TriPay_Hosted_Modu.md) | Hosted: MSSQL tabloları, C‑Lite |
+| [TriPay_AddTriPay_Dusuk_Seviye.md](./TriPay_AddTriPay_Dusuk_Seviye.md) | Yalnız test / iç yapı (`AddTriPay`) |
+| [TriPay_Kapsam_ve_Entegrasyon_Modelleri.md](./TriPay_Kapsam_ve_Entegrasyon_Modelleri.md) | Amaç, risk |
+| [TriPay_Admin_ve_Veritabani.md](./TriPay_Admin_ve_Veritabani.md) | Hosted admin + DB |
 
 ---
 
 ## İçindekiler
 
 1. [TriPay nedir?](#1-tripay-nedir)
-2. [Entegrasyon modelleri](#2-entegrasyon-modelleri)
+2. [Entegrasyon modelleri](#2-entegrasyon-modelleri) — özet; **Program.cs:** [TriPay_Program_cs_ve_DI.md](./TriPay_Program_cs_ve_DI.md)
 3. [Gereksinimler](#3-gereksinimler)
 4. [Paket ve DLL yapısı](#4-paket-ve-dll-yapısı)
 5. [NuGet ile kurulum](#5-nuget-ile-kurulum)
 6. [Doğrudan DLL referansı](#6-doğrudan-dll-referansı)
-7. [DI kaydı ve yapılandırma](#7-di-kaydı-ve-yapılandırma)
-   - [7.4 Çoklu banka config modeli](#74-çoklu-banka-yapılandırması-neden-farklı)
-   - [7.5 Dışarıdan config verme](#75-dışarıdan-config-verme-üç-katman)
-   - [7.6 Merkezi `appsettings` şeması](#76-merkezi-appsettings-şeması-tüm-kanallar)
-   - [7.7 Config şablonları (A–F)](#77-config-şablonları-af)
-   - [7.8 §6 Sanal POS config örnekleri](#78-olması-gerekenler--kullanılabilir-sanal-pos-config-örnekleri-§6)
+7. [DI kaydı ve yapılandırma](#7-di-kaydı-ve-yapılandırma) — **Program.cs:** [TriPay_Program_cs_ve_DI.md](./TriPay_Program_cs_ve_DI.md)
+  - [7.2–7.8 Banka config / Redis şablonları](#72-yapılandırma-appsettingsjson--hızlı-örnek-tek-kanal)
 8. [Provider (banka) seçimi](#8-provider-banka-seçimi)
 9. [Temel kavramlar ve modeller](#9-temel-kavramlar-ve-modeller)
 10. [Ödeme başlatma (Initialize)](#10-ödeme-başlatma-initialize)
@@ -50,46 +58,283 @@ Bu kılavuz, TriPay’i projene entegre eden geliştiriciler içindir: **NuGet /
 TriPay; banka ve ödeme kuruluşu sanal POS’larını tek arayüzde birleştiren bir **Payment Hub** kütüphanesidir. Entegrasyon developer’ı:
 
 - Hangi **provider**’ları kullanacağını belirler (`GatewayName`, `MerchantGateways` — bkz. proje dokümanı §5.5),
-- Ödeme, callback, taksit, iade işlemlerini **`IPaymentGatewayService`** üzerinden yapar.
+- Ödeme, callback, taksit, iade işlemlerini `**IPaymentGatewayService`** üzerinden yapar.
 
 **Şu an kodda aktif kanal:** `VakifPays`  
 **Hedef:** §6’daki tüm kanallar (iyzico, Garanti, PayTR, …)
 
 ---
 
-## 2. Entegrasyon modelleri
+## 2. Entegrasyon modelleri (tüm seçenekler)
 
-| Model | Nasıl çalışır? | Ne zaman? |
-| :--- | :--- | :--- |
-| **A — NuGet / DLL (in-process)** | `TriPay.Services.dll` projenize referans; `IPaymentGatewayService` doğrudan DI ile çağrılır. Bankaya giden HTTP çağrıları TriPay içindeki `HttpClient` ile yapılır. | E-ticaret, MVC, API, worker — **önerilen** |
-| **B — HttpClient (uzak TriPay API)** | Kendi uygulamanız yalnızca REST çağrısı yapar; POS mantığı TriPay sunucusunda çalışır. | Mikroservis, farklı dil/stack, merkezi TriPay host |
-| **C — Hosted sayfa** | Kullanıcı TriPay’in ödeme formuna yönlendirilir (TriPay.Web). | Hızlı MVP, PCI yükünü azaltma |
+> **Kapsam ve KVKK:** [TriPay_Kapsam_ve_Entegrasyon_Modelleri.md](./TriPay_Kapsam_ve_Entegrasyon_Modelleri.md)  
+> **Admin / MSSQL tabloları:** [TriPay_Admin_ve_Veritabani.md](./TriPay_Admin_ve_Veritabani.md)
+
+### 2.0. Hızlı seçim tablosu
+
+> **Program.cs kodu ve extension açıklaması:** [TriPay_Program_cs_ve_DI.md](./TriPay_Program_cs_ve_DI.md)
+
+
+| Kod        | Mod                  | TriPay MSSQL | DI girişi                                             | Ana API                   | KVKK veri riski (TriPay) |
+| ---------- | -------------------- | ------------ | ----------------------------------------------------- | ------------------------- | ------------------------ |
+| **A**      | Framework (NuGet)    | Hayır        | `AddTriPayFramework()`                                | `IPaymentGatewayService`  | **Yok** — önerilen       |
+| **A+**     | Framework + Redis    | Hayır        | `AddTriPayFramework()`                                | Aynı                      | Yok (geçici 3D state)    |
+| **C**      | Hosted tam           | Evet         | `AddTriPayHosted()`                                   | `IPaymentCheckoutService` | Yapılandırmaya bağlı     |
+| **C‑Lite** | Hosted, log kapalı   | Evet (özet)  | `AddTriPayHosted()` + `PersistTransactionLogs: false` | Checkout                  | Düşük                    |
+| **B**      | HttpClient API       | Sizde yok    | HTTP client                                           | REST (planlanan)          | Sunucuda TriPay          |
+| **D**      | Hosted ödeme sayfası | Evet         | TriPay.Web URL                                        | Tarayıcı redirect         | TriPay host              |
+
+
+**En düşük risk (sizin isteğiniz):** Mod **A** — banka bilgisi sizde, TriPay işlem/log tutmaz.
+
+---
+
+### 2.1. Mod A — Framework (NuGet / DLL) — önerilen
+
+> **Tam doküman:** [TriPay_Framework_Modu.md](./TriPay_Framework_Modu.md)
+
+Üye işyeri kendi .NET uygulamasında TriPay kütüphanesini çağırır. Banka credential ve sipariş kaydı **tamamen sizin** sisteminizdedir.
+
+```text
+Framework  →  AddTriPayFramework()  →  IPaymentGatewayService
+             →  TriPay MSSQL YOK  →  TransactionLogs YOK
+```
+
+```mermaid
+flowchart TB
+    subgraph Merchant["Üye işyeri"]
+        App[ASP.NET / API / Worker]
+        CFG[appsettings / Key Vault<br/>Gateway Settings]
+        MDB[(Sizin veritabanınız<br/>sipariş + ödeme durumu)]
+    end
+    subgraph TriPayFW["TriPay Framework"]
+        AddPay[AddTriPayFramework]
+        Svc[IPaymentGatewayService]
+        Prov[VakifPays / Iyzico / Vakifbank Provider]
+    end
+    Bank[Banka / iyzico API]
+
+    App --> AddPay
+    CFG --> Prov
+    App --> Svc --> Prov --> Bank
+    App --> MDB
+```
+
+
+
+**Program.cs:** `AddTriPayFramework(builder.Configuration)` — tam örnek: [TriPay_Program_cs_ve_DI.md §4](./TriPay_Program_cs_ve_DI.md#4-aspnet-core-web--framework-önerilen)
+
+**appsettings (örnek):**
+
+```json
+{
+  "TriPay": {
+    "Persistence": {
+      "Enabled": false,
+      "PersistTransactionLogs": false,
+      "EnableOutbox": false
+    },
+    "Gateways": {
+      "VakifPays": {
+        "Enabled": true,
+        "IsTestMode": true,
+        "Settings": {
+          "MerchantId": "SIZIN_ID",
+          "MerchantPassword": "SIZIN_SIFRE",
+          "TerminalNo": "SIZIN_TERMINAL"
+        }
+      }
+    }
+  }
+}
+```
+
+**Ödeme çağrısı:**
+
+```csharp
+var result = await _payment.InitializePaymentAsync(new PaymentGatewayInitializeRequestDto
+{
+    GatewayName = PaymentGatewayNames.VakifPays,
+    Payment = paymentRequest
+});
+// Sonucu kendi DB'nize siz yazarsınız
+```
+
+
+| Dahil                                            | Hariç                             |
+| ------------------------------------------------ | --------------------------------- |
+| Provider adaptörleri, 3D, callback, taksit, iade | `Transactions`, `TransactionLogs` |
+| `appsettings` gateway config                     | TriPay `Merchants` tablosu        |
+| Opsiyonel Redis (3D state)                       | `IPaymentCheckoutService`         |
+
+
+---
+
+### 2.2. Mod A+ — Framework + Redis (3D / idempotency)
+
+Mod A ile aynı; ek olarak Redis:
+
+- Vakıfbank 3D `sale` state
+- Idempotency, rate limit (ileri faz)
 
 ```mermaid
 flowchart LR
-    subgraph A["Model A — NuGet/DLL"]
-        App1[Sizin Uygulama] --> Svc[IPaymentGatewayService]
-        Svc --> Banka[Banka API]
-    end
-    subgraph B["Model B — HttpClient"]
-        App2[Sizin Uygulama] --> HTTP[HttpClient]
-        HTTP --> API[TriPay REST API]
-        API --> Banka2[Banka API]
-    end
+    App[Uygulama] --> Svc[IPaymentGatewayService]
+    Svc --> Redis[(Redis TTL)]
+    Svc --> Bank[Banka API]
 ```
 
-> **Mevcut repo:** Model **A** tam implemente. Model **B** için REST API uçları planlanmıştır; aşağıda hedef sözleşme ve geçici çözümler anlatılır.
+
+
+`AddTriPayFramework` zaten `AddTriPayRedis` çağırır. `TriPay:Redis:Enabled: true` yeterli.
+
+---
+
+### 2.3. Mod C — Hosted (TriPay operatörü / demo web)
+
+> **Tam doküman:** [TriPay_Hosted_Modu.md](./TriPay_Hosted_Modu.md) — Bölüm 1 (Hosted Tam)
+
+```text
+Hosted  →  AddTriPayHosted()  →  IPaymentCheckoutService + MSSQL
+        →  PersistTransactionLogs: true  →  TransactionLogs (normal log alanı)
+```
+
+TriPay MSSQL’de işlem özeti; maskeli API logları (`TransactionLogs`); webhook outbox.
+
+```mermaid
+flowchart TB
+    subgraph Host["TriPay Hosted"]
+        Web[TriPay.Web MVC]
+        Hosted[AddTriPayHosted]
+        Checkout[IPaymentCheckoutService]
+        TriDB[(TriPay MSSQL)]
+        Meta[GatewaySettings + ErrorMappings]
+        Redis[(Redis cache)]
+        RMQ[RabbitMQ Outbox]
+    end
+    Bank[Banka API]
+
+    Web --> Checkout --> TriDB
+    Hosted --> Meta --> Redis
+    Checkout --> Bank
+    TriDB --> RMQ
+```
+
+
+
+**Program.cs:** `AddTriPayHosted` + `RunTriPayMigrations()` — tam örnek: [TriPay_Program_cs_ve_DI.md §5](./TriPay_Program_cs_ve_DI.md#5-aspnet-core-web--hosted-demo--operatör)
+
+**appsettings:**
+
+```json
+"TriPay": {
+  "Persistence": {
+    "Enabled": true,
+    "PersistTransactionLogs": true,
+    "EnableOutbox": true
+  }
+}
+```
+
+---
+
+### 2.4. Mod C‑Lite — Hosted, KVKK hafif profil
+
+> **Tam doküman:** [TriPay_Hosted_Modu.md](./TriPay_Hosted_Modu.md) — Bölüm 2 (Hosted C‑Lite)
+
+```text
+Hosted C-Lite  →  AddTriPayHosted()  →  IPaymentCheckoutService + MSSQL
+               →  PersistTransactionLogs: false  →  TransactionLogs YAZILMAZ
+               →  Transactions özeti kalır
+```
+
+İşlem özeti TriPay’de (`Transactions`); **ham banka logu yok** (`TransactionLogs` kapalı).
+
+```json
+"Persistence": {
+  "Enabled": true,
+  "PersistTransactionLogs": false,
+  "EnableOutbox": true
+}
+```
+
+```mermaid
+flowchart LR
+    Pay[PayAsync] --> Txn[Transactions tablosu]
+    Pay -.->|kapalı| Log[TransactionLogs]
+    Txn --> Outbox[OutboxMessages]
+```
+
+
+
+---
+
+### 2.5. Mod B — HttpClient (uzak TriPay REST API)
+
+Uygulamanızda TriPay DLL **yok**; yalnızca HTTP. Veritabanı **TriPay API sunucusunda**.
+
+```mermaid
+sequenceDiagram
+    participant App as Sizin uygulama
+    participant API as TriPay REST API
+    participant Bank as Banka
+
+    App->>API: POST /api/payments/initialize
+    Note over App: Authorization: Bearer merchant_api_key
+    API->>Bank: Provider HTTP
+    Bank-->>API: 3D HTML / sonuç
+    API-->>App: JSON cevap
+```
+
+
+
+> **Durum:** REST uçları planlanmıştır. Geçici olarak Mod **A** (in-process) veya Mod **C** (hosted sayfa) kullanın. Hedef sözleşme: [§17 HttpClient](#17-httpclient-ile-kullanım-uzak-api).
+
+---
+
+### 2.6. Mod D — Hosted ödeme sayfası (redirect)
+
+Kullanıcı `https://tripay.com.tr/Checkout` benzeri sayfaya yönlendirilir; PCI yükü TriPay host’ta azalır.
+
+```mermaid
+flowchart LR
+    Shop[E-ticaret] -->|redirect| Page[TriPay.Web Checkout]
+    Page --> Hosted[AddTriPayHosted]
+    Hosted --> Bank[Banka 3D]
+    Bank -->|callback| Page
+    Page -->|webhook| Shop
+```
+
+
+
+---
+
+### 2.7. DI özeti
+
+Üretimde yalnızca **`AddTriPayFramework`** veya **`AddTriPayHosted`** yazın. Alt extension’lar (`AddTriPay`, `AddTriPayData`, …) iç yapıdır — tablo ve hatalar: [TriPay_Program_cs_ve_DI.md](./TriPay_Program_cs_ve_DI.md).
+
+
+**Monorepo paketleri:**
+
+```text
+TriPay.Services      → NuGet çekirdek (DB yok)
+TriPay.Persistence   → Hosted checkout (opsiyonel referans)
+TriPay.Data          → MSSQL
+TriPay.Infrastructure→ Redis, RabbitMQ, metadata cache
+```
 
 ---
 
 ## 3. Gereksinimler
 
-| Gereksinim | Değer |
-| :--- | :--- |
-| .NET | **8.0 ve üzeri** — NuGet paketi `net8.0`, `net9.0`, `net10.0` hedefler (8 / 9 / 10 / sonraki LTS) |
-| Proje tipi | ASP.NET Core Web, Web API, Worker, Console |
-| NuGet | `Microsoft.Extensions.DependencyInjection`, `Microsoft.Extensions.Http` |
-| Opsiyonel | MSSQL (işlem/log — planlanan `TriPay.Data`) |
+
+| Gereksinim | Değer                                                                                             |
+| ---------- | ------------------------------------------------------------------------------------------------- |
+| .NET       | **8.0 ve üzeri** — NuGet paketi `net8.0`, `net9.0`, `net10.0` hedefler (8 / 9 / 10 / sonraki LTS) |
+| Proje tipi | ASP.NET Core Web, Web API, Worker, Console                                                        |
+| NuGet      | `Microsoft.Extensions.DependencyInjection`, `Microsoft.Extensions.Http`                           |
+| Opsiyonel  | MSSQL — yalnız **Hosted (Model C)**; Framework (Model A) için **gerekmez**                        |
+
 
 ---
 
@@ -97,10 +342,13 @@ flowchart LR
 
 NuGet paket yapısı:
 
-| Paket / DLL | İçerik |
-| :--- | :--- |
-| **`TriPay`** (NuGet `PackageId`) | Ana paket — ödeme hub kütüphanesi (`TriPay.Services` kaynak kodu) |
-| **`TriPay.Data`** (ileride) | EF Core, `Transactions`, `TransactionLogs` — opsiyonel ayrı paket |
+
+| Paket / DLL                         | İçerik                                                      |
+| ----------------------------------- | ----------------------------------------------------------- |
+| `**TriPay`** (NuGet `PackageId`)    | Framework — `TriPay.Services` (TriPay.Data **dahil değil**) |
+| `**TriPay.Persistence`** (monorepo) | Hosted — `AddTriPayHosted`, `PaymentCheckoutService`        |
+| `**TriPay.Data**` (monorepo)        | MSSQL, FluentMigrator — Hosted ile                          |
+
 
 > **Neden `TriPay`?** Kısa marka adı; entegrasyon `dotnet add package TriPay` ile tek satır. Derleme çıktısı DLL adı `TriPay.Services.dll` olabilir — bu normaldir (`PackageId` ≠ assembly adı).
 
@@ -115,15 +363,23 @@ TriPay.Services/bin/Release/net8.0/   (veya net9.0 / net10.0 — proje TFM’ine
 
 Kütüphanenin public yüzeyi:
 
-| Tip | Açıklama |
-| :--- | :--- |
-| `IPaymentGatewayService` | Tüm ödeme işlemleri (Facade) |
-| `PaymentGatewayFactory` | Provider çözümleme |
-| `PaymentGatewayNames` | Gateway kod sabitleri (`const`) — magic string yasak |
-| `PaymentGateway*RequestDto` / `*ResponseDto` | İstek/cevap modelleri |
-| `PaymentRequest` | Kart ve sipariş bilgisi |
-| `Result<T>` | Standart sonuç sarmalayıcı |
-| `AddTriPay()` | DI extension |
+
+| Tip                                          | Açıklama                                             |
+| -------------------------------------------- | ---------------------------------------------------- |
+| `IPaymentGatewayService`                     | Tüm ödeme işlemleri (Facade)                         |
+| `PaymentGatewayFactory`                      | Provider çözümleme                                   |
+| `PaymentGatewayNames`                        | Gateway kod sabitleri (`const`) — magic string yasak |
+| `PaymentGateway*RequestDto` / `*ResponseDto` | İstek/cevap modelleri                                |
+| `PaymentRequest`                             | Kart ve sipariş bilgisi                              |
+| `Result<T>`                                  | Standart sonuç sarmalayıcı                           |
+| `AddTriPay()`                                | DI extension                                         |
+
+
+**Kod düzeni (zorunlu — proje dokümanı Kural #14):**
+
+- Her `public` tip (**class**, `record`, `struct`, `enum`) **kendi `.cs` dosyasında** tanımlanır.
+- `PaymentGatewayModels.cs` gibi çoklu sınıf dosyaları **kullanılmaz**; örnek: `Models/PaymentGatewayInitializeRequestDto.cs`.
+- Provider’a özel modeller ilgili provider klasöründe: `Providers/VakifPays/Models/SaleResponse.cs`.
 
 ---
 
@@ -137,7 +393,7 @@ Kütüphanenin public yüzeyi:
 dotnet add package TriPay --version 1.0.0
 ```
 
-> Paket adı: **`TriPay`** (kısa ve tek marka). İçerik `TriPay.Services` projesinden üretilir. Henüz nuget.org’da yoksa [§6 Doğrudan DLL](#6-doğrudan-dll-referansı) veya `ProjectReference` kullanın.
+> Paket adı: `**TriPay**` (kısa ve tek marka). İçerik `TriPay.Services` projesinden üretilir. Henüz nuget.org’da yoksa [§6 Doğrudan DLL](#6-doğrudan-dll-referansı) veya `ProjectReference` kullanın.
 
 ### 5.2. `.csproj` referansı
 
@@ -204,47 +460,27 @@ ASP.NET Core Web projesinde çoğu zaten vardır.
 
 ## 7. DI kaydı ve yapılandırma
 
-### 7.1. `Program.cs` — zorunlu kayıt
+**`Program.cs`, mod seçimi ve tam kod örnekleri bu kılavuzda tekrarlanmaz.** Tek kaynak: [**TriPay_Program_cs_ve_DI.md**](./TriPay_Program_cs_ve_DI.md).
 
-```csharp
-using TriPay.Services.DependencyInjection;
+Bu bölümde yalnızca **banka `appsettings` şeması**, Redis ve config şablonları vardır.
 
-var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.AddControllersWithViews();
-builder.Services.AddTriPay();   // ← TriPay
-
-var app = builder.Build();
-// ...
-app.Run();
-```
-
-`AddTriPay()` içinde kayıtlı servisler (`AddTriPayPaymentGateways()` geriye dönük uyumluluk için hâlâ çalışır):
-
-| Servis | Lifetime |
-| :--- | :--- |
-| `HttpClient` → `VakifPaysService` | Typed client |
-| `VakifPaysGatewayProvider` | Scoped |
-| `PaymentGatewayFactory` | Scoped |
-| `IPaymentGatewayService` → `PaymentGatewayService` | Scoped |
-
-### 7.2. Constructor injection
+### 7.1. Constructor injection
 
 ```csharp
 using TriPay.Services.Interfaces;
 
-public class CheckoutController : Controller
+public class PaymentController : Controller
 {
     private readonly IPaymentGatewayService _payment;
 
-    public CheckoutController(IPaymentGatewayService payment)
+    public PaymentController(IPaymentGatewayService payment)
     {
         _payment = payment;
     }
 }
 ```
 
-### 7.3. Yapılandırma (`appsettings.json`) — hızlı örnek (tek kanal)
+### 7.2. Yapılandırma (`appsettings.json`) — hızlı örnek (tek kanal)
 
 Geliştirme için yalnızca **VakıfPayS** (mevcut kod):
 
@@ -267,22 +503,24 @@ Geliştirme için yalnızca **VakıfPayS** (mevcut kod):
 }
 ```
 
-> **Not:** Şu an `VakifPaysService` içinde sabit test credential olabilir. Çoklu banka için [§7.4–7.8](#74-çoklu-banka-yapılandırması-neden-farklı) hedef modeldir.
+> **Not:** VakıfPayS, Iyzico/Vakıfbank ile aynı şekilde `HttpPaymentGatewayBase` + `TriPay:Gateways:VakifPays:Settings` kullanır (`Merchant`, `MerchantUser`, `MerchantPassword`).
 
 ---
 
-### 7.4. Çoklu banka yapılandırması (neden farklı?)
+### 7.3. Çoklu banka yapılandırması (neden farklı?)
 
 Türkiye'de her sanal POS / ödeme kuruluşu **farklı kimlik bilgisi** ve **farklı API sözleşmesi** kullanır:
 
-| Grup | Tipik alanlar | Örnek kanallar |
-| :--- | :--- | :--- |
-| **A — REST API Key** | `ApiKey`, `SecretKey`, `IsTestMode` | Iyzico, Sipay, ParamPos, Paynet, Vepara, … |
-| **B — Nestpay / EST 3D** | `MerchantId`, `TerminalId`, `Username`, `Password`, `StoreKey` | Akbank, İş Bankası, Halkbank, Ziraat, YKB, … |
-| **C — Garanti PROV** | `MerchantId`, `TerminalId`, `ProvUserId`, `ProvPassword`, `StoreKey` | Garanti BBVA |
-| **D — Vakıfbank MPI + VPOS** | `MerchantId`, `MerchantPassword`, `TerminalNo`, URL'ler, `InstallmentCounts` | Vakıfbank |
-| **E — VakıfPayS REST** | `Merchant`, `MerchantUser`, `MerchantPassword` | VakıfPayS |
-| **F — PayTR** | `MerchantId`, `MerchantKey`, `MerchantSalt` | PayTR |
+
+| Grup                         | Tipik alanlar                                                                | Örnek kanallar                               |
+| ---------------------------- | ---------------------------------------------------------------------------- | -------------------------------------------- |
+| **A — REST API Key**         | `ApiKey`, `SecretKey`, `IsTestMode`                                          | Iyzico, Sipay, ParamPos, Paynet, Vepara, …   |
+| **B — Nestpay / EST 3D**     | `MerchantId`, `TerminalId`, `Username`, `Password`, `StoreKey`               | Akbank, İş Bankası, Halkbank, Ziraat, YKB, … |
+| **C — Garanti PROV**         | `MerchantId`, `TerminalId`, `ProvUserId`, `ProvPassword`, `StoreKey`         | Garanti BBVA                                 |
+| **D — Vakıfbank MPI + VPOS** | `MerchantId`, `MerchantPassword`, `TerminalNo`, URL'ler, `InstallmentCounts` | Vakıfbank                                    |
+| **E — VakıfPayS REST**       | `Merchant`, `MerchantUser`, `MerchantPassword`                               | VakıfPayS                                    |
+| **F — PayTR**                | `MerchantId`, `MerchantKey`, `MerchantSalt`                                  | PayTR                                        |
+
 
 TriPay'de **tek tip dış config** hedeflenir; provider içinde kanala özel alanlar `Settings` sözlüğünden okunur:
 
@@ -293,17 +531,19 @@ Sizin uygulama
                     └── IyzicoGatewayProvider / VakifbankGatewayProvider / …
 ```
 
-**Önemli:** Ödeme isteğinde yalnızca **`GatewayName`** (hangi kanal) gönderilir; **API key / şifre istek gövdesinde taşınmaz.**
+**Önemli:** Ödeme isteğinde yalnızca `**GatewayName`** (hangi kanal) gönderilir; **API key / şifre istek gövdesinde taşınmaz.**
 
 ---
 
-### 7.5. Dışarıdan config verme (üç katman)
+### 7.4. Dışarıdan config verme (üç katman)
 
-| Katman | Ne zaman | Nasıl |
-| :--- | :--- | :--- |
-| **1 — `appsettings` / ortam değişkeni** | Geliştirme, tek merchant | `TriPay:Gateways:{Kod}:Settings` |
-| **2 — `MerchantGateways` (MSSQL)** | Üretim, çok üye işyeri | Şifreli credential JSON (proje dokümanı §9) |
-| **3 — Key Vault / secret store** | Üretim | `Settings` vault'tan doldurulur |
+
+| Katman                                  | Ne zaman                 | Nasıl                                       |
+| --------------------------------------- | ------------------------ | ------------------------------------------- |
+| **1 — `appsettings` / ortam değişkeni** | Geliştirme, tek merchant | `TriPay:Gateways:{Kod}:Settings`            |
+| **2 — `MerchantGateways` (MSSQL)**      | Üretim, çok üye işyeri   | Şifreli credential JSON (proje dokümanı §9) |
+| **3 — Key Vault / secret store**        | Üretim                   | `Settings` vault'tan doldurulur             |
+
 
 **Ortam değişkeni örneği:**
 
@@ -316,8 +556,8 @@ export TriPay__Gateways__Iyzico__IsTestMode="true"
 **C# bağlama (hedef — provider port sonrası):**
 
 ```csharp
-builder.Services.AddTriPay();
-builder.Services.Configure<TriPayOptions>(builder.Configuration.GetSection("TriPay"));
+builder.Services.AddTriPayFramework(builder.Configuration);
+// veya Hosted: AddTriPayHosted(builder.Configuration)
 ```
 
 **Üye işyeri paneli (hedef — `MerchantGateways`):**
@@ -337,7 +577,7 @@ builder.Services.Configure<TriPayOptions>(builder.Configuration.GetSection("TriP
 
 ---
 
-### 7.6. Merkezi `appsettings` şeması (tüm kanallar)
+### 7.5. Merkezi `appsettings` şeması (tüm kanallar)
 
 Anahtar = `PaymentGatewayNames` değeri (`"Iyzico"`, `"Vakifbank"`, …).
 
@@ -354,17 +594,66 @@ Anahtar = `PaymentGatewayNames` değeri (`"Iyzico"`, `"Vakifbank"`, …).
 }
 ```
 
-| Alan | Zorunlu | Açıklama |
-| :--- | :---: | :--- |
-| `DefaultGateway` | ✔️ | `PaymentGatewayNames.*` |
-| `Gateways` | ✔️ | Kanal kodu → ayar bloğu |
-| `Enabled` | ✔️ | `false` ise provider devre dışı |
-| `IsTestMode` | ✔️ | Sandbox URL |
-| `Settings` | ✔️ | Kanala özel key-value (§7.7) |
+
+| Alan             | Zorunlu           | Açıklama                                 |
+| ---------------- | ----------------- | ---------------------------------------- |
+| `DefaultGateway` | ✔️                | `PaymentGatewayNames.*`                  |
+| `Gateways`       | ✔️                | Kanal kodu → ayar bloğu                  |
+| `Enabled`        | ✔️                | `false` ise provider devre dışı          |
+| `IsTestMode`     | ✔️                | Sandbox URL                              |
+| `Settings`       | ✔️                | Kanala özel key-value (§7.7)             |
+| `Redis`          | ✔️ (Vakıfbank 3D) | §7.8 — 3D sonrası satış durumu önbelleği |
+
 
 ```csharp
 request.GatewayName = PaymentGatewayNames.Iyzico; // config değil — kanal seçimi
 ```
+
+---
+
+### 7.6. Redis önbellek (Vakıfbank 3D satış durumu)
+
+Vakıfbank akışında MPI enrollment ile VPOS satışı arasında **CVV, tutar ve son kullanma** gibi alanlar geçici olarak saklanır. TriPay bunu `**IMemoryCache` değil, Redis** (`IDistributedCache` + StackExchange.Redis) ile yapar; böylece yük dengeleme altında birden fazla API örneği aynı 3D oturumunu okuyabilir.
+
+
+| Ayar (`TriPay:Redis`) | Zorunlu | Açıklama                                                                             |
+| --------------------- | ------- | ------------------------------------------------------------------------------------ |
+| `Configuration`       | ✔️*     | Redis bağlantı dizesi (ör. `localhost:6379`). *Alternatif: `ConnectionStrings:Redis` |
+| `InstanceName`        | Hayır   | Anahtar öneki; varsayılan `tripay:`                                                  |
+| `SaleStateTtlHours`   | Hayır   | Satış durumu TTL (saat); varsayılan `24`                                             |
+
+
+Redis anahtar formatı: `{InstanceName}vakifbank:sale:{orderCode}` (ör. `tripay:vakifbank:sale:ORDER-123`).
+
+```json
+{
+  "ConnectionStrings": {
+    "Redis": "localhost:6379"
+  },
+  "TriPay": {
+    "Redis": {
+      "Configuration": "localhost:6379",
+      "InstanceName": "tripay:",
+      "SaleStateTtlHours": 24
+    },
+    "Gateways": {
+      "Vakifbank": {
+        "Enabled": true,
+        "IsTestMode": true,
+        "Settings": {
+          "MerchantId": "...",
+          "MerchantPassword": "...",
+          "TerminalNo": "..."
+        }
+      }
+    }
+  }
+}
+```
+
+Vakıfbank 3D state için Redis, **`AddTriPayFramework`** veya **`AddTriPayHosted`** (içeride `AddTriPayRedis`) ile kayıt olur. Yalnız `AddTriPay()` Redis **eklemez**.
+
+**Yerel geliştirme:** `docker run -d --name tripay-redis -p 6379:6379 redis:7-alpine`
 
 ---
 
@@ -470,63 +759,69 @@ Tam liste: [§6 proje dokümanı](./TriPay_Proje_Dokumani.md#6-olması-gerekenle
 
 #### MVP (§6.1)
 
-| Sanal POS | `PaymentGatewayNames` | Şablon | Durum |
-| :--- | :--- | :---: | :--- |
-| Iyzico | `Iyzico` | A | TODO P1 |
-| Vakıfbank | `Vakifbank` | D | TODO P2 |
-| VakıfPayS | `VakifPays` | E | **Mevcut** |
+
+| Sanal POS | `PaymentGatewayNames` | Şablon | Durum      |
+| --------- | --------------------- | ------ | ---------- |
+| Iyzico    | `Iyzico`              | A      | TODO P1    |
+| Vakıfbank | `Vakifbank`           | D      | TODO P2    |
+| VakıfPayS | `VakifPays`           | E      | **Mevcut** |
+
 
 Iyzico test: `https://sandbox-api.iyzipay.com` · Prod: `https://api.iyzipay.com`
 
 #### Bankalar (planlanan)
 
-| Sanal POS | `PaymentGatewayNames` | Şablon |
-| :--- | :--- | :---: |
-| Akbank | `Akbank` | B |
-| Akbank Nestpay | `AkbankNestpay` | B |
-| Alternatif Bank | `AlternatifBank` | B |
-| Anadolubank | `Anadolubank` | B |
-| Denizbank | `Denizbank` | B |
-| QNB Finansbank | `QNBFinansbank` | B |
-| Finansbank Nestpay | `FinansbankNestpay` | B |
-| Garanti BBVA | `Garanti` | C |
-| Halkbank | `Halkbank` | B |
-| ING Bank | `ING` | B |
-| İş Bankası | `IsBankasi` | B |
-| Şekerbank | `Sekerbank` | B |
-| Türk Ekonomi Bankası | `TurkEkonomiBankasi` | B |
-| Türkiye Finans | `TurkiyeFinans` | B |
-| Yapı Kredi Bankası | `YapiKredi` | B |
-| Ziraat Bankası | `Ziraat` | B |
-| Kuveyt Türk | `KuveytTurk` | B |
-| Vakıf Katılım | `VakifKatilim` | B |
+
+| Sanal POS            | `PaymentGatewayNames` | Şablon |
+| -------------------- | --------------------- | ------ |
+| Akbank               | `Akbank`              | B      |
+| Akbank Nestpay       | `AkbankNestpay`       | B      |
+| Alternatif Bank      | `AlternatifBank`      | B      |
+| Anadolubank          | `Anadolubank`         | B      |
+| Denizbank            | `Denizbank`           | B      |
+| QNB Finansbank       | `QNBFinansbank`       | B      |
+| Finansbank Nestpay   | `FinansbankNestpay`   | B      |
+| Garanti BBVA         | `Garanti`             | C      |
+| Halkbank             | `Halkbank`            | B      |
+| ING Bank             | `ING`                 | B      |
+| İş Bankası           | `IsBankasi`           | B      |
+| Şekerbank            | `Sekerbank`           | B      |
+| Türk Ekonomi Bankası | `TurkEkonomiBankasi`  | B      |
+| Türkiye Finans       | `TurkiyeFinans`       | B      |
+| Yapı Kredi Bankası   | `YapiKredi`           | B      |
+| Ziraat Bankası       | `Ziraat`              | B      |
+| Kuveyt Türk          | `KuveytTurk`          | B      |
+| Vakıf Katılım        | `VakifKatilim`        | B      |
+
 
 Nestpay bankalarında §7.7 **Şablon B** kullanılır; yalnızca `Gateways` anahtarı (`"Halkbank"`, `"Ziraat"`, …) değişir.
 
 #### Ödeme kuruluşları (planlanan)
 
-| Sanal POS | `PaymentGatewayNames` | Şablon |
-| :--- | :--- | :---: |
-| Cardplus | `Cardplus` | A |
-| Paratika | `Paratika` | A |
-| Payten - MSU | `PaytenMsu` | A |
-| Sipay | `Sipay` | A |
-| QNBpay | `QNBpay` | A |
-| ParamPos | `ParamPos` | A |
-| PayBull | `PayBull` | A |
-| Parolapara | `Parolapara` | A |
-| IQmoney | `IQmoney` | A |
-| Ahlpay | `Ahlpay` | A |
-| Moka | `Moka` | A* |
-| Vepara | `Vepara` | A |
-| ZiraatPay | `ZiraatPay` | A |
-| Tami | `Tami` | A |
-| HalkÖde | `HalkOde` | A |
-| PayNKolay | `PayNKolay` | A |
-| Paynet | `Paynet` | A |
-| PayTR | `PayTR` | F |
 
-\* Moka: kuruluş dokümanına göre `DealerCode`, `Username`, `Password` eklenebilir.
+| Sanal POS    | `PaymentGatewayNames` | Şablon |
+| ------------ | --------------------- | ------ |
+| Cardplus     | `Cardplus`            | A      |
+| Paratika     | `Paratika`            | A      |
+| Payten - MSU | `PaytenMsu`           | A      |
+| Sipay        | `Sipay`               | A      |
+| QNBpay       | `QNBpay`              | A      |
+| ParamPos     | `ParamPos`            | A      |
+| PayBull      | `PayBull`             | A      |
+| Parolapara   | `Parolapara`          | A      |
+| IQmoney      | `IQmoney`             | A      |
+| Ahlpay       | `Ahlpay`              | A      |
+| Moka         | `Moka`                | A*     |
+| Vepara       | `Vepara`              | A      |
+| ZiraatPay    | `ZiraatPay`           | A      |
+| Tami         | `Tami`                | A      |
+| HalkÖde      | `HalkOde`             | A      |
+| PayNKolay    | `PayNKolay`           | A      |
+| Paynet       | `Paynet`              | A      |
+| PayTR        | `PayTR`               | F      |
+
+
+ Moka: kuruluş dokümanına göre `DealerCode`, `Username`, `Password` eklenebilir.
 
 **Sipay tipi örnek:**
 
@@ -620,9 +915,12 @@ flowchart LR
     E[İstek GatewayName] --> C
 ```
 
+
+
 > Trimango: her provider `Settings` sözlüğünü `GetGatewayConfigAsync()` ile okur. TriPay hedefi: `TriPay:Gateways:{code}:Settings` + `MerchantGateways`.
 
 ---
+
 ## 8. Provider (banka) seçimi
 
 Developer hangi banka/kuruluşun kullanılacağını **üç şekilde** belirler (detay: proje dokümanı §5.5).
@@ -640,11 +938,13 @@ PaymentGatewayNames.Garanti     // planlanan
 PaymentGatewayNames.Default     // varsayılan (= VakifPays)
 ```
 
-| Yöntem | Örnek |
-| :--- | :--- |
-| İstekte açık ad | `GatewayName = PaymentGatewayNames.VakifPays` |
-| Varsayılan kanal | `PaymentGatewayNames.Default` veya `MerchantGateways.IsDefault` |
-| Metot parametresi | `InitializePaymentAsync(request, PaymentGatewayNames.Iyzico)` |
+
+| Yöntem            | Örnek                                                           |
+| ----------------- | --------------------------------------------------------------- |
+| İstekte açık ad   | `GatewayName = PaymentGatewayNames.VakifPays`                   |
+| Varsayılan kanal  | `PaymentGatewayNames.Default` veya `MerchantGateways.IsDefault` |
+| Metot parametresi | `InitializePaymentAsync(request, PaymentGatewayNames.Iyzico)`   |
+
 
 ```csharp
 using TriPay.Services;
@@ -662,7 +962,8 @@ var result = await _payment.InitializePaymentAsync(request, PaymentGatewayNames.
 
 **Kurallar:**
 
-- `"VakifPays"` gibi string literal **yasak** — yalnızca `PaymentGatewayNames.*`
+- `"VakifPays"` gibi string literal **yasak** — yalnızca `PaymentGatewayNames.`*
+- Yeni tip eklerken **bir dosya = bir `public` tip** (Kural #14)
 - `GatewayName` factory’de kayıtlı olmalı (`GetAllAvailableGateways()`)
 - Yeni kanal: `PaymentGatewayNames` + Factory + provider birlikte güncellenir
 - İleride: merchant için `IsEnabled` kontrolü `IPaymentGatewaySelector` ile yapılacak
@@ -673,18 +974,20 @@ var result = await _payment.InitializePaymentAsync(request, PaymentGatewayNames.
 
 ### 9.1. `PaymentRequest` — ödeme bilgisi
 
-| Alan | Zorunlu | Açıklama |
-| :--- | :---: | :--- |
-| `OrderNumber` | ✔️ | Benzersiz sipariş no |
-| `Amount` | ✔️ | Tutar |
-| `Currency` | | `TRY` (varsayılan) |
-| `CardNumber`, `ExpiryMonth`, `ExpiryYear`, `Cvv` | ✔️* | *3D/sale için |
-| `CardOwner` | ✔️ | Kart sahibi adı |
-| `CustomerEmail`, `CustomerPhone`, `CustomerIp` | ✔️ | Müşteri bilgisi |
-| `ReturnUrl` | ✔️ (3D) | Callback URL — sizin endpoint |
-| `InstallmentCount` | | Taksit (varsayılan 1) |
-| `Use3D` | | `true` → 3D Secure |
-| `TestPlatform` | | Test ortamı bayrağı |
+
+| Alan                                             | Zorunlu | Açıklama                      |
+| ------------------------------------------------ | ------- | ----------------------------- |
+| `OrderNumber`                                    | ✔️      | Benzersiz sipariş no          |
+| `Amount`                                         | ✔️      | Tutar                         |
+| `Currency`                                       |         | `TRY` (varsayılan)            |
+| `CardNumber`, `ExpiryMonth`, `ExpiryYear`, `Cvv` | ✔️*     | *3D/sale için                 |
+| `CardOwner`                                      | ✔️      | Kart sahibi adı               |
+| `CustomerEmail`, `CustomerPhone`, `CustomerIp`   | ✔️      | Müşteri bilgisi               |
+| `ReturnUrl`                                      | ✔️ (3D) | Callback URL — sizin endpoint |
+| `InstallmentCount`                               |         | Taksit (varsayılan 1)         |
+| `Use3D`                                          |         | `true` → 3D Secure            |
+| `TestPlatform`                                   |         | Test ortamı bayrağı           |
+
 
 ### 9.2. `Result<T>` — sonuç
 
@@ -699,10 +1002,12 @@ var data = result.Data;
 
 ### 9.3. Gateway adları (kodda kayıtlı / hedef)
 
-| GatewayName | Durum |
-| :--- | :--- |
-| `VakifPays` | Mevcut |
+
+| GatewayName                     | Durum          |
+| ------------------------------- | -------------- |
+| `VakifPays`                     | Mevcut         |
 | `Iyzico`, `Garanti`, `PayTR`, … | Planlanan (§6) |
+
 
 ---
 
@@ -780,6 +1085,8 @@ sequenceDiagram
     App->>TP: ProcessCallbackAsync
     App->>TP: GetPaymentStatusAsync
 ```
+
+
 
 **ReturnUrl:** TriPay değil, **sizin** controller adresiniz olmalı (`/payment/callback`).
 
@@ -949,24 +1256,28 @@ builder.Services.AddHttpClient<ITriPayApiClient, TriPayApiClient>(client =>
 
 ### 17.3. Kimlik doğrulama (önerilen)
 
-| Header | Açıklama |
-| :--- | :--- |
-| `Authorization` | `Bearer {merchantApiKey}` |
-| `X-TriPay-Merchant-Id` | Üye işyeri id |
-| `X-TriPay-Gateway` | Opsiyonel; varsayılan kanal override |
+
+| Header                 | Açıklama                             |
+| ---------------------- | ------------------------------------ |
+| `Authorization`        | `Bearer {merchantApiKey}`            |
+| `X-TriPay-Merchant-Id` | Üye işyeri id                        |
+| `X-TriPay-Gateway`     | Opsiyonel; varsayılan kanal override |
+
 
 ### 17.4. REST uçları (hedef sözleşme)
 
 > TriPay REST API henüz ayrı host olarak yayınlanmamış olabilir; sözleşme entegrasyon için hedeftir. In-process kullanım için [§10–15](#10-ödeme-başlatma-initialize) yeterlidir.
 
-| Metot | Endpoint | Gövde |
-| :--- | :--- | :--- |
-| `POST` | `/api/v1/payments/initialize` | `PaymentGatewayInitializeRequestDto` JSON |
-| `POST` | `/api/v1/payments/callback` | Form veya JSON `RawData` |
-| `GET` | `/api/v1/payments/{orderNumber}/status` | — |
-| `GET` | `/api/v1/installments` | `?cardNumber=&amount=&gateway=` |
-| `POST` | `/api/v1/payments/{id}/refund` | `{ "amount": null }` |
-| `GET` | `/api/v1/merchants/{id}/gateways` | Aktif kanal listesi |
+
+| Metot  | Endpoint                                | Gövde                                     |
+| ------ | --------------------------------------- | ----------------------------------------- |
+| `POST` | `/api/v1/payments/initialize`           | `PaymentGatewayInitializeRequestDto` JSON |
+| `POST` | `/api/v1/payments/callback`             | Form veya JSON `RawData`                  |
+| `GET`  | `/api/v1/payments/{orderNumber}/status` | —                                         |
+| `GET`  | `/api/v1/installments`                  | `?cardNumber=&amount=&gateway=`           |
+| `POST` | `/api/v1/payments/{id}/refund`          | `{ "amount": null }`                      |
+| `GET`  | `/api/v1/merchants/{id}/gateways`       | Aktif kanal listesi                       |
+
 
 ### 17.5. Örnek: Initialize (HttpClient)
 
@@ -995,12 +1306,14 @@ Banka sizin sitenize değil TriPay API’ye post edecekse URL TriPay host’ta o
 
 ### 17.7. Model A vs B karar tablosu
 
-| Kriter | NuGet/DLL | HttpClient API |
-| :--- | :--- | :--- |
-| Latency | Düşük | Ağ hop +1 |
-| Bağımlılık | .NET + TriPay DLL | Yalnızca HTTP |
+
+| Kriter      | NuGet/DLL                              | HttpClient API                 |
+| ----------- | -------------------------------------- | ------------------------------ |
+| Latency     | Düşük                                  | Ağ hop +1                      |
+| Bağımlılık  | .NET + TriPay DLL                      | Yalnızca HTTP                  |
 | Kart verisi | Sizin sunucunuzdan bankaya (PCI sizde) | TriPay host’ta (PCI TriPay’de) |
-| Güncelleme | NuGet sürüm bump | API versiyon |
+| Güncelleme  | NuGet sürüm bump                       | API versiyon                   |
+
 
 ---
 
@@ -1008,12 +1321,14 @@ Banka sizin sitenize değil TriPay API’ye post edecekse URL TriPay host’ta o
 
 Minimum dosyalar:
 
-| Dosya | Görev |
-| :--- | :--- |
-| `Program.cs` | `AddTriPay()` |
-| `CheckoutController.cs` | `Pay`, `Callback`, `Installments` |
-| `Views/Checkout/Index.cshtml` | Ödeme formu |
-| `Views/Checkout/Result.cshtml` | Sonuç |
+
+| Dosya                          | Görev                             |
+| ------------------------------ | --------------------------------- |
+| `Program.cs`                   | `AddTriPayHosted()` — [örnek](./TriPay_Program_cs_ve_DI.md#5-aspnet-core-web--hosted-demo--operatör) |
+| `CheckoutController.cs`        | `Pay`, `Callback`, `Installments` |
+| `Views/Checkout/Index.cshtml`  | Ödeme formu                       |
+| `Views/Checkout/Result.cshtml` | Sonuç                             |
+
 
 **Pay action özeti:**
 
@@ -1040,56 +1355,27 @@ public async Task<IActionResult> Pay(PaymentRequest model)
 }
 ```
 
-Referans implementasyon: repodaki `TriPay/Controllers/HomeController.cs`.
+**Referans implementasyon (TriPay demo):** `TriPay/Controllers/CheckoutController.cs` (`Pay`, `Callback`, `Installments`). `HomeController` yalnızca ana sayfa yönlendirmesi ve `Privacy` içindir.
 
 ---
 
 ## 19. Console / Worker Service örneği
 
-```csharp
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using TriPay.Services.DependencyInjection;
-using TriPay.Services;
-using TriPay.Services.Interfaces;
-using TriPay.Services.Models;
-using TriPay.Services.Providers;
+Console ve Worker’da da **`AddTriPayFramework(configuration)`** kullanın. Eski örnekteki yalnız `AddTriPay()` eksik kayıt bırakır.
 
-var host = Host.CreateDefaultBuilder()
-    .ConfigureServices(services =>
-    {
-        services.AddHttpClient();
-        services.AddTriPay();
-    })
-    .Build();
-
-var payment = host.Services.GetRequiredService<IPaymentGatewayService>();
-
-var result = await payment.InitializePaymentAsync(new PaymentGatewayInitializeRequestDto
-{
-    GatewayName = PaymentGatewayNames.VakifPays,
-    Payment = new PaymentRequest
-    {
-        Amount = 100m,
-        OrderNumber = "TEST-001",
-        ReturnUrl = "https://localhost/callback",
-        TestPlatform = true
-        // ... kart alanları
-    }
-});
-
-Console.WriteLine(result.IsSuccess ? "OK" : result.ErrorMessage);
-```
+Tam kod: [TriPay_Program_cs_ve_DI.md §6](./TriPay_Program_cs_ve_DI.md#6-console--worker--framework)
 
 ---
 
 ## 20. Hata yönetimi
 
-| Durum | Davranış |
-| :--- | :--- |
+
+| Durum               | Davranış                                                 |
+| ------------------- | -------------------------------------------------------- |
 | Provider bulunamadı | `Result.Failure("Payment gateway provider bulunamadı.")` |
-| Banka hata kodu | `Data.Success == false`, `Message` / `ErrorMessage` |
-| Exception | try/catch — loglama `TransactionLogs` (planlanan) |
+| Banka hata kodu     | `Data.Success == false`, `Message` / `ErrorMessage`      |
+| Exception           | try/catch — loglama `TransactionLogs` (planlanan)        |
+
 
 **Önerilen pattern:**
 
@@ -1108,23 +1394,40 @@ Planlanan hata kodları (§5.5): `GATEWAY_NOT_ENABLED_FOR_MERCHANT`, `GATEWAY_NO
 
 ## 21. Güvenlik ve PCI
 
-| Kural | Uygulama |
-| :--- | :--- |
-| Kart verisi | Loglara ve MSSQL’e **yazılmaz** (maskeli log) |
-| HTTPS | Zorunlu (ReturnUrl, API) |
-| Callback | `[IgnoreAntiforgeryToken]` — banka POST’u |
-| API key | Header / Key Vault — kaynak kodda sabit şifre yok |
-| DLL güncelleme | Güvenlik yamaları için NuGet sürüm takibi |
+
+| Kural              | Uygulama                                                               |
+| ------------------ | ---------------------------------------------------------------------- |
+| Kart verisi        | Loglara ve MSSQL’e **yazılmaz** — `PciDataMasker.MaskSensitivePayload` |
+| HTTPS              | Zorunlu (ReturnUrl, API)                                               |
+| Callback           | `[IgnoreAntiforgeryToken]` — banka POST’u                              |
+| Callback replay    | `RedisIdempotencyStore` — `PaymentGatewayService.ProcessCallbackAsync` |
+| API key            | User Secrets / K8s Secret / Key Vault                                  |
+| Üye işyeri webhook | `WebhookSignatureHelper` — HMAC-SHA256                                 |
+| DLL güncelleme     | Güvenlik yamaları için NuGet sürüm takibi                              |
+
+
+**Tam mimari (işlem state machine, RabbitMQ outbox, Docker, Kubernetes):**  
+[TriPay_Guvenlik_ve_Altrapi_Dokumani.md](./TriPay_Guvenlik_ve_Altrapi_Dokumani.md)
+
+### 21.1. Yerel altyapı
+
+```bash
+docker compose up -d   # redis:6379, rabbitmq:5672/15672, mssql:1433
+```
+
+`TriPay:RabbitMq` ve `TriPay:Redis:IdempotencyTtlDays` — `appsettings.json` örneği.
 
 ---
 
 ## 22. Test ortamı
 
-| Ayar | Değer |
-| :--- | :--- |
-| `PaymentRequest.TestPlatform` | `true` |
-| `InstallmentInfoRequest.TestPlatform` | `true` |
-| Gateway | `PaymentGatewayNames.VakifPays` (test credential — provider içi) |
+
+| Ayar                                  | Değer                                                            |
+| ------------------------------------- | ---------------------------------------------------------------- |
+| `PaymentRequest.TestPlatform`         | `true`                                                           |
+| `InstallmentInfoRequest.TestPlatform` | `true`                                                           |
+| Gateway                               | `PaymentGatewayNames.VakifPays` (test credential — provider içi) |
+
 
 Test kartları: ilgili banka / VakıfPayS test dokümantasyonu.
 
@@ -1151,18 +1454,20 @@ Hayır; kütüphane doğrudan projenize eklenir.
 
 ## 24. Hızlı referans tablosu
 
-| İşlem | Servis metodu | Gateway parametresi |
-| :--- | :--- | :--- |
-| Ödeme başlat | `InitializePaymentAsync` | `request.GatewayName` veya 2. parametre |
-| Callback | `ProcessCallbackAsync` | `request.GatewayName` |
-| Taksit | `GetInstallmentInfoAsync` | `request.GatewayName` |
-| Durum | `GetPaymentStatusAsync` | 2. parametre `gatewayName` |
-| İade | `RefundPaymentAsync` | 3. parametre `gatewayName` |
-| Normalize | `NormalizeCallbackFromRawDataAsync` | 1. parametre `gatewayName` |
-| Liste | `GetActiveGatewaysAsync` | — |
 
-**DI:** `services.AddTriPay();`  
-**Ana arayüz:** `IPaymentGatewayService`  
+| İşlem        | Servis metodu                       | Gateway parametresi                     |
+| ------------ | ----------------------------------- | --------------------------------------- |
+| Ödeme başlat | `InitializePaymentAsync`            | `request.GatewayName` veya 2. parametre |
+| Callback     | `ProcessCallbackAsync`              | `request.GatewayName`                   |
+| Taksit       | `GetInstallmentInfoAsync`           | `request.GatewayName`                   |
+| Durum        | `GetPaymentStatusAsync`             | 2. parametre `gatewayName`              |
+| İade         | `RefundPaymentAsync`                | 3. parametre `gatewayName`              |
+| Normalize    | `NormalizeCallbackFromRawDataAsync` | 1. parametre `gatewayName`              |
+| Liste        | `GetActiveGatewaysAsync`            | —                                       |
+
+
+**DI (üretim):** `AddTriPayFramework` veya `AddTriPayHosted` — [TriPay_Program_cs_ve_DI.md](./TriPay_Program_cs_ve_DI.md)  
+**Ana arayüz:** Framework → `IPaymentGatewayService` · Hosted → `IPaymentCheckoutService`  
 **DLL:** `TriPay.Services.dll`  
 **NuGet (hedef):** `TriPay`
 

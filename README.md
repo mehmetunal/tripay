@@ -7,12 +7,35 @@
 
 | Doküman | İçerik |
 | :--- | :--- |
-| [**pwd.md**](./pwd.md) | **Öncelik TODO:** iyzico → Vakıfbank → VakıfPayS (✅) |
-| [**Kılavuz §7**](./docs/TriPay_Kullanim_Kilavuzu.md#74-çoklu-banka-yapılandırması-neden-farklı) | Tüm banka/kuruluş **dış config** örnekleri (`appsettings`) |
-| [**TriPay_Proje_Dokumani.md**](./docs/TriPay_Proje_Dokumani.md) | Mimari, POS listesi, veritabanı, kurallar |
-| [**TriPay_Kullanim_Kilavuzu.md**](./docs/TriPay_Kullanim_Kilavuzu.md) | **Kullanım kılavuzu A–Z:** NuGet, DLL, HttpClient, kod örnekleri |
+| [**TriPay_Program_cs_ve_DI.md**](./docs/TriPay_Program_cs_ve_DI.md) | **`Program.cs` tek kaynak** — Framework / Hosted / Console |
+| [**TriPay_Kullanim_Kilavuzu.md**](./docs/TriPay_Kullanim_Kilavuzu.md) | API A–Z (Initialize, Callback, …) |
+| [**pwd.md**](./pwd.md) | Geliştirici özet + TODO |
+| [**TriPay_Proje_Dokumani.md**](./docs/TriPay_Proje_Dokumani.md) | Mimari, POS listesi, kurallar |
+| [**TriPay_Framework_Modu.md**](./docs/TriPay_Framework_Modu.md) | Framework appsettings + KVKK |
+| [**TriPay_Hosted_Modu.md**](./docs/TriPay_Hosted_Modu.md) | Hosted DB + C‑Lite |
+| [**TriPay_Kapsam_ve_Entegrasyon_Modelleri.md**](./docs/TriPay_Kapsam_ve_Entegrasyon_Modelleri.md) | Amaç, risk |
+| [**TriPay_Admin_ve_Veritabani.md**](./docs/TriPay_Admin_ve_Veritabani.md) | Hosted tablolar + admin |
+| [**TriPay_Guvenlik_ve_Altrapi_Dokumani.md**](./docs/TriPay_Guvenlik_ve_Altrapi_Dokumani.md) | **Güvenlik, işlem, RabbitMQ, Docker, Kubernetes** |
 
 > **Zorunlu:** Kod yazmadan önce proje dokümanını okuyun. Entegrasyon için kullanım kılavuzunu takip edin.
+
+## Yerel altyapı (Redis + RabbitMQ + MSSQL)
+
+```bash
+docker compose up -d
+# RabbitMQ UI: http://localhost:15672 (tripay / tripay_dev_only — yalnızca geliştirme)
+dotnet run --project TriPay
+```
+
+Detay: [TriPay_Guvenlik_ve_Altrapi_Dokumani.md](./docs/TriPay_Guvenlik_ve_Altrapi_Dokumani.md)
+
+## Testler
+
+```bash
+dotnet test
+```
+
+Yapı ve kurallar: [TriPay_Test_Rehberi.md](./docs/TriPay_Test_Rehberi.md)
 
 ## Hızlı başlangıç (NuGet / DLL)
 
@@ -25,12 +48,12 @@ dotnet add reference ../tripay/TriPay.Services/TriPay.Services.csproj
 ```
 
 ```csharp
-using TriPay.Services;
+using TriPay.Persistence.DependencyInjection;
 
-// Program.cs
-builder.Services.AddTriPay();
+// Framework modu (TriPay DB yok — önerilen)
+builder.Services.AddTriPayFramework(builder.Configuration);
 
-// Controller
+// Controller — IPaymentGatewayService
 var result = await _payment.InitializePaymentAsync(new PaymentGatewayInitializeRequestDto
 {
     GatewayName = PaymentGatewayNames.VakifPays,
@@ -38,7 +61,7 @@ var result = await _payment.InitializePaymentAsync(new PaymentGatewayInitializeR
 });
 ```
 
-Detay: [Kullanım kılavuzu](./docs/TriPay_Kullanim_Kilavuzu.md)
+Detay: [Program.cs ve DI](./docs/TriPay_Program_cs_ve_DI.md) · [Kullanım kılavuzu](./docs/TriPay_Kullanim_Kilavuzu.md)
 
 ## Demo uygulama (MVC)
 
