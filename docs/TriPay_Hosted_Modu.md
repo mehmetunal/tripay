@@ -65,7 +65,7 @@ flowchart TB
 
 ## Kurulum — Hosted Tam
 
-**Program.cs ve iç extension sırası:** [TriPay_Program_cs_ve_DI.md](./TriPay_Program_cs_ve_DI.md). Canlı örnek: `TriPay/Program.cs`.
+**Program.cs ve iç extension sırası:** [TriPay_Program_cs_ve_DI.md](./TriPay_Program_cs_ve_DI.md). Canlı örnek: `TriPay.Demo/Program.cs`.
 
 ### appsettings — Hosted Tam
 

@@ -1,0 +1,70 @@
+@model SystemStatusViewModel
+<span data-admin-module="system.index" class="hidden" aria-hidden="true"></span>
+<h1 class="sr-only">Sistem</h1>
+
+<div class="grid gap-4 lg:grid-cols-2">
+    <div class="rounded-xl border border-slate-200 bg-white p-5 text-sm">
+        <h2 class="mb-4 font-semibold text-slate-800">Bağlantılar</h2>
+        <dl class="space-y-2">
+            <div class="flex justify-between">
+                <dt class="text-slate-500">Veritabanı</dt>
+                <dd class="@(Model.DatabaseOk ? "text-emerald-700" : "text-red-700")">@(Model.DatabaseOk ? "Bağlı" : "Hata")</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-slate-500">Redis</dt>
+                <dd class="@(Model.RedisOk ? "text-emerald-700" : "text-amber-700")">@(Model.RedisOk ? "Bağlı" : "Kapalı / bellek içi")</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-slate-500">Bellek içi DB</dt>
+                <dd>@(Model.UseInMemoryDatabase ? "Evet" : "Hayır")</dd>
+            </div>
+            <div class="flex justify-between">
+                <dt class="text-slate-500">RabbitMQ outbox</dt>
+                <dd>@(Model.RabbitMqEnabled ? "Açık" : "Kapalı")</dd>
+            </div>
+        </dl>
+    </div>
+
+    <div class="rounded-xl border border-slate-200 bg-white p-5 text-sm">
+        <h2 class="mb-4 font-semibold text-slate-800">Migration (FluentMigrator)</h2>
+        @if (Model.LatestMigrationVersion is null)
+        {
+            <p class="text-slate-600">Sürüm bilgisi yok (bellek içi DB veya tablo henüz oluşmadı).</p>
+        }
+        else
+        {
+            <p><span class="text-slate-500">Son sürüm:</span> <strong>@Model.LatestMigrationVersion</strong></p>
+            <p class="mt-1 text-slate-600">@Model.LatestMigrationDescription</p>
+        }
+    </div>
+
+    <div class="rounded-xl border border-slate-200 bg-white p-5 text-sm lg:col-span-2">
+        <h2 class="mb-4 font-semibold text-slate-800">Güvenlik</h2>
+        <p class="text-slate-600">Admin IP kısıtı (<code>TriPay:Admin:AllowedIpRanges</code>):</p>
+        @if (Model.AllowedIpRanges.Count == 0)
+        {
+            <p class="mt-2 text-amber-700">Tanımlı değil — tüm IP’lerden erişim (geliştirme).</p>
+        }
+        else
+        {
+            <ul class="mt-2 list-inside list-disc text-slate-700">
+                @foreach (var ip in Model.AllowedIpRanges)
+                {
+                    <li>@ip</li>
+                }
+            </ul>
+        }
+    </div>
+
+    <div class="rounded-xl border border-slate-200 bg-white p-5 lg:col-span-2">
+        <h2 class="mb-2 font-semibold text-slate-800">Gateway metadata önbelleği</h2>
+        <p class="mb-4 text-sm text-slate-600">Ayar veya hata sözlüğü değişikliğinden sonra Redis anahtarlarını temizler.</p>
+        <form asp-action="ClearGatewayCache" method="post" data-admin-ajax="json"
+              data-admin-confirm="Tüm gateway önbelleği silinsin mi?">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="rounded-lg bg-tripay-700 px-4 py-2 text-sm font-semibold text-white hover:bg-tripay-800">
+                Önbelleği temizle
+            </button>
+        </form>
+    </div>
+</div>

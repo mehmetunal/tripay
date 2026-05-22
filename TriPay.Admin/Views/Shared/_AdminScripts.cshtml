@@ -1,0 +1,41 @@
+@model IReadOnlyList<string>
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment WebHostEnvironment
+@foreach (var scriptTilde in Model)
+{
+    if (string.IsNullOrWhiteSpace(scriptTilde))
+    {
+        continue;
+    }
+
+    var src = scriptTilde.Trim();
+    var builtRel = MapToJsBuiltRelativePath(src);
+    var resolved = src;
+    if (!string.IsNullOrEmpty(builtRel))
+    {
+        var physical = System.IO.Path.Combine(WebHostEnvironment.WebRootPath,
+            builtRel.Replace('/', System.IO.Path.DirectorySeparatorChar));
+        if (System.IO.File.Exists(physical))
+        {
+            resolved = "~/" + builtRel.Replace('\\', '/');
+        }
+    }
+
+    <script src="@Url.Content(resolved)" asp-append-version="true" defer></script>
+}
+
+@functions {
+    /// <summary>~/js/... → ~/js-built/js/....min.js (Trimango _WebScripts ile ayni mantik).</summary>
+    private static string? MapToJsBuiltRelativePath(string tildePath)
+    {
+        var s = tildePath.Trim().TrimStart('~').TrimStart('/').Replace('\\', '/');
+        if (!s.StartsWith("js/", StringComparison.OrdinalIgnoreCase) ||
+            !s.EndsWith(".js", StringComparison.OrdinalIgnoreCase) ||
+            s.EndsWith(".min.js", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        var withoutExt = s[..^3];
+        return "js-built/" + withoutExt + ".min.js";
+    }
+}

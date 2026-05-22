@@ -1,0 +1,40 @@
+@model IReadOnlyList<RoleListItem>
+<span data-admin-module="roles.index" class="hidden" aria-hidden="true"></span>
+<h1 class="sr-only">Roller ve yetkiler</h1>
+
+<p class="mb-4 text-sm text-slate-600">
+    Yetkiler veritabanında <code>AspNetRoleClaims</code> olarak saklanır. <strong>Admin</strong> rolü kodda tam yetkilidir.
+</p>
+
+<div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <table class="min-w-full divide-y divide-slate-200 text-sm">
+        <thead class="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
+            <tr>
+                <th class="px-4 py-3">Rol</th>
+                <th class="px-4 py-3">Kod</th>
+                <th class="px-4 py-3">İzin sayısı</th>
+                <th class="px-4 py-3"></th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+            @foreach (var r in Model)
+            {
+                <tr>
+                    <td class="px-4 py-3 font-medium">@r.DisplayName</td>
+                    <td class="px-4 py-3 font-mono text-xs">@r.Name</td>
+                    <td class="px-4 py-3">@r.PermissionCount</td>
+                    <td class="px-4 py-3 text-right">
+                        @if (r.IsAdminRole)
+                        {
+                            <span class="text-slate-400">Tam yetki (sabit)</span>
+                        }
+                        else
+                        {
+                            <a asp-action="Edit" asp-route-id="@r.Id" data-admin-ajax-link class="text-tripay-700 hover:underline">Yetkileri düzenle</a>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

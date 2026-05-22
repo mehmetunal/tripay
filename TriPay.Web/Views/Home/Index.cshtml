@@ -1,0 +1,77 @@
+@{
+    ViewData["Title"] = "Ana Sayfa";
+}
+<section class="relative overflow-hidden bg-gradient-to-br from-ink-950 via-ink-900 to-brand-900">
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-500/20 via-transparent to-transparent"></div>
+    <div class="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
+        <div class="max-w-3xl">
+            <span class="badge bg-brand-500/20 text-brand-100 ring-brand-400/40">Payment Hub · .NET</span>
+            <h1 class="mt-6 text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
+                Tüm ödemeler tek platformda
+            </h1>
+            <p class="mt-6 text-lg leading-relaxed text-slate-300 sm:text-xl">
+                TriPay; iyzico, banka sanal POS ve ödeme kuruluşu API’lerini tek arayüzde toplar.
+                Kendi sunucunuzda çalıştırın veya hosted ödeme sayfasını kullanın — veri sorumluluğu sizde kalır.
+            </p>
+            <div class="mt-10 flex flex-wrap gap-4">
+                <a href="@SiteLinks.DocsPath/Kilavuz/GettingStarted" class="btn-primary bg-brand-500 hover:bg-brand-400">5 dakikada başlayın</a>
+                <a asp-controller="Iletisim" asp-action="Index" class="btn-outline-light">Demo talep edin</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <p class="text-center text-sm font-semibold uppercase tracking-wider text-brand-700">Neden TriPay?</p>
+    <h2 class="section-title mt-2 text-center">Tek entegrasyon, çoklu kanal</h2>
+    <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="card">
+            <h3 class="text-lg font-bold text-ink-950">Banka sözleşmeniz sizde</h3>
+            <p class="mt-2 text-sm text-ink-600">TriPay banka değildir. Üye işyeri kendi terminal ve şifreleriyle çalışır; komisyon ve sözleşme doğrudan bankanızla.</p>
+        </div>
+        <div class="card">
+            <h3 class="text-lg font-bold text-ink-950">KVKK dostu mod</h3>
+            <p class="mt-2 text-sm text-ink-600">Framework modunda müşteri verisi ve işlem kayıtları kendi veritabanınızda kalır; TriPay tarafında merkezi log tutulmaz.</p>
+        </div>
+        <div class="card">
+            <h3 class="text-lg font-bold text-ink-950">Üretime hazır altyapı</h3>
+            <p class="mt-2 text-sm text-ink-600">3D Secure, taksit, iade, callback doğrulama ve yönetim paneli ile operasyonel görünürlük.</p>
+        </div>
+    </div>
+</section>
+
+<section class="bg-slate-100/80 py-16">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <h2 class="section-title text-center">Nasıl entegre olursunuz?</h2>
+        <p class="section-lead mx-auto text-center">İhtiyacınıza göre üç yol — hepsi aynı ödeme mantığını paylaşır.</p>
+        <div class="mt-12 grid gap-8 lg:grid-cols-3">
+            <article class="card border-brand-200 ring-2 ring-brand-500/20">
+                <span class="badge">Önerilen</span>
+                <h3 class="mt-4 text-xl font-bold">Kendi uygulamanız</h3>
+                <p class="mt-2 text-sm text-ink-600">NuGet paketini projeye ekleyin, banka ayarlarını yapılandırın, ödeme akışını kendi MVC veya API’nizde yönetin.</p>
+                <a href="@SiteLinks.DocsPath/Kilavuz/IntegrationModes" class="mt-4 inline-block text-sm font-semibold text-brand-700">Detaylı anlatım →</a>
+            </article>
+            <article class="card">
+                <h3 class="text-xl font-bold">Hosted ödeme</h3>
+                <p class="mt-2 text-sm text-ink-600">Ödeme sayfasını TriPay sunar; siz yalnızca yönlendirme ve sonuç bildirimi alırsınız.</p>
+                <a href="@SiteLinks.PayPath" class="mt-4 inline-block text-sm font-semibold text-brand-700">/pay modülü →</a>
+            </article>
+            <article class="card">
+                <h3 class="text-xl font-bold">Operasyon paneli</h3>
+                <p class="mt-2 text-sm text-ink-600">İşlemler, üye işyerleri, gateway ayarları ve raporlar tek panelde.</p>
+                <a href="@SiteLinks.AdminPath" class="mt-4 inline-block text-sm font-semibold text-brand-700">/admin modülü →</a>
+            </article>
+        </div>
+    </div>
+</section>
+
+<section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <div class="rounded-3xl bg-ink-950 px-8 py-12 text-center sm:px-12">
+        <h2 class="text-2xl font-bold text-white sm:text-3xl">Entegrasyona hazır mısınız?</h2>
+        <p class="mx-auto mt-4 max-w-xl text-slate-400">Kullanım kılavuzumuz teknik jargon yerine adım adım süreç anlatır.</p>
+        <div class="mt-8 flex flex-wrap justify-center gap-4">
+            <a href="@SiteLinks.DocsPath" class="btn-primary">Kılavuzu aç</a>
+            <a asp-controller="Entegrasyon" asp-action="Index" class="btn-outline-light">Modları karşılaştır</a>
+        </div>
+    </div>
+</section>

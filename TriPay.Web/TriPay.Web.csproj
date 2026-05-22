@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <RootNamespace>TriPay.Web</RootNamespace>
+    <AssemblyName>TriPay.Web</AssemblyName>
+    <WatchExclude>$(WatchExclude);**/node_modules/**;**/node_modules/**</WatchExclude>
+  </PropertyGroup>
+
+  <Target Name="BuildWebTailwind" BeforeTargets="Build" Condition="Exists('$(ProjectDir)gulpfile.js') AND '$(DotNetWatchBuild)' != 'true'">
+    <Message Text="TriPay.Web: Tailwind CSS derleniyor..." Importance="high" />
+    <Exec WorkingDirectory="$(ProjectDir)" Command="npx gulp styles" IgnoreExitCode="false" />
+  </Target>
+
+</Project>

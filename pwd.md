@@ -16,6 +16,7 @@ TriPay.sln
 ├── TriPay.Data/                 # MSSQL (yalnız Hosted)
 ├── TriPay.Infrastructure/       # Redis, RabbitMQ, metadata cache
 ├── TriPay/                      # Demo web — AddTriPayHosted
+├── TriPay.Admin/                # Yönetim paneli — Tailwind + Identity
 └── TriPay.Tests/
 ```
 
@@ -108,22 +109,37 @@ Development: `TriPay:Redis:Enabled: false`, `TriPay:Database:UseInMemory: true`
 
 ---
 
-## EN SON FAZ — Admin panel + Identity ⏳
+## Admin panel — Tamamlandı ✅ (Tailwind + Gulp)
 
-> **Kod yazılmadı.** Tam spesifikasyon: [docs/TriPay_Proje_Dokumani.md §17](./docs/TriPay_Proje_Dokumani.md#17-yönetim-paneli-admin--en-son-faz)
-
-| Öğe | Karar |
+| Öğe | Durum |
 | :--- | :--- |
-| Proje | `TriPay.Admin` (Bootstrap 5 MVC, Türkçe) |
-| Giriş | ASP.NET Core Identity |
-| Migration | **FluentMigrator** (`AspNetUsers`, roller, …) — EF migration değil |
-| Seed admin | `admin@gmail.com` / `Super123!` |
-| Öncelik | Ödeme + webhook + `MerchantGateways` bittikten **sonra** |
+| Proje | `TriPay.Admin` — **Tailwind CSS 4** (`npm run build:css`) |
+| UI | **Tailwind CSS 4** + Gulp; JS: Trimango `core/*` + `ModuleFactory` + **tam AJAX** (`ApiService`, `UIService`) |
+| Identity | FluentMigrator `202605220010_IdentitySchema` |
+| Doğrulama | **FluentValidation** — `TriPay.Admin/Validators/*` (DataAnnotations yalnızca `[Display]`) |
+| Katmanlar (SOLID) | Controller → `Application/Services` → `TriPay.Data/Repositories/Admin` + `Application/Dtos` |
+| Seed (Development) | `admin@gmail.com` / `Super123!` |
+| Modüller | Dashboard, İşlemler, **Raporlar**, Merchants, Gateways (ayar+hata CRUD), Outbox (+ yeniden kuyruk), Kullanıcılar (oluştur/şifre/kilit), **Roller / yetkiler**, Sistem |
+| Roller | `Admin` (tam yetki, kod) · `User` (DB’de `AspNetRoleClaims`, `permission` claim) |
+| Yetki yönetimi | `Roles/Index` → **User** rolü izinleri düzenlenir; **Admin** rolü UI’da kilitli |
+| IP kısıtı | `TriPay:Admin:AllowedIpRanges` (`appsettings`) — rol değil, ağ filtresi |
 
-**Panelde olacaklar (özet):** Dashboard, işlem/log inceleme, merchant listesi, gateway ayarları + hata sözlüğü CRUD (Redis invalidation), outbox kuyruğu, Identity kullanıcı/rol yönetimi.
+**Rol / yetki (özet):**
 
-**Panelde olmayacaklar:** PAN/CVV, appsettings credential düzenleme, merchant self-servis.
+- İzin kodları: `TriPay.Data/Identity/AdminPermissions.cs` (`panel.access`, `transactions.view`, `merchants.manage`, …)
+- Seed: `AdminPermissionSeeder` — roller + User varsayılan claim’leri
+- Oturum: `ApplicationClaimsPrincipalFactory` — User rolündeki permission claim’leri cookie’ye eklenir
+- Policy: `AddTriPayAdminAuthorization()` — her izin için ayrı policy; giriş için `panel.access` fallback
+
+```bash
+cd TriPay.Admin && npm install && npm run build
+# Kaynak: wwwroot/js/**, wwwroot/css/admin.css (Tailwind)
+# Minify: wwwroot/js-built/**, wwwroot/css-built/** (Trimango.Web ile ayni; _AdminScripts / _AdminStyles)
+dotnet run --project TriPay.Admin   # https://localhost:5055
+```
+
+Giriş (Development): `admin@gmail.com` / `Super123!`
 
 ---
 
-**Son güncelleme:** 2026-05-22 — §17 Admin + Identity planı dokümana eklendi (implementasyon en son)
+**Son güncelleme:** 2026-05-22 — Admin rol/yetki (DB) + menü policy filtreleme

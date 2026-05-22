@@ -1,0 +1,36 @@
+@model CreateUserViewModel
+<span data-admin-module="users.create" class="hidden" aria-hidden="true"></span>
+<h1 class="sr-only">Yeni kullanıcı</h1>
+
+<form asp-action="Create" method="post" data-admin-ajax="json" class="max-w-xl space-y-4 rounded-xl border border-slate-200 bg-white p-6">
+    @Html.AntiForgeryToken()
+    <div data-admin-validation-summary class="hidden rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"></div>
+
+    <div>
+        <label asp-for="Email" class="mb-1 block text-sm font-medium text-slate-700"></label>
+        <input asp-for="Email" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+        <span asp-validation-for="Email" class="text-xs text-red-600"></span>
+    </div>
+    <div>
+        <label asp-for="DisplayName" class="mb-1 block text-sm font-medium text-slate-700"></label>
+        <input asp-for="DisplayName" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+    </div>
+    <div>
+        <label asp-for="Password" class="mb-1 block text-sm font-medium text-slate-700"></label>
+        <input asp-for="Password" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+    </div>
+    <div>
+        <label asp-for="ConfirmPassword" class="mb-1 block text-sm font-medium text-slate-700"></label>
+        <input asp-for="ConfirmPassword" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+    </div>
+    <div>
+        <label asp-for="RoleName" class="mb-1 block text-sm font-medium text-slate-700"></label>
+        <select asp-for="RoleName" asp-items="ViewBag.Roles" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"></select>
+        <span asp-validation-for="RoleName" class="text-xs text-red-600"></span>
+        <p class="mt-1 text-xs text-slate-500">Admin = tam yetki; Kullanıcı = veritabanındaki rol izinleri.</p>
+    </div>
+    <div class="flex gap-2">
+        <button type="submit" class="rounded-lg bg-tripay-700 px-4 py-2 text-sm font-semibold text-white">Oluştur</button>
+        <a asp-action="Index" data-admin-ajax-link class="rounded-lg border border-slate-300 px-4 py-2 text-sm">İptal</a>
+    </div>
+</form>

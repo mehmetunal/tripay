@@ -1,0 +1,21 @@
+@{
+    ViewData["Title"] = "Yönetim Paneli";
+}
+<section class="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+    <span class="badge">/admin</span>
+    <h1 class="mt-4 text-3xl font-bold text-ink-950">TriPay Yönetim Paneli</h1>
+    <p class="mt-4 text-lg text-ink-600">
+        Hosted modda işlemler, üye işyerleri, sanal POS ayarları, outbox kuyruğu ve raporlar bu panelden yönetilir.
+        Erişim rol ve izinlere göre sınırlandırılır.
+    </p>
+    <div class="card mt-10">
+        <ul class="space-y-2 text-sm text-ink-700">
+            <li>✓ İşlem listesi ve detay</li>
+            <li>✓ Üye işyeri ve gateway yapılandırması</li>
+            <li>✓ Kullanıcı, rol ve yetki yönetimi</li>
+            <li>✓ Sistem durumu ve raporlar</li>
+        </ul>
+        <a href="@SiteLinks.AdminPanelUrl" class="btn-primary mt-6">Panele giriş yap</a>
+        <p class="mt-4 text-xs text-ink-500">Geliştirme ortamı: @SiteLinks.AdminPanelUrl</p>
+    </div>
+</section>

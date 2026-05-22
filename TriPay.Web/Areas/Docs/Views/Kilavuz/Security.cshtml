@@ -1,0 +1,26 @@
+@{
+    ViewData["Title"] = "Güvenlik";
+    ViewData["DocLead"] = "Kart verisi, imza doğrulama ve uyumluluk özeti.";
+}
+<h1>Güvenlik</h1>
+
+<h2>Kart bilgisi</h2>
+<p>
+    Tam kart numarası, CVV veya magnetic track verisi iş veritabanına <strong>yazılmamalıdır</strong>.
+    TriPay loglarında da maskeleme uygulanır (ör. yalnızca son dört hane).
+</p>
+
+<h2>HTTPS</h2>
+<p>Tüm ödeme ve callback trafiği TLS üzerinden olmalıdır. Test ortamında bile mümkünse HTTPS kullanın.</p>
+
+<h2>Bildirim imzası</h2>
+<p>
+    Sunucunuza gelen “ödeme tamamlandı” bildirimlerinde, TriPay’in gönderdiği imza ve zaman damgasını
+    sizinle paylaşılan gizli anahtarla doğrulayın. İmza uyuşmuyorsa siparişi otomatik onaylamayın.
+</p>
+
+<h2>Idempotency (çift işlem)</h2>
+<p>Aynı sipariş numarasıyla iki kez başarılı tahsilat oluşmaması için sipariş kimliğini benzersiz tutun ve callback’i yalnızca bir kez işleyin.</p>
+
+<h2>Admin paneli</h2>
+<p>Operasyon paneline rol bazlı erişim verin; mümkünse ofis IP aralığıyla sınırlayın.</p>

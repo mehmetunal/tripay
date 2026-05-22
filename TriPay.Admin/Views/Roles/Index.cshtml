@@ -1,0 +1,8 @@
+@model IReadOnlyList<RoleListItem>
+@{
+    ViewData["Title"] = "Roller ve yetkiler";
+}
+<partial name="_IndexContent" model="Model" />
+@section Scripts {
+    @await Html.PartialAsync("_AdminScripts", new[] { "~/js/modules/roles/roles.index.module.js" })
+}

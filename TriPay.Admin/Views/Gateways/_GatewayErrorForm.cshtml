@@ -1,0 +1,38 @@
+@model GatewayErrorEditViewModel
+
+<form asp-action="@(Model.Id == 0 ? "CreateError" : "EditError")" method="post" data-admin-ajax="json" class="max-w-xl space-y-4 rounded-xl border border-slate-200 bg-white p-6">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="PaymentGatewayId" />
+    <input type="hidden" asp-for="GatewayCode" />
+
+    <div data-admin-validation-summary class="hidden text-sm text-red-600"></div>
+
+    <div>
+        <label asp-for="ProviderErrorCode" class="mb-1 block text-sm font-medium text-slate-700"></label>
+        <input asp-for="ProviderErrorCode" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-mono" />
+    </div>
+    <div>
+        <label asp-for="UserMessage" class="mb-1 block text-sm font-medium text-slate-700"></label>
+        <input asp-for="UserMessage" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+    </div>
+    <div>
+        <label asp-for="NormalizedCode" class="mb-1 block text-sm font-medium text-slate-700"></label>
+        <input asp-for="NormalizedCode" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+    </div>
+    <div>
+        <label asp-for="Locale" class="mb-1 block text-sm font-medium text-slate-700"></label>
+        <select asp-for="Locale" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+            <option value="tr">tr</option>
+            <option value="en">en</option>
+        </select>
+    </div>
+    <label class="flex items-center gap-2 text-sm">
+        <input asp-for="IsActive" type="checkbox" class="rounded border-slate-300 text-tripay-700" />
+        <span asp-for="IsActive"></span>
+    </label>
+    <div class="flex gap-2">
+        <button type="submit" class="rounded-lg bg-tripay-700 px-4 py-2 text-sm font-semibold text-white">Kaydet</button>
+        <a asp-action="Errors" asp-route-gatewayId="@Model.PaymentGatewayId" data-admin-ajax-link class="rounded-lg border border-slate-300 px-4 py-2 text-sm">İptal</a>
+    </div>
+</form>

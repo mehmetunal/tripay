@@ -1,0 +1,44 @@
+@model PagedResult<OutboxListItem>
+@{
+    var unpublishedOnly = ViewBag.UnpublishedOnly as bool? == true;
+}
+<span data-admin-module="outbox.index" class="hidden" aria-hidden="true"></span>
+<h1 class="sr-only">Outbox kuyruğu</h1>
+
+<div class="mb-4 flex gap-2">
+    <a asp-action="Index" data-admin-ajax-link class="rounded-lg px-3 py-2 text-sm @(unpublishedOnly ? "text-slate-600" : "bg-slate-100 font-medium")">Tümü</a>
+    <a asp-action="Index" asp-route-unpublishedOnly="true" data-admin-ajax-link class="rounded-lg px-3 py-2 text-sm @(unpublishedOnly ? "bg-amber-100 font-medium text-amber-900" : "text-slate-600")">Yalnız bekleyen</a>
+</div>
+
+<div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <table class="min-w-full divide-y divide-slate-200 text-sm">
+        <thead class="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
+            <tr>
+                <th class="px-4 py-3">Id</th>
+                <th class="px-4 py-3">Txn</th>
+                <th class="px-4 py-3">Routing</th>
+                <th class="px-4 py-3">Yayın</th>
+                <th class="px-4 py-3">Deneme</th>
+                <th class="px-4 py-3">Tarih</th>
+                <th class="px-4 py-3"></th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+            @foreach (var o in Model.Items)
+            {
+                <tr class="hover:bg-slate-50">
+                    <td class="px-4 py-3">@o.Id</td>
+                    <td class="px-4 py-3">@o.TransactionId</td>
+                    <td class="px-4 py-3 font-mono text-xs">@o.RoutingKey</td>
+                    <td class="px-4 py-3">@(o.IsPublished ? "Evet" : "Hayır")</td>
+                    <td class="px-4 py-3">@o.RetryCount</td>
+                    <td class="px-4 py-3 text-slate-500">@o.CreatedAt.ToLocalTime().ToString("g")</td>
+                    <td class="px-4 py-3 text-right">
+                        <a asp-action="Details" asp-route-id="@o.Id" data-admin-ajax-link class="text-tripay-700 hover:underline">Detay</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+<partial name="_Pagination" model="Model" />

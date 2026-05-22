@@ -1,0 +1,210 @@
+﻿@using Microsoft.AspNetCore.Authorization
+@using TriPay.Admin.Authorization
+@using TriPay.Admin.Infrastructure
+@inject IAuthorizationService AuthorizationService
+@{
+
+    var title = ViewData["Title"] as string ?? "TriPay Yönetim";
+    bool Can(string policy) => AuthorizationService.AuthorizeAsync(User, policy).GetAwaiter().GetResult().Succeeded;
+
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+
+    var adminModule = ViewData["AdminModule"] as string ?? "";
+
+    string NavClass(string controller) =>
+
+        string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase)
+
+            ? "block rounded-lg bg-tripay-50 px-3 py-2 font-medium text-tripay-800"
+
+            : "block rounded-lg px-3 py-2 font-medium text-slate-700 hover:bg-slate-100";
+
+}
+
+<!DOCTYPE html>
+
+<html lang="tr">
+
+<head>
+
+    <meta charset="utf-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>@title — TriPay Admin</title>
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+
+    @await Html.PartialAsync("_AdminStyles", new[] { "~/css/admin.css" })
+
+</head>
+
+<body class="min-h-screen bg-slate-50 text-slate-900 antialiased">
+
+<div id="globalLoaderContainer" class="pointer-events-none fixed inset-0 z-[9998] hidden items-center justify-center bg-black/40 [.active]:flex [.active]:pointer-events-auto" aria-hidden="true">
+
+    <div class="rounded-xl bg-white px-6 py-4 text-sm font-medium text-slate-700 shadow-lg">Yükleniyor...</div>
+
+</div>
+
+@if (isAuthenticated)
+
+{
+
+    <div class="flex min-h-screen">
+
+        <aside class="flex w-64 shrink-0 flex-col border-r border-slate-200 bg-white">
+
+            <div class="border-b border-slate-200 px-5 py-4">
+
+                <a asp-controller="Dashboard" asp-action="Index" data-admin-ajax-link class="text-lg font-semibold text-tripay-700">TriPay</a>
+
+                <p class="mt-1 text-xs text-slate-500">Yönetim paneli</p>
+
+            </div>
+
+            <nav class="flex-1 space-y-1 p-3 text-sm" data-admin-nav>
+
+                @if (Can(AdminPolicies.DashboardView))
+                {
+                    <a asp-controller="Dashboard" asp-action="Index" data-admin-ajax-link class="@NavClass("Dashboard")">Dashboard</a>
+                }
+                @if (Can(AdminPolicies.TransactionsView))
+                {
+                    <a asp-controller="Transactions" asp-action="Index" data-admin-ajax-link class="@NavClass("Transactions")">İşlemler</a>
+                }
+                @if (Can(AdminPolicies.ReportsView))
+                {
+                    <a asp-controller="Reports" asp-action="Index" data-admin-ajax-link class="@NavClass("Reports")">Raporlar</a>
+                }
+                @if (Can(AdminPolicies.MerchantsView))
+                {
+                    <a asp-controller="Merchants" asp-action="Index" data-admin-ajax-link class="@NavClass("Merchants")">Üye işyerleri</a>
+                }
+                @if (Can(AdminPolicies.GatewaysView))
+                {
+                    <a asp-controller="Gateways" asp-action="Index" data-admin-ajax-link class="@NavClass("Gateways")">Ödeme kanalları</a>
+                }
+                @if (Can(AdminPolicies.OutboxView))
+                {
+                    <a asp-controller="Outbox" asp-action="Index" data-admin-ajax-link class="@NavClass("Outbox")">Outbox</a>
+                }
+                @if (Can(AdminPolicies.UsersManage))
+                {
+                    <a asp-controller="Users" asp-action="Index" data-admin-ajax-link class="@NavClass("Users")">Kullanıcılar</a>
+                }
+                @if (Can(AdminPolicies.RolesManage))
+                {
+                    <a asp-controller="Roles" asp-action="Index" data-admin-ajax-link class="@NavClass("Roles")">Roller / yetkiler</a>
+                }
+                @if (Can(AdminPolicies.SystemView))
+                {
+                    <a asp-controller="System" asp-action="Index" data-admin-ajax-link class="@NavClass("System")">Sistem</a>
+                }
+
+            </nav>
+
+            <div class="mt-auto border-t border-slate-200 p-3">
+
+                <form asp-controller="Account" asp-action="Logout" method="post" data-admin-ajax="json">
+
+                    @Html.AntiForgeryToken()
+
+                    <button type="submit"
+
+                            class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
+
+                        Çıkış
+
+                    </button>
+
+                </form>
+
+            </div>
+
+        </aside>
+
+        <main class="flex-1 overflow-auto">
+
+            <header class="border-b border-slate-200 bg-white px-6 py-4">
+
+                <h1 class="text-xl font-semibold text-slate-800" data-admin-page-title>@title</h1>
+
+            </header>
+
+            <div class="p-6">
+
+                <partial name="_Alerts" />
+
+                <div id="admin-page-root" data-admin-module="@adminModule">
+
+                    <div data-admin-content>
+
+                        @RenderBody()
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </main>
+
+    </div>
+
+}
+
+else
+
+{
+
+    <main>
+
+        <div id="admin-page-root" data-admin-module="@adminModule">
+
+            <div data-admin-content>
+
+                @RenderBody()
+
+            </div>
+
+        </div>
+
+    </main>
+
+}
+
+<script src="~/lib/jquery/dist/jquery.min.js" asp-append-version="true"></script>
+
+@await Html.PartialAsync("_AdminScripts", new[]
+
+{
+
+    "~/js/modules/core/module.factory.js",
+
+    "~/js/modules/core/api.service.js",
+
+    "~/js/modules/core/ui.service.js",
+
+    "~/js/modules/core/helper.service.js",
+
+    "~/js/modules/core/price-utils.module.js",
+
+    "~/js/modules/core/app.init.js",
+
+    "~/js/modules/admin/admin.page-base.js",
+
+    "~/js/modules/admin/admin.shell.module.js",
+
+    "~/js/modules/admin/admin.page-router.module.js"
+
+})
+
+@await RenderSectionAsync("Scripts", required: false)
+
+</body>
+
+</html>
+

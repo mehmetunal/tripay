@@ -1,0 +1,52 @@
+@{
+    ViewData["Title"] = "Kurulum";
+    ViewData["DocLead"] = "Projeye TriPay ekleme ve banka ayarlarını yapılandırma.";
+}
+<h1>Kurulum</h1>
+
+<h2>Gereksinimler</h2>
+<ul>
+    <li>.NET 8 veya üzeri web uygulaması</li>
+    <li>Bankanızdan alınmış sanal POS / üye işyeri bilgileri</li>
+    <li>Canlıda HTTPS zorunlu</li>
+    <li>İsteğe bağlı: Redis (3D oturum durumu için), RabbitMQ (arka plan bildirimleri)</li>
+</ul>
+
+<h2>Paket kurulumu</h2>
+<p>Proje dosyanıza TriPay NuGet paketini ekleyin. Paket yalnızca ödeme katmanını getirir; veritabanı şeması zorunlu değildir (Framework modu).</p>
+<pre><code>dotnet add package TriPay</code></pre>
+
+<h2>Yapılandırma dosyası</h2>
+<p>
+    <code>appsettings.json</code> veya ortam değişkenlerinde banka kanalınızı açın.
+    Her kanal için: test modu anahtarı, üye işyeri kimliği, terminal ve şifre alanları bulunur.
+    Canlı ve test bilgilerini asla aynı dosyada karıştırmayın.
+</p>
+<pre><code>{
+  "TriPay": {
+    "Persistence": {
+      "Enabled": false
+    },
+    "Gateways": {
+      "VakifPays": {
+        "Enabled": true,
+        "IsTestMode": true,
+        "Settings": {
+          "MerchantId": "BANKADAN_ALINAN",
+          "MerchantPassword": "GIZLI",
+          "TerminalNo": "TERMINAL"
+        }
+      }
+    }
+  }
+}</code></pre>
+
+<h2>Uygulama kaydı</h2>
+<p>
+    Uygulama ayağa kalkarken TriPay’i yapılandırmayla kaydedin.
+    Framework modunda “veritabanı kapalı” bayrağının açık olduğundan emin olun — böylece TriPay kendi MSSQL’ine yazmaya çalışmaz.
+    Tam kayıt satırı için geliştirici ekibiniz <code>docs/TriPay_Program_cs_ve_DI.md</code> dosyasına bakmalıdır; bu kılavuzda yalnızca kavram anlatılır.
+</p>
+
+<h2>Test</h2>
+<p>Test modunda bankanın verdiği test kartlarıyla küçük tutar deneyin. Başarılı işlemde sipariş satırınızı güncelleyin; başarısızda kullanıcıya anlaşılır Türkçe mesaj gösterin.</p>

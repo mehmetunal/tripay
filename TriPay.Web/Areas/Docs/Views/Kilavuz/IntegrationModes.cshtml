@@ -1,0 +1,40 @@
+@{
+    ViewData["Title"] = "Entegrasyon modları";
+    ViewData["DocLead"] = "Hangi modelde veri nerede durur, operasyon yükü kime kalır?";
+}
+<h1>Entegrasyon modları</h1>
+
+<h2>1. Kendi uygulamanız (Framework) — önerilen</h2>
+<p>
+    TriPay kütüphanesi sizin ASP.NET, API veya arka plan servisinizin içinde çalışır.
+    Ödeme isteği doğrudan bankaya gider; TriPay tarafında merkezi müşteri veritabanı tutulmaz.
+    KVKK açısından en şeffaf seçenektir.
+</p>
+<p><strong>Kimler için?</strong> E-ticaret, ERP entegrasyonu, özel checkout tasarımı isteyen ekipler.</p>
+
+<h2>2. Hosted ödeme sayfası</h2>
+<p>
+    Müşteri sizin siteden <a href="@SiteLinks.PayPath">/pay</a> ödeme sayfasına yönlendirilir;
+    kart ve 3D ekranları TriPay sunar. Siz sipariş kimliği ve geri dönüş URL’lerini verirsiniz.
+</p>
+<p><strong>Kimler için?</strong> Hızlı canlıya çıkmak, PCI kapsamını daraltmak isteyenler.</p>
+
+<h2>3. Yönetim paneli (Hosted operasyon)</h2>
+<p>
+    <a href="@SiteLinks.AdminPath">/admin</a> modülü üzerinden işlem izleme, üye işyeri ve gateway ayarları (canlı panel ayrı uygulamadır).
+    Framework modunda panel zorunlu değildir; hosted operasyonda gereklidir.
+</p>
+
+<h2>Karar tablosu</h2>
+<div class="overflow-x-auto rounded-xl border border-slate-200">
+    <table class="w-full text-left text-sm">
+        <thead class="bg-slate-50 font-semibold">
+            <tr><th class="p-3">Kriter</th><th class="p-3">Kendi uygulama</th><th class="p-3">Hosted</th></tr>
+        </thead>
+        <tbody class="divide-y text-ink-700">
+            <tr><td class="p-3">Müşteri verisi</td><td class="p-3">Sizde</td><td class="p-3">Yapılandırmaya bağlı</td></tr>
+            <tr><td class="p-3">Checkout tasarımı</td><td class="p-3">Tam özgürlük</td><td class="p-3">TriPay sayfası</td></tr>
+            <tr><td class="p-3">Go-live süresi</td><td class="p-3">Orta</td><td class="p-3">Kısa</td></tr>
+        </tbody>
+    </table>
+</div>

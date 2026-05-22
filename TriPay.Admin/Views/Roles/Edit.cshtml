@@ -1,0 +1,8 @@
+@model RoleEditViewModel
+@{
+    ViewData["Title"] = $"{Model.DisplayName} — yetkiler";
+}
+<partial name="_EditContent" model="Model" />
+@section Scripts {
+    @await Html.PartialAsync("_AdminScripts", new[] { "~/js/modules/roles/roles.edit.module.js" })
+}

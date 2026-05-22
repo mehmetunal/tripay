@@ -1,0 +1,14 @@
+@{
+    ViewData["Title"] = "Nasıl çalışır?";
+}
+<section class="mx-auto max-w-3xl px-4 py-16 prose-doc sm:px-6">
+    <h1 class="text-3xl font-bold text-ink-950">Hosted ödeme akışı</h1>
+    <ol>
+        <li>Müşteri sitenizde ödemeye tıklar.</li>
+        <li>Sunucunuz TriPay’e ödeme oturumu açar ve dönüş adreslerini iletir.</li>
+        <li>Müşteri <strong>/pay</strong> ödeme sayfasında kart ve 3D adımlarını tamamlar.</li>
+        <li>Banka sonucu TriPay’e döner; TriPay sizi yapılandırdığınız adrese yönlendirir.</li>
+        <li>Arka planda imzalı bir bildirim ile sipariş durumunu güncellersiniz.</li>
+    </ol>
+    <p><a href="@SiteLinks.DocsPath/Kilavuz/PaymentFlow">Kılavuzda detaylı anlatım →</a></p>
+</section>

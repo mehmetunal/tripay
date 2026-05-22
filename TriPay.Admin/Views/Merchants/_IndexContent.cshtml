@@ -1,0 +1,46 @@
+@using Microsoft.AspNetCore.Authorization
+@using TriPay.Admin.Authorization
+@inject IAuthorizationService AuthorizationService
+@model IReadOnlyList<MerchantListItem>
+@{
+    var canManage = AuthorizationService.AuthorizeAsync(User, AdminPolicies.MerchantsManage).GetAwaiter().GetResult().Succeeded;
+}
+<span data-admin-module="merchants.index" class="hidden" aria-hidden="true"></span>
+<h1 class="sr-only">Üye işyerleri</h1>
+
+<div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <table class="min-w-full divide-y divide-slate-200 text-sm">
+        <thead class="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
+            <tr>
+                <th class="px-4 py-3">Id</th>
+                <th class="px-4 py-3">Ad</th>
+                <th class="px-4 py-3">API anahtarı</th>
+                <th class="px-4 py-3">Webhook</th>
+                <th class="px-4 py-3">Aktif</th>
+                <th class="px-4 py-3"></th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+            @foreach (var m in Model)
+            {
+                <tr class="hover:bg-slate-50">
+                    <td class="px-4 py-3">@m.Id</td>
+                    <td class="px-4 py-3 font-medium">@m.Name</td>
+                    <td class="px-4 py-3 font-mono text-xs">@m.ApiKeyMasked</td>
+                    <td class="px-4 py-3 text-slate-500">@(m.WebhookUrl ?? "-")</td>
+                    <td class="px-4 py-3">@(m.IsActive ? "Evet" : "Hayır")</td>
+                    <td class="px-4 py-3 text-right">
+                        @if (canManage)
+                        {
+                            <a asp-action="Edit" asp-route-id="@m.Id" data-admin-ajax-link class="font-medium text-tripay-700 hover:underline">Düzenle</a>
+                        }
+                        else
+                        {
+                            <span class="text-slate-400">—</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

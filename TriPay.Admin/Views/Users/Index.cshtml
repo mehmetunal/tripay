@@ -1,0 +1,8 @@
+@model IReadOnlyList<UserListItem>
+@{
+    ViewData["Title"] = "Kullanıcılar";
+}
+<partial name="_IndexContent" model="Model" />
+@section Scripts {
+    @await Html.PartialAsync("_AdminScripts", new[] { "~/js/modules/users/users.index.module.js" })
+}

@@ -1,0 +1,27 @@
+@model IReadOnlyList<GatewayListDto>
+<span data-admin-module="gateways.index" class="hidden" aria-hidden="true"></span>
+<h1 class="sr-only">Ödeme kanalları</h1>
+
+<div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+    <p class="text-sm text-slate-600">Teknik URL ve hata sözlüğü buradan yönetilir. Banka şifreleri <strong>appsettings</strong> / Vault’ta kalır.</p>
+    <form asp-action="ClearAllCache" method="post" data-admin-ajax="json"
+          data-admin-confirm="Tüm gateway önbelleği silinsin mi?">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Tüm önbelleği temizle</button>
+    </form>
+</div>
+
+<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    @foreach (var g in Model)
+    {
+        <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <h3 class="text-lg font-semibold text-slate-900">@g.DisplayName</h3>
+            <p class="text-sm text-slate-500">@g.Code</p>
+            <p class="mt-2 text-xs">@(g.IsActive ? "Aktif" : "Pasif")</p>
+            <div class="mt-4 flex flex-wrap gap-2 text-sm">
+                <a asp-action="Settings" asp-route-gatewayId="@g.Id" data-admin-ajax-link class="font-medium text-tripay-700 hover:underline">Ayarlar</a>
+                <a asp-action="Errors" asp-route-gatewayId="@g.Id" data-admin-ajax-link class="font-medium text-tripay-700 hover:underline">Hata sözlüğü</a>
+            </div>
+        </div>
+    }
+</div>

@@ -1,0 +1,40 @@
+@model IReadOnlyList<string>
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment WebHostEnvironment
+@foreach (var styleTilde in Model)
+{
+    if (string.IsNullOrWhiteSpace(styleTilde))
+    {
+        continue;
+    }
+
+    var href = styleTilde.Trim();
+    var builtRel = MapToCssBuiltRelativePath(href);
+    var resolved = href;
+    if (!string.IsNullOrEmpty(builtRel))
+    {
+        var physical = System.IO.Path.Combine(WebHostEnvironment.WebRootPath,
+            builtRel.Replace('/', System.IO.Path.DirectorySeparatorChar));
+        if (System.IO.File.Exists(physical))
+        {
+            resolved = "~/" + builtRel.Replace('\\', '/');
+        }
+    }
+
+    <link href="@Url.Content(resolved)" rel="stylesheet" asp-append-version="true" />
+}
+
+@functions {
+    private static string? MapToCssBuiltRelativePath(string tildePath)
+    {
+        var s = tildePath.Trim().TrimStart('~').TrimStart('/').Replace('\\', '/');
+        if (!s.StartsWith("css/", StringComparison.OrdinalIgnoreCase) ||
+            !s.EndsWith(".css", StringComparison.OrdinalIgnoreCase) ||
+            s.EndsWith(".min.css", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        var withoutExt = s[..^4];
+        return "css-built/" + withoutExt + ".min.css";
+    }
+}

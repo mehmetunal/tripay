@@ -4,7 +4,8 @@
 
 **Versiyon:** 1.1 · **Tarih:** 22 Mayıs 2026
 
-Bu doküman yalnızca **Hosted mod** (`AddTriPayHosted`) için geçerlidir. **Framework (NuGet)** kullanan üye işyerlerinin TriPay MSSQL’i **yoktur**; veri kendi sistemlerinde tutulur.
+Bu doküman yalnızca **Hosted mod** (`AddTriPayHosted`) için geçerlidir.  
+**Yönetim paneli UI:** `TriPay.Admin` — **Tailwind CSS 4** + **Gulp** (`gulpfile.js` → `admin.min.css`, `admin.min.js`). Bootstrap ve jQuery kullanılmaz. Bkz. [TriPay_Admin_Fazlar.md](./TriPay_Admin_Fazlar.md). **Framework (NuGet)** kullanan üye işyerlerinin TriPay MSSQL’i **yoktur**; veri kendi sistemlerinde tutulur.
 
 ---
 

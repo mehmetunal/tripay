@@ -1,0 +1,28 @@
+@model TriPay.Admin.Models.Shared.PagedResultBase
+@{
+    var routeValues = ViewContext.RouteData.Values
+        .Where(x => x.Value is not null)
+        .ToDictionary(x => x.Key, x => x.Value!.ToString()!);
+    foreach (var key in Context.Request.Query.Keys.Where(k => k != "page"))
+        routeValues[key] = Context.Request.Query[key].ToString();
+}
+@if (Model.TotalPages > 1)
+{
+    <nav class="mt-4 flex items-center justify-between text-sm text-slate-600">
+        <span>Toplam @Model.TotalCount kayıt · Sayfa @Model.Page / @Model.TotalPages</span>
+        <div class="flex gap-2">
+            @if (Model.HasPrevious)
+            {
+                routeValues["page"] = (Model.Page - 1).ToString();
+                <a asp-all-route-data="routeValues" data-admin-ajax-link
+                   class="rounded-lg border border-slate-300 px-3 py-1.5 hover:bg-slate-50">Önceki</a>
+            }
+            @if (Model.HasNext)
+            {
+                routeValues["page"] = (Model.Page + 1).ToString();
+                <a asp-all-route-data="routeValues" data-admin-ajax-link
+                   class="rounded-lg border border-slate-300 px-3 py-1.5 hover:bg-slate-50">Sonraki</a>
+            }
+        </div>
+    </nav>
+}

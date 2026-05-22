@@ -1,0 +1,36 @@
+@model GatewaySettingEditViewModel
+
+<form asp-action="@(Model.Id == 0 ? "CreateSetting" : "EditSetting")" method="post" data-admin-ajax="json" class="max-w-xl space-y-4 rounded-xl border border-slate-200 bg-white p-6">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="PaymentGatewayId" />
+    <input type="hidden" asp-for="GatewayCode" />
+
+    <div data-admin-validation-summary class="hidden text-sm text-red-600"></div>
+
+    <div>
+        <label asp-for="SettingKey" class="mb-1 block text-sm font-medium text-slate-700"></label>
+        <input asp-for="SettingKey" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm font-mono" />
+        <span asp-validation-for="SettingKey" class="text-xs text-red-600"></span>
+    </div>
+    <div>
+        <label asp-for="SettingValue" class="mb-1 block text-sm font-medium text-slate-700"></label>
+        <textarea asp-for="SettingValue" rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"></textarea>
+    </div>
+    <div>
+        <label asp-for="Environment" class="mb-1 block text-sm font-medium text-slate-700"></label>
+        <select asp-for="Environment" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+            <option value="All">All</option>
+            <option value="Test">Test</option>
+            <option value="Production">Production</option>
+        </select>
+    </div>
+    <label class="flex items-center gap-2 text-sm">
+        <input asp-for="IsActive" type="checkbox" class="rounded border-slate-300 text-tripay-700" />
+        <span asp-for="IsActive"></span>
+    </label>
+    <div class="flex gap-2">
+        <button type="submit" class="rounded-lg bg-tripay-700 px-4 py-2 text-sm font-semibold text-white">Kaydet</button>
+        <a asp-action="Settings" asp-route-gatewayId="@Model.PaymentGatewayId" data-admin-ajax-link class="rounded-lg border border-slate-300 px-4 py-2 text-sm">İptal</a>
+    </div>
+</form>

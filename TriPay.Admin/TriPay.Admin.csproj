@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <RootNamespace>TriPay.Admin</RootNamespace>
+    <AssemblyName>TriPay.Admin</AssemblyName>
+    <WatchExclude>$(WatchExclude);**/bin/**;**/obj/**;**/node_modules/**;**/wwwroot/js-built/**;**/wwwroot/css-built/**</WatchExclude>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FluentValidation" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
+    <PackageReference Include="FluentValidation.AspNetCore" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TriPay.Data\TriPay.Data.csproj" />
+    <ProjectReference Include="..\TriPay.Infrastructure\TriPay.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <!-- Tailwind: Styles/app.css → wwwroot/css/admin.css (kaynak, minify degil) -->
+  <Target Name="BuildAdminTailwind" BeforeTargets="Build" Condition="Exists('$(ProjectDir)gulpfile.js') AND '$(DotNetWatchBuild)' != 'true'">
+    <Message Text="TriPay.Admin: Tailwind CSS derleniyor..." Importance="high" />
+    <Exec WorkingDirectory="$(ProjectDir)" Command="npx gulp styles" IgnoreExitCode="false" />
+  </Target>
+
+  <!-- wwwroot/js → wwwroot/js-built/**/*.min.js (Terser) -->
+  <Target Name="BuildAdminJsBuilt" AfterTargets="Build" Condition="Exists('$(ProjectDir)scripts/build-admin-js-built.js') AND '$(DotNetWatchBuild)' != 'true'">
+    <Message Text="TriPay.Admin: wwwroot/js-built uretiliyor..." Importance="high" />
+    <Exec WorkingDirectory="$(ProjectDir)" Command="node ./scripts/build-admin-js-built.js" IgnoreExitCode="false" />
+  </Target>
+
+  <!-- wwwroot/css → wwwroot/css-built/**/*.min.css -->
+  <Target Name="BuildAdminCssBuilt" AfterTargets="Build" Condition="Exists('$(ProjectDir)scripts/build-admin-css-built.js') AND '$(DotNetWatchBuild)' != 'true'">
+    <Message Text="TriPay.Admin: wwwroot/css-built uretiliyor..." Importance="high" />
+    <Exec WorkingDirectory="$(ProjectDir)" Command="node ./scripts/build-admin-css-built.js" IgnoreExitCode="false" />
+  </Target>
+
+</Project>
+

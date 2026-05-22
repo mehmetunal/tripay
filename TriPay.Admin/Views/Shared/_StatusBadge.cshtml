@@ -1,0 +1,11 @@
+@{
+    var status = ViewData["Status"] as string ?? "";
+    var css = status switch
+    {
+        "Success" => "bg-emerald-100 text-emerald-800",
+        "Failed" => "bg-red-100 text-red-800",
+        "Pending" => "bg-amber-100 text-amber-800",
+        _ => "bg-slate-100 text-slate-700"
+    };
+}
+<span class="inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium @css">@status</span>

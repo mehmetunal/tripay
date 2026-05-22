@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TriPay\TriPay.csproj" />
+    <ProjectReference Include="..\TriPay.Demo\TriPay.Demo.csproj" />
     <ProjectReference Include="..\TriPay.Core\TriPay.Core.csproj" />
     <ProjectReference Include="..\TriPay.Data\TriPay.Data.csproj" />
     <ProjectReference Include="..\TriPay.Infrastructure\TriPay.Infrastructure.csproj" />

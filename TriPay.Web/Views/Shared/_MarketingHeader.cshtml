@@ -1,0 +1,31 @@
+<header class="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-md">
+    <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+        <a href="@SiteLinks.Root" class="flex items-center gap-2 text-xl font-bold tracking-tight text-ink-950">
+            <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 text-sm font-extrabold text-white">TP</span>
+            TriPay
+        </a>
+        <nav class="hidden items-center gap-1 md:flex" aria-label="Ana menü">
+            <a asp-controller="Urun" asp-action="Index" class="btn-ghost">Ürün</a>
+            <a asp-controller="Cozumler" asp-action="Index" class="btn-ghost">Çözümler</a>
+            <a asp-controller="Entegrasyon" asp-action="Index" class="btn-ghost">Entegrasyon</a>
+            <a asp-controller="Guvenlik" asp-action="Index" class="btn-ghost">Güvenlik</a>
+            <a href="@SiteLinks.DocsPath" class="btn-ghost">Dokümantasyon</a>
+            <a asp-controller="Kurumsal" asp-action="About" class="btn-ghost">Kurumsal</a>
+        </nav>
+        <div class="flex items-center gap-2">
+            <a href="@SiteLinks.DocsPath/Kilavuz/GettingStarted" class="hidden btn-secondary sm:inline-flex">Başlangıç</a>
+            <a asp-controller="Iletisim" asp-action="Index" class="btn-primary">İletişim</a>
+            <button type="button" id="nav-toggle" class="btn-ghost md:hidden" aria-expanded="false" aria-controls="mobile-nav">Menü</button>
+        </div>
+    </div>
+    <div id="mobile-nav" class="hidden border-t border-slate-200 bg-white px-4 py-3 md:hidden">
+        <div class="flex flex-col gap-1">
+            <a asp-controller="Urun" asp-action="Index" class="btn-ghost justify-start">Ürün</a>
+            <a asp-controller="Cozumler" asp-action="Index" class="btn-ghost justify-start">Çözümler</a>
+            <a asp-controller="Entegrasyon" asp-action="Index" class="btn-ghost justify-start">Entegrasyon</a>
+            <a asp-controller="Guvenlik" asp-action="Index" class="btn-ghost justify-start">Güvenlik</a>
+            <a href="@SiteLinks.DocsPath" class="btn-ghost justify-start">Dokümantasyon</a>
+            <a asp-controller="Kurumsal" asp-action="About" class="btn-ghost justify-start">Kurumsal</a>
+        </div>
+    </div>
+</header>

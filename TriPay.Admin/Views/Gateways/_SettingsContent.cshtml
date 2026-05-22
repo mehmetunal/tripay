@@ -1,0 +1,47 @@
+@model IReadOnlyList<GatewaySettingListDto>
+@{
+    var gateway = ViewBag.Gateway as GatewayContextDto;
+}
+<span data-admin-module="gateways.settings" class="hidden" aria-hidden="true"></span>
+<h1 class="sr-only">@gateway?.Code — Ayarlar</h1>
+
+<div class="mb-4 flex items-center justify-between">
+    <a asp-action="Index" data-admin-ajax-link class="text-sm text-tripay-700 hover:underline">← Kanallar</a>
+    <a asp-action="CreateSetting" asp-route-gatewayId="@gateway!.Id" data-admin-ajax-link
+       class="rounded-lg bg-tripay-700 px-3 py-2 text-sm font-semibold text-white hover:bg-tripay-800">Yeni ayar</a>
+</div>
+
+<div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <table class="min-w-full divide-y divide-slate-200 text-sm">
+        <thead class="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
+            <tr>
+                <th class="px-4 py-3">Anahtar</th>
+                <th class="px-4 py-3">Değer</th>
+                <th class="px-4 py-3">Ortam</th>
+                <th class="px-4 py-3">Aktif</th>
+                <th class="px-4 py-3"></th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+            @foreach (var s in Model)
+            {
+                <tr>
+                    <td class="px-4 py-3 font-mono text-xs">@s.SettingKey</td>
+                    <td class="max-w-md truncate px-4 py-3" title="@s.SettingValue">@s.SettingValue</td>
+                    <td class="px-4 py-3">@s.Environment</td>
+                    <td class="px-4 py-3">@(s.IsActive ? "Evet" : "Hayır")</td>
+                    <td class="px-4 py-3 text-right whitespace-nowrap">
+                        <a asp-action="EditSetting" asp-route-id="@s.Id" data-admin-ajax-link class="text-tripay-700 hover:underline">Düzenle</a>
+                        <form asp-action="DeleteSetting" method="post" data-admin-ajax="json" data-admin-confirm="Silinsin mi?" class="inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@s.Id" />
+                            <input type="hidden" name="gatewayCode" value="@gateway.Code" />
+                            <input type="hidden" name="gatewayId" value="@gateway.Id" />
+                            <button type="submit" class="ml-2 text-red-600 hover:underline">Sil</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

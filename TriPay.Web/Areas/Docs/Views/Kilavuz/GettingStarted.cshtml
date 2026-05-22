@@ -1,0 +1,31 @@
+@{
+    ViewData["Title"] = "Hızlı başlangıç";
+    ViewData["DocLead"] = "TriPay’i tanıyın ve ilk ödeme denemenizi yapın.";
+}
+<h1>Hızlı başlangıç</h1>
+
+<h2>TriPay ne yapar?</h2>
+<p>
+    TriPay, farklı banka ve ödeme kuruluşlarının sanal POS API’lerini tek bir .NET katmanında toplar.
+    Siz yalnızca “ödeme başlat”, “sonucu al”, “iade et” gibi tutarlı adımlarla çalışırsınız;
+    hangi bankanın hangi alan adını istediği arka planda çözülür.
+</p>
+
+<h2>Beş adımda ilk ödeme</h2>
+<ol>
+    <li><strong>Mod seçin:</strong> Veriyi kendi sunucunuzda tutacaksanız “kendi uygulamanız” modunu; hazır ödeme sayfası istiyorsanız “hosted” modunu seçin.</li>
+    <li><strong>Paketi ekleyin:</strong> .NET projenize TriPay NuGet paketini referans verin (geliştirici dokümantasyonundaki paket adı).</li>
+    <li><strong>Banka bilgilerini girin:</strong> Bankanızdan aldığınız üye işyeri numarası, terminal ve şifreyi yapılandırma dosyasına veya gizli anahtar kasanıza yazın — asla kaynak koduna gömülü tutmayın.</li>
+    <li><strong>Uygulamayı kaydedin:</strong> Proje başlarken TriPay’in ödeme servislerini sisteme tanıtın (tek satırlık kayıt; ayrıntı geliştirici DI dokümanında).</li>
+    <li><strong>Test ödemesi:</strong> Test modunda küçük bir tutarla 3D’li ödeme deneyin; sipariş durumunu kendi veritabanınızda “bekliyor → başarılı” olarak güncelleyin.</li>
+</ol>
+
+<h2>Sizin sorumluluğunuzda kalanlar</h2>
+<ul>
+    <li>Sipariş ve müşteri kayıtları</li>
+    <li>Banka sözleşmesi ve komisyon</li>
+    <li>Canlı ortamda TLS sertifikası ve domain</li>
+    <li>KVKK aydınlatma metinleri (kendi siteniz için)</li>
+</ul>
+
+<p>Detaylı mod karşılaştırması için <a asp-action="IntegrationModes">Entegrasyon modları</a> sayfasına geçin.</p>

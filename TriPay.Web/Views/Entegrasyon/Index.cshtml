@@ -1,0 +1,44 @@
+@{
+    ViewData["Title"] = "Entegrasyon";
+}
+<section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <h1 class="section-title">Entegrasyon modları</h1>
+    <p class="section-lead">Risk, veri konumu ve operasyon yüküne göre doğru modeli seçin.</p>
+    <div class="mt-12 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 text-xs font-semibold uppercase text-ink-600">
+                <tr>
+                    <th class="px-6 py-4">Model</th>
+                    <th class="px-6 py-4">Veri nerede?</th>
+                    <th class="px-6 py-4">Kim işletir?</th>
+                    <th class="px-6 py-4">Uygun senaryo</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-ink-700">
+                <tr>
+                    <td class="px-6 py-4 font-semibold text-brand-800">Framework (NuGet)</td>
+                    <td class="px-6 py-4">Sizin sunucunuz</td>
+                    <td class="px-6 py-4">Sizin uygulamanız</td>
+                    <td class="px-6 py-4">KVKK hassasiyeti, tam kontrol</td>
+                </tr>
+                <tr>
+                    <td class="px-6 py-4 font-semibold">Hosted ödeme sayfası</td>
+                    <td class="px-6 py-4">TriPay hosted</td>
+                    <td class="px-6 py-4">TriPay + sizin backend</td>
+                    <td class="px-6 py-4">Hızlı go-live, PCI yüzeyini küçültme</td>
+                </tr>
+                <tr>
+                    <td class="px-6 py-4 font-semibold">Yönetim paneli</td>
+                    <td class="px-6 py-4">TriPay MSSQL</td>
+                    <td class="px-6 py-4">TriPay operasyon</td>
+                    <td class="px-6 py-4">Merkezi izleme, çoklu üye işyeri</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <p class="mt-8 text-ink-600">
+        Adım adım kurulum ve örnek akışlar için
+        <a href="@SiteLinks.DocsPath/Kilavuz/GettingStarted" class="font-semibold text-brand-700">kullanım kılavuzuna</a> bakın.
+        Teknik detay ve mimari kurallar geliştirici ekibiniz için <code>docs/</code> klasöründeki markdown dosyalarında tutulur.
+    </p>
+</section>

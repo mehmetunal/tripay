@@ -208,7 +208,8 @@ TriPay.sln
 ├── TriPay.Data               (EF Core, FluentMigrator, Repository)
 ├── TriPay.Services           (Gateway provider'lar, PaymentGatewayService, Checkout)
 ├── TriPay.Infrastructure     (Redis, RabbitMQ outbox, arka plan worker'lar)
-├── TriPay/                   (Demo MVC — AssemblyName: TriPay.Web)
+├── TriPay.Web/              (Kurumsal site + kılavuz — path modülleri)
+├── TriPay.Demo/             (Hosted checkout demosu)
 └── TriPay.Tests              (xUnit)
 ```
 
@@ -1358,7 +1359,8 @@ TriPay.sln
 
 | Proje | Rol |
 | :--- | :--- |
-| `TriPay` (`TriPay.Web`) | Hosted payment / demo checkout — **admin yok** |
+| `TriPay.Demo` | Hosted payment / demo checkout — **admin yok** |
+| `TriPay.Web` | Kurumsal site, `/docs` kılavuz — **DB yok** |
 | `TriPay.Admin` | Giriş korumalı yönetim paneli |
 | `TriPay.Data` | Ortak DbContext, repository, **FluentMigrator** (Identity tabloları dahil) |
 | `TriPay.Infrastructure` | Redis cache invalidation, health |
@@ -1471,7 +1473,7 @@ Mevcut ve planlanan veritabanı kayıtlarına göre panel modülleri:
 
 | # | Kural |
 | :---: | :--- |
-| 1 | UI: **yalnızca Bootstrap 5**; özel CSS minimum; inline style yok; etiketler **Türkçe** |
+| 1 | UI (`TriPay.Admin`): **Tailwind CSS** + Gulp (`admin.min.css` / `admin.min.js`); Bootstrap/jQuery yok; etiketler **Türkçe** |
 | 2 | İş mantığı controller’da değil; liste/detay için **MediatR** query/command (ileride `TriPay.Application` ayrılırsa orada) |
 | 3 | Liste sayfalarında sayfalama + sunucu tarafı filtre (EF `IQueryable`) |
 | 4 | `TransactionLogs` export’unda PCI maskeleme zorunlu |

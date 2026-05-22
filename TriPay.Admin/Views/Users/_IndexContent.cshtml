@@ -1,0 +1,42 @@
+@model IReadOnlyList<UserListItem>
+<span data-admin-module="users.index" class="hidden" aria-hidden="true"></span>
+<h1 class="sr-only">Kullanıcılar</h1>
+
+<div class="mb-4 flex justify-end">
+    <a asp-action="Create" data-admin-ajax-link class="rounded-lg bg-tripay-700 px-4 py-2 text-sm font-semibold text-white hover:bg-tripay-800">Yeni kullanıcı</a>
+</div>
+
+<div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <table class="min-w-full divide-y divide-slate-200 text-sm">
+        <thead class="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
+            <tr>
+                <th class="px-4 py-3">E-posta</th>
+                <th class="px-4 py-3">Ad</th>
+                <th class="px-4 py-3">Roller</th>
+                <th class="px-4 py-3">E-posta onay</th>
+                <th class="px-4 py-3 text-right">İşlem</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+            @foreach (var u in Model)
+            {
+                var locked = u.LockoutEnabled && u.IsLockedOut;
+                <tr>
+                    <td class="px-4 py-3 font-medium">@u.Email</td>
+                    <td class="px-4 py-3">@(u.DisplayName ?? "-")</td>
+                    <td class="px-4 py-3">@string.Join(", ", u.Roles)</td>
+                    <td class="px-4 py-3">@(u.EmailConfirmed ? "Evet" : "Hayır")</td>
+                    <td class="px-4 py-3 text-right">
+                        <div class="flex flex-wrap justify-end gap-2">
+                            <a asp-action="ResetPassword" asp-route-id="@u.Id" data-admin-ajax-link class="text-tripay-700 hover:underline">Şifre</a>
+                            <form asp-action="ToggleLock" asp-route-id="@u.Id" method="post" data-admin-ajax="json" class="inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="text-slate-600 hover:underline">@(locked ? "Kilidi aç" : "Kilitle")</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

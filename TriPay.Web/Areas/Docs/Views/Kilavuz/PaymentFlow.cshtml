@@ -1,0 +1,24 @@
+@{
+    ViewData["Title"] = "Ödeme akışı";
+    ViewData["DocLead"] = "Sepetten başarılı tahsilata kadar standart yol.";
+}
+<h1>Ödeme akışı</h1>
+
+<h2>Genel akış</h2>
+<ol>
+    <li><strong>Sepet onayı:</strong> Müşteri ödemeye geçer; siz benzersiz bir sipariş numarası üretirsiniz.</li>
+    <li><strong>Ödeme başlatma:</strong> Tutar, para birimi, taksit tercihi ve dönüş adresleri TriPay’e iletilir. Banka 3D gerektiriyorsa müşteri banka sayfasına yönlendirilir.</li>
+    <li><strong>3D Secure:</strong> Müşteri SMS veya banka uygulaması ile doğrular. Bu adım bankaya özeldir.</li>
+    <li><strong>Geri dönüş (callback):</strong> Banka sonucu TriPay’e post eder; TriPay doğrulayıp sizin belirlediğiniz URL’ye yönlendirir. Bu uç için tarayıcı dışı doğrulama kurallarına uyun.</li>
+    <li><strong>Sipariş güncelleme:</strong> Başarı koduna göre siparişi “ödendi” yapın; stok ve fatura süreçlerini tetikleyin.</li>
+    <li><strong>Arka plan bildirimi:</strong> Müşteri tarayıcıyı kapatsa bile sunucunuza imzalı bir HTTP bildirimi gelebilir — bunu tek gerçek kaynak olarak kullanın.</li>
+</ol>
+
+<h2>Taksit sorgulama</h2>
+<p>BIN (kartın ilk 6–8 hanesi) ile bankanın izin verdiği taksit listesini ödeme öncesi gösterebilirsiniz. Liste bankaya göre değişir.</p>
+
+<h2>İade</h2>
+<p>Başarılı işlemden sonra tam veya kısmi iade banka kurallarına tabidir. İade talebini kendi panelinizden veya API’nizden TriPay üzerinden iletirsiniz.</p>
+
+<h2>Hosted farkı</h2>
+<p>Hosted modda 2–4. adımlar müşteriye TriPay ödeme sayfasında gösterilir; siz yalnızca oturum açma ve sonuç URL’lerini yönetirsiniz.</p>

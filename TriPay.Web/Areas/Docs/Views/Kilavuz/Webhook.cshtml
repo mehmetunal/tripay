@@ -1,0 +1,30 @@
+@{
+    ViewData["Title"] = "Bildirimler (Webhook)";
+    ViewData["DocLead"] = "Ödeme sonucunun sunucunuza güvenli iletilmesi.";
+}
+<h1>Bildirimler (Webhook)</h1>
+
+<h2>Neden gerekli?</h2>
+<p>
+    Müşteri 3D sonrası tarayıcıyı kapatabilir veya ağ kesilebilir.
+    Bu yüzden “ödendi” bilgisini yalnızca müşterinin gördüğü başarı sayfasına bağlamayın;
+    banka sonucu sunucunuza ayrıca bildirilmelidir.
+</p>
+
+<h2>Nasıl çalışır?</h2>
+<ol>
+    <li>Üye işyeri panelinde veya yapılandırmada bir bildirim URL’si tanımlarsınız.</li>
+    <li>Ödeme sonuçlandığında TriPay bu adrese JSON gövde ve imza başlıkları gönderir.</li>
+    <li>Sunucunuz imzayı doğrular, siparişi günceller ve HTTP 200 döner.</li>
+    <li>Geçici hata olursa TriPay belirli aralıklarla yeniden dener (yeniden deneme politikası yapılandırmaya bağlıdır).</li>
+</ol>
+
+<h2>Örnek gövde (kavramsal)</h2>
+<pre><code>{
+  "orderId": "SIP-2026-001",
+  "status": "success",
+  "amount": 150.00,
+  "currency": "TRY",
+  "paidAt": "2026-05-22T14:30:00Z"
+}</code></pre>
+<p>Gerçek alan adları banka ve moda göre değişebilir; entegrasyon testinde loglayıp doğrulayın.</p>

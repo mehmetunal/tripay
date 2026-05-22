@@ -1,0 +1,58 @@
+@model LoginViewModel
+@{
+    ViewData["Title"] = "Giriş";
+    Layout = "_Layout";
+    ViewData["AdminModule"] = "account.login";
+}
+
+<div class="flex min-h-screen items-center justify-center px-4">
+    <div class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+        <span data-admin-module="account.login" class="hidden" aria-hidden="true"></span>
+        <h1 class="text-2xl font-bold text-slate-900">TriPay Yönetim</h1>
+        <p class="mt-1 text-sm text-slate-500">Operasyon paneline giriş yapın</p>
+
+        <form asp-action="Login" method="post" data-admin-ajax="json" class="mt-8 space-y-5">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="ReturnUrl" />
+
+            <div data-admin-validation-summary class="hidden rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"></div>
+
+            <div>
+                <label asp-for="Email" class="mb-1 block text-sm font-medium text-slate-700"></label>
+                <input asp-for="Email"
+                       class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-tripay-600 focus:outline-none focus:ring-2 focus:ring-tripay-600/20"
+                       autocomplete="username" />
+                <span asp-validation-for="Email" class="mt-1 block text-xs text-red-600"></span>
+            </div>
+
+            <div>
+                <label asp-for="Password" class="mb-1 block text-sm font-medium text-slate-700"></label>
+                <input asp-for="Password"
+                       class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-tripay-600 focus:outline-none focus:ring-2 focus:ring-tripay-600/20"
+                       autocomplete="current-password" />
+                <span asp-validation-for="Password" class="mt-1 block text-xs text-red-600"></span>
+            </div>
+
+            <label class="flex items-center gap-2 text-sm text-slate-600">
+                <input asp-for="RememberMe" type="checkbox" class="rounded border-slate-300 text-tripay-700 focus:ring-tripay-600" />
+                <span asp-for="RememberMe"></span>
+            </label>
+
+            <button type="submit"
+                    class="w-full rounded-lg bg-tripay-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-tripay-800">
+                Giriş yap
+            </button>
+        </form>
+
+        @if (HostEnvironment.IsDevelopment())
+        {
+            <p class="mt-6 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                Geliştirme: <strong>admin@gmail.com</strong> / <strong>Super123!</strong>
+            </p>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_AdminScripts", new[] { "~/js/modules/account/account.login.module.js" })
+}

@@ -230,7 +230,7 @@ public class CheckoutController : Controller
 
 Detay (tablolar, health): [TriPay_Hosted_Modu.md](./TriPay_Hosted_Modu.md)
 
-**Canlı referans:** `TriPay/Program.cs` (repo).
+**Canlı referans:** `TriPay.Demo/Program.cs` (repo).
 
 ---
 

@@ -1,0 +1,37 @@
+@model RoleEditViewModel
+<span data-admin-module="roles.edit" class="hidden" aria-hidden="true"></span>
+<h1 class="sr-only">@Model.DisplayName — yetkiler</h1>
+
+<a asp-action="Index" data-admin-ajax-link class="mb-4 inline-block text-sm text-tripay-700 hover:underline">← Roller</a>
+
+<form asp-action="Edit" method="post" data-admin-ajax="json" class="max-w-2xl space-y-4 rounded-xl border border-slate-200 bg-white p-6">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="RoleName" />
+    <input type="hidden" asp-for="DisplayName" />
+
+    <p class="text-sm text-slate-600">Rol: <strong>@Model.DisplayName</strong> (<code>@Model.RoleName</code>)</p>
+    <div data-admin-validation-summary class="hidden rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"></div>
+
+    <div class="space-y-3">
+        @for (var i = 0; i < Model.Permissions.Count; i++)
+        {
+            <input type="hidden" asp-for="Permissions[i].Code" />
+            <input type="hidden" asp-for="Permissions[i].Label" />
+            <input type="hidden" asp-for="Permissions[i].Description" />
+            <label class="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-100 p-3 hover:bg-slate-50">
+                <input asp-for="Permissions[i].IsSelected" type="checkbox" class="mt-1 rounded border-slate-300 text-tripay-700" />
+                <span>
+                    <span class="block text-sm font-medium text-slate-800">@Model.Permissions[i].Label</span>
+                    <span class="block text-xs text-slate-500">@Model.Permissions[i].Description</span>
+                    <span class="font-mono text-xs text-slate-400">@Model.Permissions[i].Code</span>
+                </span>
+            </label>
+        }
+    </div>
+
+    <div class="flex gap-2 pt-2">
+        <button type="submit" class="rounded-lg bg-tripay-700 px-4 py-2 text-sm font-semibold text-white hover:bg-tripay-800">Kaydet</button>
+        <a asp-action="Index" data-admin-ajax-link class="rounded-lg border border-slate-300 px-4 py-2 text-sm">İptal</a>
+    </div>
+</form>

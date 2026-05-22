@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@(ViewData["Title"] ?? "TriPay")</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/web.css" asp-append-version="true" />
+</head>
+<body class="min-h-screen bg-slate-50">
+    <header class="border-b border-slate-200 bg-white">
+        <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 sm:px-6">
+            <a href="@SiteLinks.Root" class="text-lg font-bold text-ink-950">Tri<span class="text-brand-600">Pay</span></a>
+            <nav class="flex items-center gap-3 text-sm">
+                <a href="@SiteLinks.DocsPath" class="btn-ghost">Kılavuz</a>
+                <a href="@SiteLinks.Root" class="btn-ghost">Ana site</a>
+            </nav>
+        </div>
+    </header>
+    <main>@RenderBody()</main>
+    <footer class="border-t border-slate-200 py-8 text-center text-sm text-ink-500">
+        © @DateTime.Now.Year TriPay · <a href="/Iletisim" class="text-brand-700 hover:underline">İletişim</a>
+    </footer>
+</body>
+</html>

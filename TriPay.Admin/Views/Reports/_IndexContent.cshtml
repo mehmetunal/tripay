@@ -1,0 +1,159 @@
+@model ReportsIndexDto
+@{
+    var filter = ViewBag.Filter as ReportsFilterModel ?? new ReportsFilterModel();
+    var s = Model.Summary;
+    var fromLocal = filter.FromUtc?.ToLocalTime().ToString("yyyy-MM-dd") ?? Model.Filter.FromUtc.ToLocalTime().ToString("yyyy-MM-dd");
+    var toLocal = filter.ToUtc?.ToLocalTime().ToString("yyyy-MM-dd") ?? Model.Filter.ToUtc.ToLocalTime().ToString("yyyy-MM-dd");
+}
+<span data-admin-module="reports.index" class="hidden" aria-hidden="true"></span>
+<h1 class="sr-only">Raporlar</h1>
+
+<form method="get" asp-action="Index" data-admin-ajax="html" class="mb-6 grid gap-4 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-2 lg:grid-cols-5">
+    <div>
+        <label class="mb-1 block text-xs font-medium text-slate-600">Başlangıç (yerel tarih)</label>
+        <input type="date" name="FromUtc" value="@fromLocal" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+    </div>
+    <div>
+        <label class="mb-1 block text-xs font-medium text-slate-600">Bitiş (yerel tarih)</label>
+        <input type="date" name="ToUtc" value="@toLocal" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+    </div>
+    <div>
+        <label class="mb-1 block text-xs font-medium text-slate-600">Üye işyeri</label>
+        <select name="MerchantId" asp-items="ViewBag.Merchants" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+            <option value="">Tümü</option>
+        </select>
+    </div>
+    <div>
+        <label class="mb-1 block text-xs font-medium text-slate-600">Ödeme kanalı</label>
+        <select name="PaymentGatewayId" asp-items="ViewBag.Gateways" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+            <option value="">Tümü</option>
+        </select>
+    </div>
+    <div class="flex items-end gap-2">
+        <button type="submit" class="rounded-lg bg-tripay-700 px-4 py-2 text-sm font-semibold text-white hover:bg-tripay-800">Uygula</button>
+        <a asp-action="Index" data-admin-ajax-link class="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Sıfırla</a>
+    </div>
+</form>
+
+<p class="mb-4 text-xs text-slate-500">
+    Dönem: @Model.Filter.FromUtc.ToLocalTime().ToString("g") — @Model.Filter.ToUtc.ToLocalTime().ToString("g") (UTC filtre)
+</p>
+
+<div class="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="rounded-xl border border-slate-200 bg-white p-4">
+        <p class="text-xs font-medium text-slate-500">Toplam işlem</p>
+        <p class="mt-1 text-2xl font-bold text-slate-900">@s.TotalCount</p>
+    </div>
+    <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+        <p class="text-xs font-medium text-emerald-700">Başarılı</p>
+        <p class="mt-1 text-2xl font-bold text-emerald-900">@s.SuccessCount <span class="text-sm font-normal">(%@s.SuccessRatePercent)</span></p>
+    </div>
+    <div class="rounded-xl border border-red-200 bg-red-50 p-4">
+        <p class="text-xs font-medium text-red-700">Başarısız</p>
+        <p class="mt-1 text-2xl font-bold text-red-900">@s.FailedCount</p>
+    </div>
+    <div class="rounded-xl border border-tripay-200 bg-tripay-50 p-4">
+        <p class="text-xs font-medium text-tripay-800">Başarılı ciro</p>
+        <p class="mt-1 text-2xl font-bold text-tripay-900">@s.SuccessAmount.ToString("N2") @s.Currency</p>
+    </div>
+</div>
+
+<div class="mb-4 flex flex-wrap gap-3 text-sm text-slate-600">
+    <span>Bekleyen: <strong>@s.PendingCount</strong></span>
+    <span>İptal: <strong>@s.CancelledCount</strong></span>
+</div>
+
+<div class="grid gap-6 xl:grid-cols-2">
+    <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <h2 class="border-b border-slate-100 px-4 py-3 text-sm font-semibold text-slate-800">Üye işyerine göre</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200 text-sm">
+                <thead class="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
+                    <tr>
+                        <th class="px-4 py-3">Üye işyeri</th>
+                        <th class="px-4 py-3 text-right">Adet</th>
+                        <th class="px-4 py-3 text-right">Başarılı</th>
+                        <th class="px-4 py-3 text-right">Ciro</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @if (Model.ByMerchant.Count == 0)
+                    {
+                        <tr><td colspan="4" class="px-4 py-6 text-center text-slate-500">Kayıt yok</td></tr>
+                    }
+                    @foreach (var row in Model.ByMerchant)
+                    {
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-4 py-3 font-medium">@row.MerchantName</td>
+                            <td class="px-4 py-3 text-right">@row.TotalCount</td>
+                            <td class="px-4 py-3 text-right text-emerald-700">@row.SuccessCount</td>
+                            <td class="px-4 py-3 text-right font-mono text-xs">@row.SuccessAmount.ToString("N2") @row.Currency</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <h2 class="border-b border-slate-100 px-4 py-3 text-sm font-semibold text-slate-800">Ödeme kanalına göre</h2>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200 text-sm">
+                <thead class="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
+                    <tr>
+                        <th class="px-4 py-3">Kanal</th>
+                        <th class="px-4 py-3 text-right">Adet</th>
+                        <th class="px-4 py-3 text-right">Başarılı</th>
+                        <th class="px-4 py-3 text-right">Ciro</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @if (Model.ByGateway.Count == 0)
+                    {
+                        <tr><td colspan="4" class="px-4 py-6 text-center text-slate-500">Kayıt yok</td></tr>
+                    }
+                    @foreach (var row in Model.ByGateway)
+                    {
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-4 py-3 font-mono font-medium">@row.GatewayCode</td>
+                            <td class="px-4 py-3 text-right">@row.TotalCount</td>
+                            <td class="px-4 py-3 text-right text-emerald-700">@row.SuccessCount</td>
+                            <td class="px-4 py-3 text-right font-mono text-xs">@row.SuccessAmount.ToString("N2") @row.Currency</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+<section class="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <h2 class="border-b border-slate-100 px-4 py-3 text-sm font-semibold text-slate-800">Günlük trend</h2>
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-200 text-sm">
+            <thead class="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
+                <tr>
+                    <th class="px-4 py-3">Tarih</th>
+                    <th class="px-4 py-3 text-right">Toplam</th>
+                    <th class="px-4 py-3 text-right">Başarılı</th>
+                    <th class="px-4 py-3 text-right">Ciro</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                @if (Model.DailyTrend.Count == 0)
+                {
+                    <tr><td colspan="4" class="px-4 py-6 text-center text-slate-500">Kayıt yok</td></tr>
+                }
+                @foreach (var row in Model.DailyTrend)
+                {
+                    <tr class="hover:bg-slate-50">
+                        <td class="px-4 py-3">@row.Date.ToString("dd.MM.yyyy")</td>
+                        <td class="px-4 py-3 text-right">@row.TotalCount</td>
+                        <td class="px-4 py-3 text-right text-emerald-700">@row.SuccessCount</td>
+                        <td class="px-4 py-3 text-right font-mono text-xs">@row.SuccessAmount.ToString("N2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</section>

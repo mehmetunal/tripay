@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using TriPay.Data.Migrations;
 using TriPay.Data.Persistence;
 using TriPay.Data.Repositories;
+using TriPay.Data.Repositories.Admin;
 
 namespace TriPay.Data.DependencyInjection;
 
@@ -34,6 +35,12 @@ public static class TriPayDataServiceCollectionExtensions
 
         services.AddScoped<IPaymentTransactionRepository, PaymentTransactionRepository>();
         services.AddScoped<IGatewayMetadataRepository, GatewayMetadataRepository>();
+        services.AddScoped<IAdminMerchantRepository, AdminMerchantRepository>();
+        services.AddScoped<IAdminTransactionRepository, AdminTransactionRepository>();
+        services.AddScoped<IAdminOutboxRepository, AdminOutboxRepository>();
+        services.AddScoped<IAdminGatewayRepository, AdminGatewayRepository>();
+        services.AddScoped<IAdminDatabaseRepository, AdminDatabaseRepository>();
+        services.AddScoped<IAdminReportsRepository, AdminReportsRepository>();
 
         services.AddFluentMigratorCore()
             .ConfigureRunner(rb => rb

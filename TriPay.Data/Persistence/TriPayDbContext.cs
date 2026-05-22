@@ -1,10 +1,12 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using TriPay.Data.Entities;
 
 namespace TriPay.Data.Persistence;
 
-/// <summary>TriPay MSSQL veritabanı bağlamı.</summary>
-public class TriPayDbContext : DbContext
+/// <summary>TriPay MSSQL veritabanı bağlamı (ödeme + Identity).</summary>
+public class TriPayDbContext : IdentityDbContext<ApplicationUser, IdentityRole<int>, int>
 {
     /// <summary>DbContext oluşturur.</summary>
     public TriPayDbContext(DbContextOptions<TriPayDbContext> options)
@@ -36,6 +38,13 @@ public class TriPayDbContext : DbContext
     /// <summary>Fluent API yapılandırması.</summary>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<ApplicationUser>(e =>
+        {
+            e.Property(x => x.DisplayName).HasMaxLength(128);
+        });
+
         modelBuilder.Entity<Merchant>(e =>
         {
             e.ToTable("Merchants");

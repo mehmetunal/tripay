@@ -1,0 +1,6 @@
+@model GatewaySettingEditViewModel
+@{ ViewData["Title"] = "Yeni gateway ayarı"; }
+<partial name="_SettingFormContent" model="Model" />
+@section Scripts {
+    @await Html.PartialAsync("_AdminScripts", new[] { "~/js/modules/gateways/gateways.setting-form.module.js" })
+}

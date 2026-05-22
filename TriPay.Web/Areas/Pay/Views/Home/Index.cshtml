@@ -1,0 +1,16 @@
+@{
+    ViewData["Title"] = "Hosted Ödeme";
+}
+<section class="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+    <span class="badge">/pay</span>
+    <h1 class="mt-4 text-3xl font-bold text-ink-950">Hosted ödeme girişi</h1>
+    <p class="mt-4 text-lg text-ink-600">
+        Müşterinizi güvenli ödeme sayfasına yönlendirin. Kart bilgisi ve 3D adımları TriPay hosted ortamında işlenir;
+        siz yalnızca sipariş kimliği ve sonuç bildirimini kendi sisteminizde tutarsınız.
+    </p>
+    <div class="card mt-10 space-y-4">
+        <p class="text-sm text-ink-600"><strong>Geliştirme demosu:</strong> Aşağıdaki bağlantı mevcut checkout örneğini açar.</p>
+        <a href="@SiteLinks.PayDemoUrl" class="btn-primary" rel="noopener">Demo ödeme sayfasına git</a>
+        <a asp-controller="Home" asp-action="HowItWorks" class="btn-secondary">Nasıl çalışır?</a>
+    </div>
+</section>

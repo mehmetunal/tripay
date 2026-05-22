@@ -1,0 +1,32 @@
+@model MerchantEditViewModel
+<span data-admin-module="merchants.edit" class="hidden" aria-hidden="true"></span>
+<h1 class="sr-only">Üye işyeri düzenle</h1>
+
+<form asp-action="Edit" method="post" data-admin-ajax="json" class="max-w-xl space-y-4 rounded-xl border border-slate-200 bg-white p-6">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+
+    <div data-admin-validation-summary class="hidden rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"></div>
+
+    <div>
+        <label asp-for="Name" class="mb-1 block text-sm font-medium text-slate-700"></label>
+        <input asp-for="Name" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+        <span asp-validation-for="Name" class="text-xs text-red-600"></span>
+    </div>
+    <div>
+        <label asp-for="WebhookUrl" class="mb-1 block text-sm font-medium text-slate-700"></label>
+        <input asp-for="WebhookUrl" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+    </div>
+    <div>
+        <label asp-for="ApiKeyMasked" class="mb-1 block text-sm font-medium text-slate-700"></label>
+        <input asp-for="ApiKeyMasked" readonly class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 font-mono text-sm text-slate-500" />
+    </div>
+    <label class="flex items-center gap-2 text-sm">
+        <input asp-for="IsActive" type="checkbox" class="rounded border-slate-300 text-tripay-700" />
+        <span asp-for="IsActive"></span>
+    </label>
+    <div class="flex gap-2 pt-2">
+        <button type="submit" class="rounded-lg bg-tripay-700 px-4 py-2 text-sm font-semibold text-white hover:bg-tripay-800">Kaydet</button>
+        <a asp-action="Index" data-admin-ajax-link class="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">İptal</a>
+    </div>
+</form>

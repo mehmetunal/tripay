@@ -15,6 +15,7 @@
 | [**TriPay_Hosted_Modu.md**](./docs/TriPay_Hosted_Modu.md) | Hosted DB + C‑Lite |
 | [**TriPay_Kapsam_ve_Entegrasyon_Modelleri.md**](./docs/TriPay_Kapsam_ve_Entegrasyon_Modelleri.md) | Amaç, risk |
 | [**TriPay_Admin_ve_Veritabani.md**](./docs/TriPay_Admin_ve_Veritabani.md) | Hosted tablolar + admin |
+| [**TriPay_Admin_Fazlar.md**](./docs/TriPay_Admin_Fazlar.md) | Admin panel faz planı (Tailwind) |
 | [**TriPay_Guvenlik_ve_Altrapi_Dokumani.md**](./docs/TriPay_Guvenlik_ve_Altrapi_Dokumani.md) | **Güvenlik, işlem, RabbitMQ, Docker, Kubernetes** |
 
 > **Zorunlu:** Kod yazmadan önce proje dokümanını okuyun. Entegrasyon için kullanım kılavuzunu takip edin.

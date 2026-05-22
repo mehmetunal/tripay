@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@source "../Views/**/*.cshtml";
+@source "../wwwroot/js/**/*.js";
+
+@theme {
+  --color-tripay-600: #0d9488;
+  --color-tripay-700: #0f766e;
+  --color-tripay-800: #115e59;
+}
+
+#globalLoaderContainer.active {
+  display: flex !important;
+  pointer-events: auto;
+}

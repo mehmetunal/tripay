@@ -1,0 +1,23 @@
+@{
+    ViewData["Title"] = "Sık sorulanlar";
+    ViewData["DocLead"] = "En çok gelen sorular ve kısa yanıtlar.";
+}
+<h1>Sık sorulanlar</h1>
+
+<h2>TriPay banka mı?</h2>
+<p>Hayır. Ödeme lisansı ve sözleşme sizin bankanızla; TriPay yazılım entegrasyon katmanıdır.</p>
+
+<h2>Hangi bankalar destekleniyor?</h2>
+<p>Yol haritasında iyzico, Garanti, PayTR ve diğer sanal POS kanalları vardır. Canlıda hangi kanalın açık olduğunu proje yöneticinizden veya admin panelindeki gateway listesinden öğrenin.</p>
+
+<h2>Verilerim TriPay sunucusunda kalır mı?</h2>
+<p>Framework modunda hayır — işlem özeti sizin veritabanınızda. Hosted modda yapılandırmaya göre özet kayıt TriPay MSSQL’inde tutulabilir.</p>
+
+<h2>Test kartı nereden?</h2>
+<p>Bankanızın sanal POS test dokümanından. Test modu bayrağı açıkken gerçek tahsilat yapılmaz.</p>
+
+<h2>Demo site ile üretim farkı?</h2>
+<p><code>TriPay</code> klasöründeki web projesi yalnızca hosted checkout demosudur. Üretimde kendi siteniz veya <a href="@SiteLinks.Root">tripay.com.tr</a> kurumsal yüzünüz kullanılır.</p>
+
+<h2>Daha teknik detay?</h2>
+<p>Geliştirici markdown dokümanları repoda <code>docs/</code> altındadır: mimari kurallar, veritabanı şeması ve genişletme planı.</p>

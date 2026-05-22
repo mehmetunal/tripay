@@ -1,0 +1,73 @@
+@model PagedResult<TransactionListItem>
+@{
+    var filter = ViewBag.Filter as TransactionListFilter ?? new TransactionListFilter();
+}
+<span data-admin-module="transactions.index" class="hidden" aria-hidden="true"></span>
+<h1 class="sr-only">İşlemler</h1>
+
+<form method="get" asp-action="Index" data-admin-ajax="html" class="mb-6 grid gap-4 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-3 lg:grid-cols-6">
+    <div>
+        <label class="mb-1 block text-xs font-medium text-slate-600">Sipariş no</label>
+        <input name="OrderNumber" value="@filter.OrderNumber" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" />
+    </div>
+    <div>
+        <label class="mb-1 block text-xs font-medium text-slate-600">Durum</label>
+        <select name="Status" asp-items="ViewBag.Statuses" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+            <option value="">Tümü</option>
+        </select>
+    </div>
+    <div>
+        <label class="mb-1 block text-xs font-medium text-slate-600">Üye işyeri</label>
+        <select name="MerchantId" asp-items="ViewBag.Merchants" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+            <option value="">Tümü</option>
+        </select>
+    </div>
+    <div>
+        <label class="mb-1 block text-xs font-medium text-slate-600">Kanal</label>
+        <select name="PaymentGatewayId" asp-items="ViewBag.Gateways" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+            <option value="">Tümü</option>
+        </select>
+    </div>
+    <div class="md:col-span-2 flex items-end gap-2">
+        <button type="submit" class="rounded-lg bg-tripay-700 px-4 py-2 text-sm font-semibold text-white hover:bg-tripay-800">Filtrele</button>
+        <a asp-action="Index" data-admin-ajax-link class="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Temizle</a>
+    </div>
+</form>
+
+<div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <table class="min-w-full divide-y divide-slate-200 text-sm">
+        <thead class="bg-slate-50 text-left text-xs font-semibold uppercase text-slate-500">
+            <tr>
+                <th class="px-4 py-3">Id</th>
+                <th class="px-4 py-3">Sipariş</th>
+                <th class="px-4 py-3">Üye işyeri</th>
+                <th class="px-4 py-3">Kanal</th>
+                <th class="px-4 py-3">Tutar</th>
+                <th class="px-4 py-3">Durum</th>
+                <th class="px-4 py-3">Tarih</th>
+                <th class="px-4 py-3"></th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+            @foreach (var item in Model.Items)
+            {
+                <tr class="hover:bg-slate-50">
+                    <td class="px-4 py-3">@item.Id</td>
+                    <td class="px-4 py-3 font-medium">@item.OrderNumber</td>
+                    <td class="px-4 py-3">@item.MerchantName</td>
+                    <td class="px-4 py-3">@item.GatewayCode</td>
+                    <td class="px-4 py-3">@item.Amount.ToString("N2") @item.Currency</td>
+                    <td class="px-4 py-3">
+                        @{ ViewData["Status"] = item.Status; }
+                        <partial name="_StatusBadge" />
+                    </td>
+                    <td class="px-4 py-3 text-slate-500">@item.CreatedAt.ToLocalTime().ToString("g")</td>
+                    <td class="px-4 py-3 text-right">
+                        <a asp-action="Details" asp-route-id="@item.Id" data-admin-ajax-link class="font-medium text-tripay-700 hover:underline">Detay</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+<partial name="_Pagination" model="Model" />

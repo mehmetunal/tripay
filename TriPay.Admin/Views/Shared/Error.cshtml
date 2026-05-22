@@ -1,0 +1,15 @@
+﻿@model ErrorViewModel
+@{
+    ViewData["Title"] = "Hata";
+    Layout = "_Layout";
+}
+
+<div class="flex min-h-screen items-center justify-center p-6">
+    <div class="max-w-lg rounded-xl border border-red-200 bg-red-50 p-6 text-red-900">
+        <h1 class="text-lg font-semibold">Bir hata oluştu</h1>
+        @if (Model.ShowRequestId)
+        {
+            <p class="mt-2 text-sm">İstek: <code class="rounded bg-red-100 px-1">@Model.RequestId</code></p>
+        }
+    </div>
+</div>
