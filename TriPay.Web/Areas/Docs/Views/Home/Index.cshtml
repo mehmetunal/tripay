@@ -1,23 +1,52 @@
 @{
-    ViewData["Title"] = "Dokümantasyon";
+    ViewData["Title"] = "Genel bakış";
 }
-<h1 class="text-3xl font-bold text-ink-950">TriPay Dokümantasyon</h1>
-<p class="mt-4 text-lg text-ink-600">Ödeme entegrasyonunu sıfırdan öğrenmek için adım adım kılavuz. Teknik sınıf veya metot adları yerine süreç ve kavram odaklı anlatım.</p>
-<div class="mt-10 grid gap-4 sm:grid-cols-2">
-    <a asp-controller="Kilavuz" asp-action="GettingStarted" class="card block transition hover:border-brand-300 hover:shadow-md">
-        <h2 class="font-bold text-ink-950">Hızlı başlangıç</h2>
-        <p class="mt-2 text-sm text-ink-600">İlk ödemenizi 5 adımda hayata geçirin.</p>
-    </a>
-    <a asp-controller="Kilavuz" asp-action="IntegrationModes" class="card block transition hover:border-brand-300">
-        <h2 class="font-bold text-ink-950">Entegrasyon modları</h2>
-        <p class="mt-2 text-sm text-ink-600">Framework, hosted ve panel — hangisi size uygun?</p>
-    </a>
-    <a asp-controller="Kilavuz" asp-action="PaymentFlow" class="card block transition hover:border-brand-300">
-        <h2 class="font-bold text-ink-950">Ödeme akışı</h2>
-        <p class="mt-2 text-sm text-ink-600">Sepetten 3D Secure’a, sonuç bildirimine kadar.</p>
-    </a>
-    <a asp-controller="Kilavuz" asp-action="Faq" class="card block transition hover:border-brand-300">
-        <h2 class="font-bold text-ink-950">Sık sorulanlar</h2>
-        <p class="mt-2 text-sm text-ink-600">KVKK, test ortamı, hata kodları.</p>
-    </a>
+<div class="rounded-2xl border border-brand-200 bg-brand-50 px-6 py-8">
+    <h1 class="text-3xl font-bold text-ink-950 sm:text-4xl">TriPay kullanım kılavuzu</h1>
+    <p class="mt-4 max-w-2xl text-lg text-ink-700">
+        Ödeme entegrasyonunu sıfırdan öğrenmek için adım adım rehber.
+        Teknik sınıf veya metot adı yerine süreç, kavram ve karar noktalarına odaklanır.
+    </p>
+    <a href="@(SiteLinks.DocsPath)/Guide/GettingStarted" class="btn-primary mt-6">İlk ödemenize başlayın</a>
 </div>
+
+<section class="mt-12">
+    <h2 class="text-sm font-semibold uppercase tracking-wider text-brand-700">Popüler konular</h2>
+    <div class="mt-6 grid gap-4 sm:grid-cols-2">
+        <a asp-controller="Guide" asp-action="GettingStarted" class="card block transition hover:border-brand-300 hover:shadow-md">
+            <h3 class="font-bold text-ink-950">Hızlı başlangıç</h3>
+            <p class="mt-2 text-sm text-ink-600">İlk ödemenizi beş adımda hayata geçirin: ortam, kanal, test, canlı.</p>
+        </a>
+        <a asp-controller="Guide" asp-action="IntegrationModes" class="card block transition hover:border-brand-300 hover:shadow-md">
+            <h3 class="font-bold text-ink-950">Entegrasyon modları</h3>
+            <p class="mt-2 text-sm text-ink-600">Framework, hosted ve panel — hangisi size uygun?</p>
+        </a>
+        <a asp-controller="Guide" asp-action="PaymentFlow" class="card block transition hover:border-brand-300 hover:shadow-md">
+            <h3 class="font-bold text-ink-950">Ödeme akışı</h3>
+            <p class="mt-2 text-sm text-ink-600">Sepetten 3D Secure’a, sonuç bildirimine kadar uçtan uca.</p>
+        </a>
+        <a asp-controller="Guide" asp-action="Webhook" class="card block transition hover:border-brand-300 hover:shadow-md">
+            <h3 class="font-bold text-ink-950">Webhook ve bildirimler</h3>
+            <p class="mt-2 text-sm text-ink-600">İmzalı bildirim, yeniden deneme ve hata senaryoları.</p>
+        </a>
+        <a asp-controller="Guide" asp-action="Security" class="card block transition hover:border-brand-300 hover:shadow-md">
+            <h3 class="font-bold text-ink-950">Güvenlik</h3>
+            <p class="mt-2 text-sm text-ink-600">Veri minimizasyonu, KVKK ve operasyon güvenliği.</p>
+        </a>
+        <a asp-controller="Guide" asp-action="Faq" class="card block transition hover:border-brand-300 hover:shadow-md">
+            <h3 class="font-bold text-ink-950">Sık sorulanlar</h3>
+            <p class="mt-2 text-sm text-ink-600">Test ortamı, hata kodları, destek ve lisans.</p>
+        </a>
+    </div>
+</section>
+
+<section class="mt-12 rounded-2xl border border-slate-200 bg-slate-50 p-6">
+    <h2 class="font-bold text-ink-950">Geliştirici kaynakları</h2>
+    <p class="mt-2 text-sm text-ink-600">
+        Mimari kurallar, API sözleşmeleri ve migration notları repodaki <code>docs/</code> klasöründedir.
+        Bu kılavuz ürün ve operasyon ekipleri içindir.
+    </p>
+    <p class="mt-4 text-sm">
+        <a href="@SiteLinks.Root" class="font-semibold text-brand-700">Kurumsal siteye dön →</a>
+    </p>
+</section>

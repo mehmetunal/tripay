@@ -1,0 +1,17 @@
+@{
+    ViewData["Title"] = "KVKK";
+    ViewData["HeroTitle"] = "KVKK aydınlatma metni";
+    ViewData["HeroLead"] = "Kişisel verilerin işlenmesine ilişkin özet bilgilendirme.";
+    ViewData["HeroCompact"] = true;
+}
+@await Html.PartialAsync("_PageHero")
+<section class="mx-auto max-w-3xl px-4 py-16 prose-doc sm:px-6 lg:px-8">
+    <h2 class="text-xl font-bold text-ink-950">Veri sorumlusu</h2>
+    <p>İletişim formu ve kurumsal iletişim kanalları üzerinden toplanan kişisel veriler, talebin cevaplanması amacıyla işlenir.</p>
+    <h2>İşlenen veriler</h2>
+    <p>Ad soyad, e-posta, şirket unvanı ve mesaj içeriği; isteğe bağlı olarak proje detayları.</p>
+    <h2>Framework modu</h2>
+    <p>TriPay framework entegrasyonunda müşteri ve işlem verileri müşterinin kendi sistemlerinde işlenir; TriPay yalnızca entegrasyon yazılımı sağlar. Veri sorumluluğu müşteri ile banka/kuruluş arasındaki sözleşmelere göre belirlenir.</p>
+    <h2>Başvuru</h2>
+    <p>Haklarınız için <a asp-controller="Contact" asp-action="Index">iletişim formunu</a> kullanabilirsiniz.</p>
+</section>

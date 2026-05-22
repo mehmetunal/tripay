@@ -1,0 +1,39 @@
+@{
+    var title = ViewData["HeroTitle"] as string ?? ViewData["Title"]?.ToString() ?? "TriPay";
+    var lead = ViewData["HeroLead"] as string;
+    var badge = ViewData["HeroBadge"] as string;
+    var primaryText = ViewData["HeroPrimaryText"] as string;
+    var primaryUrl = ViewData["HeroPrimaryUrl"] as string ?? SiteLinks.DocsPath + "/Guide/GettingStarted";
+    var secondaryText = ViewData["HeroSecondaryText"] as string;
+    var secondaryUrl = ViewData["HeroSecondaryUrl"] as string ?? "/Contact";
+    var compact = ViewData["HeroCompact"] as bool? == true;
+}
+<section class="page-hero @(compact ? "page-hero-compact" : "")">
+    <div class="page-hero-glow" aria-hidden="true"></div>
+    <div class="page-hero-inner">
+        <div class="max-w-3xl">
+            @if (!string.IsNullOrEmpty(badge))
+            {
+                <span class="badge bg-brand-500/20 text-brand-100 ring-brand-400/40">@badge</span>
+            }
+            <h1 class="page-hero-title">@title</h1>
+            @if (!string.IsNullOrEmpty(lead))
+            {
+                <p class="page-hero-lead">@lead</p>
+            }
+            @if (!string.IsNullOrEmpty(primaryText) || !string.IsNullOrEmpty(secondaryText))
+            {
+                <div class="mt-8 flex flex-wrap gap-4">
+                    @if (!string.IsNullOrEmpty(primaryText))
+                    {
+                        <a href="@primaryUrl" class="btn-primary bg-brand-500 hover:bg-brand-400">@primaryText</a>
+                    }
+                    @if (!string.IsNullOrEmpty(secondaryText))
+                    {
+                        <a href="@secondaryUrl" class="btn-outline-light">@secondaryText</a>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</section>

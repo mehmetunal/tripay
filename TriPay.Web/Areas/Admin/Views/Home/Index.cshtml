@@ -1,21 +1,50 @@
 @{
+    Layout = "/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Yönetim Paneli";
+    ViewData["Description"] = "TriPay yönetim paneli: işlemler, üye işyerleri, gateway ve raporlar.";
+    ViewData["HeroTitle"] = "Operasyon için yönetim paneli";
+    ViewData["HeroLead"] = "Hosted ve çoklu üye işyeri senaryolarında işlemler, sanal POS ayarları, kullanıcılar ve raporlar tek panelde toplanır.";
+    ViewData["HeroBadge"] = "/admin modülü";
+    ViewData["HeroPrimaryText"] = "Panele giriş";
+    ViewData["HeroPrimaryUrl"] = SiteLinks.AdminPanelUrl;
+    ViewData["HeroSecondaryText"] = "Ana site";
+    ViewData["HeroSecondaryUrl"] = SiteLinks.Root;
+    ViewData["HeroCompact"] = true;
 }
-<section class="mx-auto max-w-3xl px-4 py-16 sm:px-6">
-    <span class="badge">/admin</span>
-    <h1 class="mt-4 text-3xl font-bold text-ink-950">TriPay Yönetim Paneli</h1>
-    <p class="mt-4 text-lg text-ink-600">
-        Hosted modda işlemler, üye işyerleri, sanal POS ayarları, outbox kuyruğu ve raporlar bu panelden yönetilir.
-        Erişim rol ve izinlere göre sınırlandırılır.
-    </p>
-    <div class="card mt-10">
-        <ul class="space-y-2 text-sm text-ink-700">
-            <li>✓ İşlem listesi ve detay</li>
+@await Html.PartialAsync("_PageHero")
+
+<section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
+        <div class="card">
+            <h3 class="font-bold text-ink-950">İşlemler</h3>
+            <p class="mt-2 text-sm text-ink-600">Liste, filtre, detay; başarılı, bekleyen ve hatalı işlemler.</p>
+        </div>
+        <div class="card">
+            <h3 class="font-bold text-ink-950">Üye işyeri</h3>
+            <p class="mt-2 text-sm text-ink-600">Terminal, gateway ve kanal yapılandırması.</p>
+        </div>
+        <div class="card">
+            <h3 class="font-bold text-ink-950">Kullanıcılar</h3>
+            <p class="mt-2 text-sm text-ink-600">Rol, izin ve güvenli oturum yönetimi.</p>
+        </div>
+        <div class="card">
+            <h3 class="font-bold text-ink-950">Sistem</h3>
+            <p class="mt-2 text-sm text-ink-600">Outbox, bakım modu, raporlar ve durum özeti.</p>
+        </div>
+    </div>
+    <div class="card mt-12">
+        <h2 class="text-lg font-bold text-ink-950">Panel özellikleri</h2>
+        <ul class="mt-6 grid gap-3 text-sm text-ink-700 sm:grid-cols-2">
+            <li>✓ İşlem listesi ve detay görüntüleme</li>
             <li>✓ Üye işyeri ve gateway yapılandırması</li>
+            <li>✓ İade ve iptal operasyonları</li>
             <li>✓ Kullanıcı, rol ve yetki yönetimi</li>
-            <li>✓ Sistem durumu ve raporlar</li>
+            <li>✓ Outbox kuyruğu ve yeniden deneme</li>
+            <li>✓ Raporlar ve dışa aktarma</li>
         </ul>
-        <a href="@SiteLinks.AdminPanelUrl" class="btn-primary mt-6">Panele giriş yap</a>
-        <p class="mt-4 text-xs text-ink-500">Geliştirme ortamı: @SiteLinks.AdminPanelUrl</p>
+        <a href="@SiteLinks.AdminPanelUrl" class="btn-primary mt-8">Geliştirme paneline git</a>
+        <p class="mt-4 text-xs text-ink-500">Geliştirme ortamı adresi: @SiteLinks.AdminPanelUrl</p>
     </div>
 </section>
+
+@await Html.PartialAsync("_MarketingCta")

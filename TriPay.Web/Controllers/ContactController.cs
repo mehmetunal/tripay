@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using TriPay.Web.Models;
 namespace TriPay.Web.Controllers;
 
-public sealed class IletisimController : Controller
+public sealed class ContactController : Controller
 {
     [HttpGet]
     public IActionResult Index() => View(new ContactFormModel());

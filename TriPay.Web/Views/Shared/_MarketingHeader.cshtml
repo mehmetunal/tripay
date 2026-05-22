@@ -1,31 +1,64 @@
+@{
+    var area = ViewContext.RouteData.Values["area"]?.ToString() ?? "";
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
+
+    bool isDocsArea = area.Equals("Docs", StringComparison.OrdinalIgnoreCase);
+
+    string MainNavClass(bool active) => active ? "nav-link-active" : "btn-ghost";
+
+    bool MainActive(string ctrl, string act = "Index")
+    {
+        if (!string.IsNullOrEmpty(area))
+            return false;
+        return controller.Equals(ctrl, StringComparison.OrdinalIgnoreCase)
+            && action.Equals(act, StringComparison.OrdinalIgnoreCase);
+    }
+}
 <header class="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-md">
     <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
         <a href="@SiteLinks.Root" class="flex items-center gap-2 text-xl font-bold tracking-tight text-ink-950">
             <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 text-sm font-extrabold text-white">TP</span>
             TriPay
         </a>
-        <nav class="hidden items-center gap-1 md:flex" aria-label="Ana menü">
-            <a asp-controller="Urun" asp-action="Index" class="btn-ghost">Ürün</a>
-            <a asp-controller="Cozumler" asp-action="Index" class="btn-ghost">Çözümler</a>
-            <a asp-controller="Entegrasyon" asp-action="Index" class="btn-ghost">Entegrasyon</a>
-            <a asp-controller="Guvenlik" asp-action="Index" class="btn-ghost">Güvenlik</a>
-            <a href="@SiteLinks.DocsPath" class="btn-ghost">Dokümantasyon</a>
-            <a asp-controller="Kurumsal" asp-action="About" class="btn-ghost">Kurumsal</a>
+        <nav class="hidden items-center gap-1 lg:flex" aria-label="Ana menü">
+            <a asp-controller="Product" asp-action="Index" class="@MainNavClass(MainActive("Product"))">Ürün</a>
+            <a asp-controller="Solutions" asp-action="Index" class="@MainNavClass(MainActive("Solutions"))">Çözümler</a>
+            <a asp-controller="Integration" asp-action="Index" class="@MainNavClass(MainActive("Integration"))">Entegrasyon</a>
+            <a asp-controller="Security" asp-action="Index" class="@MainNavClass(MainActive("Security"))">Güvenlik</a>
+            <a href="@SiteLinks.DocsPath" class="@MainNavClass(isDocsArea)" aria-current="@(isDocsArea ? "page" : null)">Kullanım kılavuzu</a>
+            <a asp-controller="Corporate" asp-action="About" class="@MainNavClass(MainActive("Corporate", "About"))">Kurumsal</a>
         </nav>
         <div class="flex items-center gap-2">
-            <a href="@SiteLinks.DocsPath/Kilavuz/GettingStarted" class="hidden btn-secondary sm:inline-flex">Başlangıç</a>
-            <a asp-controller="Iletisim" asp-action="Index" class="btn-primary">İletişim</a>
-            <button type="button" id="nav-toggle" class="btn-ghost md:hidden" aria-expanded="false" aria-controls="mobile-nav">Menü</button>
+            @if (isDocsArea)
+            {
+                <span class="hidden rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold text-brand-800 ring-1 ring-brand-200 sm:inline-flex">Kılavuzdasınız</span>
+            }
+            <a href="@SiteLinks.PayDemoUrl" class="hidden btn-ghost sm:inline-flex" rel="noopener">Demo</a>
+            <a href="@SiteLinks.DocsPath/Guide/GettingStarted" class="hidden btn-secondary md:inline-flex">Başlangıç</a>
+            <a asp-controller="Contact" asp-action="Index" class="btn-primary">İletişim</a>
+            <button type="button" id="nav-toggle" class="btn-ghost lg:hidden" aria-expanded="false" aria-controls="mobile-nav">Menü</button>
         </div>
     </div>
-    <div id="mobile-nav" class="hidden border-t border-slate-200 bg-white px-4 py-3 md:hidden">
+    @if (isDocsArea)
+    {
+        <div class="border-t border-brand-100 bg-brand-50/80">
+            <div class="mx-auto flex max-w-7xl items-center gap-2 px-4 py-2 text-sm sm:px-6 lg:px-8">
+                <span class="font-semibold text-brand-800">Kullanım kılavuzu</span>
+                <span class="text-brand-400" aria-hidden="true">/</span>
+                <span class="truncate text-ink-600">@(ViewData["Title"] ?? "Dokümantasyon")</span>
+            </div>
+        </div>
+    }
+    <div id="mobile-nav" class="hidden border-t border-slate-200 bg-white px-4 py-3 lg:hidden">
         <div class="flex flex-col gap-1">
-            <a asp-controller="Urun" asp-action="Index" class="btn-ghost justify-start">Ürün</a>
-            <a asp-controller="Cozumler" asp-action="Index" class="btn-ghost justify-start">Çözümler</a>
-            <a asp-controller="Entegrasyon" asp-action="Index" class="btn-ghost justify-start">Entegrasyon</a>
-            <a asp-controller="Guvenlik" asp-action="Index" class="btn-ghost justify-start">Güvenlik</a>
-            <a href="@SiteLinks.DocsPath" class="btn-ghost justify-start">Dokümantasyon</a>
-            <a asp-controller="Kurumsal" asp-action="About" class="btn-ghost justify-start">Kurumsal</a>
+            <a asp-controller="Product" asp-action="Index" class="@MainNavClass(MainActive("Product")) justify-start">Ürün</a>
+            <a asp-controller="Solutions" asp-action="Index" class="@MainNavClass(MainActive("Solutions")) justify-start">Çözümler</a>
+            <a asp-controller="Integration" asp-action="Index" class="@MainNavClass(MainActive("Integration")) justify-start">Entegrasyon</a>
+            <a asp-controller="Security" asp-action="Index" class="@MainNavClass(MainActive("Security")) justify-start">Güvenlik</a>
+            <a href="@SiteLinks.DocsPath" class="@MainNavClass(isDocsArea) justify-start" aria-current="@(isDocsArea ? "page" : null)">Kullanım kılavuzu</a>
+            <a asp-controller="Corporate" asp-action="About" class="@MainNavClass(MainActive("Corporate", "About")) justify-start">Kurumsal</a>
+            <a href="@SiteLinks.PayDemoUrl" class="btn-ghost justify-start" rel="noopener">Canlı demo</a>
         </div>
     </div>
 </header>

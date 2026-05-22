@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace TriPay.Web.Areas.Docs.Controllers;
 
 [Area("Docs")]
-public sealed class KilavuzController : Controller
+public sealed class GuideController : Controller
 {
     public IActionResult Index() => View();
     public IActionResult GettingStarted() => View();

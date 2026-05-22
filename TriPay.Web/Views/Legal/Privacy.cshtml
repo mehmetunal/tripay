@@ -1,0 +1,15 @@
+@{
+    ViewData["Title"] = "Gizlilik Politikası";
+    ViewData["HeroTitle"] = "Gizlilik politikası";
+    ViewData["HeroLead"] = "Kurumsal sitede veri işleme ilkeleri ve ödeme verilerine ilişkin taahhütler.";
+    ViewData["HeroCompact"] = true;
+}
+@await Html.PartialAsync("_PageHero")
+<section class="mx-auto max-w-3xl px-4 py-16 prose-doc sm:px-6 lg:px-8">
+    <h2 class="text-xl font-bold text-ink-950">Genel ilkeler</h2>
+    <p>TriPay kurumsal web sitesinde çerez ve analitik kullanımı minimum tutulur. İletişim formu aracılığıyla ilettiğiniz bilgiler yalnızca talebinize yanıt vermek için işlenir.</p>
+    <h2>Ödeme verileri</h2>
+    <p>Ödeme işlemlerinde kart bilgileri (PAN, CVV) TriPay veritabanında kalıcı olarak saklanmaz. Framework modunda işlem meta verisi müşteri ortamında; hosted modda kart adımları güvenli ödeme sayfasında işlenir.</p>
+    <h2>Haklarınız</h2>
+    <p>KVKK kapsamındaki talepleriniz için <a asp-controller="Legal" asp-action="Kvkk">KVKK aydınlatma metni</a> ve <a asp-controller="Contact" asp-action="Index">iletişim</a> sayfamızı kullanabilirsiniz.</p>
+</section>

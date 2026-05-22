@@ -1,26 +1,39 @@
 <footer class="border-t border-slate-200 bg-ink-950 text-slate-300">
-    <div class="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-4 lg:px-8">
+    <div class="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 lg:grid-cols-5 lg:px-8">
         <div class="lg:col-span-2">
-            <p class="text-lg font-bold text-white">TriPay</p>
-            <p class="mt-3 max-w-md text-sm leading-relaxed text-slate-400">
+            <p class="text-xl font-bold text-white">TriPay</p>
+            <p class="mt-4 max-w-md text-sm leading-relaxed text-slate-400">
                 Türkiye’deki sanal POS ve ödeme kuruluşu API’lerini tek .NET arayüzünde birleştiren Payment Hub.
-                Banka sözleşmeniz ve müşteri veriniz sizde kalır.
+                Banka sözleşmeniz ve müşteri veriniz sizde kalır; TriPay öngörülebilir entegrasyon sağlar.
+            </p>
+            <p class="mt-4 text-sm">
+                <a href="mailto:@SiteLinks.ContactEmail" class="font-medium text-brand-400 hover:text-brand-300">@SiteLinks.ContactEmail</a>
             </p>
         </div>
         <div>
             <p class="text-sm font-semibold uppercase tracking-wider text-slate-500">Ürün</p>
-            <ul class="mt-4 space-y-2 text-sm">
-                <li><a asp-controller="Urun" asp-action="Index" class="hover:text-white">Özellikler</a></li>
-                <li><a asp-controller="Entegrasyon" asp-action="Index" class="hover:text-white">Entegrasyon modları</a></li>
+            <ul class="mt-4 space-y-2.5 text-sm">
+                <li><a asp-controller="Product" asp-action="Index" class="hover:text-white">Özellikler</a></li>
+                <li><a asp-controller="Integration" asp-action="Index" class="hover:text-white">Entegrasyon modları</a></li>
+                <li><a asp-controller="Solutions" asp-action="Index" class="hover:text-white">Sektör çözümleri</a></li>
                 <li><a href="@SiteLinks.PayPath" class="hover:text-white">Hosted ödeme</a></li>
             </ul>
         </div>
         <div>
-            <p class="text-sm font-semibold uppercase tracking-wider text-slate-500">Kaynaklar</p>
-            <ul class="mt-4 space-y-2 text-sm">
+            <p class="text-sm font-semibold uppercase tracking-wider text-slate-500">Geliştirici</p>
+            <ul class="mt-4 space-y-2.5 text-sm">
                 <li><a href="@SiteLinks.DocsPath" class="hover:text-white">Kullanım kılavuzu</a></li>
+                <li><a href="@SiteLinks.DocsPath/Guide/GettingStarted" class="hover:text-white">Hızlı başlangıç</a></li>
+                <li><a href="@SiteLinks.PayDemoUrl" class="hover:text-white" rel="noopener">Checkout demosu</a></li>
                 <li><a href="@SiteLinks.AdminPath" class="hover:text-white">Yönetim paneli</a></li>
-                <li><a asp-controller="Iletisim" asp-action="Index" class="hover:text-white">İletişim</a></li>
+            </ul>
+        </div>
+        <div>
+            <p class="text-sm font-semibold uppercase tracking-wider text-slate-500">Şirket</p>
+            <ul class="mt-4 space-y-2.5 text-sm">
+                <li><a asp-controller="Corporate" asp-action="About" class="hover:text-white">Hakkımızda</a></li>
+                <li><a asp-controller="Security" asp-action="Index" class="hover:text-white">Güvenlik</a></li>
+                <li><a asp-controller="Contact" asp-action="Index" class="hover:text-white">İletişim ve demo</a></li>
             </ul>
         </div>
     </div>
@@ -28,9 +41,9 @@
         <div class="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
             <span>© @DateTime.Now.Year TriPay. Tüm hakları saklıdır.</span>
             <div class="flex flex-wrap gap-4">
-                <a asp-controller="Yasal" asp-action="Kvkk" class="hover:text-slate-300">KVKK</a>
-                <a asp-controller="Yasal" asp-action="Privacy" class="hover:text-slate-300">Gizlilik</a>
-                <a asp-controller="Yasal" asp-action="Cookies" class="hover:text-slate-300">Çerez</a>
+                <a asp-controller="Legal" asp-action="Kvkk" class="hover:text-slate-300">KVKK</a>
+                <a asp-controller="Legal" asp-action="Privacy" class="hover:text-slate-300">Gizlilik</a>
+                <a asp-controller="Legal" asp-action="Cookies" class="hover:text-slate-300">Çerez</a>
             </div>
         </div>
     </div>

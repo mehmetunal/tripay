@@ -1,16 +1,57 @@
 @{
+    Layout = "/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Hosted Ödeme";
+    ViewData["Description"] = "TriPay hosted ödeme sayfası: güvenli yönlendirme, 3D Secure ve sonuç bildirimi.";
+    ViewData["HeroTitle"] = "Hosted ödeme sayfası";
+    ViewData["HeroLead"] = "Müşterinizi markanıza uygun, güvenli ödeme sayfasına yönlendirin. Kart ve 3D adımları TriPay ortamında işlenir; siz sipariş kimliği ve sonuç bildirimini yönetirsiniz.";
+    ViewData["HeroBadge"] = "/pay modülü";
+    ViewData["HeroPrimaryText"] = "Demo ödeme sayfası";
+    ViewData["HeroPrimaryUrl"] = SiteLinks.PayDemoUrl;
+    ViewData["HeroSecondaryText"] = "Nasıl çalışır?";
+    ViewData["HeroSecondaryUrl"] = "/pay/Home/HowItWorks";
+    ViewData["HeroCompact"] = true;
 }
-<section class="mx-auto max-w-3xl px-4 py-16 sm:px-6">
-    <span class="badge">/pay</span>
-    <h1 class="mt-4 text-3xl font-bold text-ink-950">Hosted ödeme girişi</h1>
-    <p class="mt-4 text-lg text-ink-600">
-        Müşterinizi güvenli ödeme sayfasına yönlendirin. Kart bilgisi ve 3D adımları TriPay hosted ortamında işlenir;
-        siz yalnızca sipariş kimliği ve sonuç bildirimini kendi sisteminizde tutarsınız.
-    </p>
-    <div class="card mt-10 space-y-4">
-        <p class="text-sm text-ink-600"><strong>Geliştirme demosu:</strong> Aşağıdaki bağlantı mevcut checkout örneğini açar.</p>
-        <a href="@SiteLinks.PayDemoUrl" class="btn-primary" rel="noopener">Demo ödeme sayfasına git</a>
-        <a asp-controller="Home" asp-action="HowItWorks" class="btn-secondary">Nasıl çalışır?</a>
+@await Html.PartialAsync("_PageHero")
+
+<section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <div class="grid gap-12 lg:grid-cols-2">
+        <div>
+            <h2 class="section-title">Neden hosted?</h2>
+            <p class="section-lead">PCI kapsamını daraltır, mobil uyumlu sayfayı hazır alırsınız; backend yalnızca iş kurallarına odaklanır.</p>
+            <ul class="mt-8 space-y-4 text-sm text-ink-600">
+                <li class="flex gap-3"><span class="font-bold text-brand-600">1.</span> Sipariş oluşturun ve müşteriyi TriPay ödeme URL’sine yönlendirin.</li>
+                <li class="flex gap-3"><span class="font-bold text-brand-600">2.</span> Müşteri kart ve 3D adımlarını hosted sayfada tamamlar.</li>
+                <li class="flex gap-3"><span class="font-bold text-brand-600">3.</span> Sonuç imzalı webhook veya redirect ile sisteminize düşer.</li>
+                <li class="flex gap-3"><span class="font-bold text-brand-600">4.</span> Stok, fatura ve bildirim süreçlerinizi otomatik güncelleyin.</li>
+            </ul>
+            <div class="mt-8 flex flex-wrap gap-4">
+                <a href="@SiteLinks.PayDemoUrl" class="btn-primary" rel="noopener">Canlı demo</a>
+                <a href="@SiteLinks.DocsPath/Guide/PaymentFlow" class="btn-secondary">Ödeme akışı kılavuzu</a>
+            </div>
+        </div>
+        <div class="card">
+            <h3 class="font-bold text-ink-950">Hosted vs Framework</h3>
+            <dl class="mt-6 space-y-4 text-sm">
+                <div class="flex justify-between border-b border-slate-100 pb-3">
+                    <dt class="text-ink-600">Go-live</dt>
+                    <dd class="font-semibold text-ink-950">Daha hızlı</dd>
+                </div>
+                <div class="flex justify-between border-b border-slate-100 pb-3">
+                    <dt class="text-ink-600">Kart formu</dt>
+                    <dd class="font-semibold text-ink-950">TriPay sayfasında</dd>
+                </div>
+                <div class="flex justify-between border-b border-slate-100 pb-3">
+                    <dt class="text-ink-600">Özelleştirme</dt>
+                    <dd class="font-semibold text-ink-950">Marka + yönlendirme</dd>
+                </div>
+                <div class="flex justify-between">
+                    <dt class="text-ink-600">Veri</dt>
+                    <dd class="font-semibold text-ink-950">Sipariş sizde</dd>
+                </div>
+            </dl>
+            <a asp-controller="Integration" asp-action="Index" class="mt-6 inline-block text-sm font-semibold text-brand-700">Modları karşılaştır →</a>
+        </div>
     </div>
 </section>
+
+@await Html.PartialAsync("_MarketingCta")

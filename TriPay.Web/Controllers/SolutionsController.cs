@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace TriPay.Web.Controllers;
 
-public sealed class EntegrasyonController : Controller
+public sealed class SolutionsController : Controller
 {
     public IActionResult Index() => View();
 }

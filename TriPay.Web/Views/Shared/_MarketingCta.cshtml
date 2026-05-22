@@ -1,0 +1,21 @@
+@{
+    var title = ViewData["CtaTitle"] as string ?? "Entegrasyona hazır mısınız?";
+    var lead = ViewData["CtaLead"] as string ?? "Ekibiniz için adım adım kılavuz, canlı demo ve teknik görüşme planlayalım.";
+    var primaryText = ViewData["CtaPrimaryText"] as string ?? "Kılavuzu aç";
+    var primaryUrl = ViewData["CtaPrimaryUrl"] as string ?? SiteLinks.DocsPath;
+    var secondaryText = ViewData["CtaSecondaryText"] as string ?? "İletişime geçin";
+    var secondaryUrl = ViewData["CtaSecondaryUrl"] as string ?? "/Contact";
+}
+<section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <div class="cta-panel">
+        <h2 class="text-2xl font-bold text-white sm:text-3xl">@title</h2>
+        <p class="mx-auto mt-4 max-w-2xl text-slate-400">@lead</p>
+        <div class="mt-8 flex flex-wrap justify-center gap-4">
+            <a href="@primaryUrl" class="btn-primary">@primaryText</a>
+            @if (!string.IsNullOrEmpty(secondaryText))
+            {
+                <a href="@secondaryUrl" class="btn-outline-light">@secondaryText</a>
+            }
+        </div>
+    </div>
+</section>

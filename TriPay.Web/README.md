@@ -15,13 +15,15 @@ Kurumsal site ve kılavuz (`TriPay.Admin` ile aynı solution düzeni).
 
 ```
 TriPay.Web/
-  Controllers/          ← kurumsal sayfalar
+  Controllers/          ← Product, Solutions, Integration, Security, Corporate, Contact, Legal
   Views/
   Areas/
-    Docs/Controllers + Views
+    Docs/Controllers + Views   ← Guide (kullanım kılavuzu)
     Pay/
     Admin/
 ```
+
+Controller ve view klasör adları İngilizcedir; sayfa metinleri Türkçedir.
 
 ## Çalıştırma
 

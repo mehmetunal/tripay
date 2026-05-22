@@ -46,6 +46,15 @@
   .btn-ghost {
     @apply inline-flex items-center justify-center rounded-lg px-3 py-2 text-sm font-medium text-ink-700 transition hover:bg-slate-100 hover:text-ink-900;
   }
+  .nav-link-active {
+    @apply inline-flex items-center justify-center rounded-lg bg-brand-50 px-3 py-2 text-sm font-semibold text-brand-800 ring-1 ring-brand-200;
+  }
+  .doc-nav-link {
+    @apply block rounded-lg px-3 py-2 text-ink-700 transition hover:bg-slate-50;
+  }
+  .doc-nav-link-active {
+    @apply bg-brand-50 font-semibold text-brand-800 ring-1 ring-brand-200;
+  }
   .card {
     @apply rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm;
   }
@@ -81,5 +90,65 @@
   }
   .badge {
     @apply inline-flex items-center rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-800 ring-1 ring-brand-200;
+  }
+  .page-hero {
+    @apply relative overflow-hidden bg-gradient-to-br from-ink-950 via-ink-900 to-brand-900 py-20 sm:py-28;
+  }
+  .page-hero-compact {
+    @apply py-14 sm:py-16;
+  }
+  .page-hero-glow {
+    @apply pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-500/25 via-transparent to-transparent;
+  }
+  .page-hero-inner {
+    @apply relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+  .page-hero-title {
+    @apply mt-6 text-4xl font-extrabold tracking-tight text-white sm:text-5xl;
+  }
+  .page-hero-lead {
+    @apply mt-6 max-w-2xl text-lg leading-relaxed text-slate-300 sm:text-xl;
+  }
+  .cta-panel {
+    @apply rounded-3xl bg-ink-950 px-8 py-12 text-center sm:px-12;
+  }
+  .icon-feature {
+    @apply flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-100 text-brand-700;
+  }
+  .icon-feature svg {
+    @apply h-6 w-6;
+  }
+  .stat-value {
+    @apply text-3xl font-extrabold tracking-tight text-brand-600 sm:text-4xl;
+  }
+  .stat-label {
+    @apply mt-1 text-sm text-ink-600;
+  }
+  .trust-strip {
+    @apply border-y border-slate-200/80 bg-white py-8;
+  }
+  .step-number {
+    @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-600 text-sm font-bold text-white;
+  }
+  .faq-details {
+    @apply rounded-2xl border border-slate-200 bg-white px-6 py-4 shadow-sm;
+  }
+  .faq-details summary {
+    @apply cursor-pointer list-none font-semibold text-ink-950 [&::-webkit-details-marker]:hidden;
+  }
+  .faq-details[open] summary {
+    @apply mb-3 text-brand-800;
+  }
+  .faq-details p {
+    @apply text-sm leading-relaxed text-ink-600;
+  }
+  .mock-panel {
+    @apply rounded-2xl border border-slate-700/60 bg-ink-900/90 p-5 shadow-2xl ring-1 ring-white/10 backdrop-blur;
+  }
+  .input-field {
+    @apply mt-1 w-full rounded-xl border border-slate-300 px-4 py-2.5 text-ink-800 transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20;
+  }
+  .label-field {
+    @apply block text-sm font-medium text-ink-800;
   }
 }

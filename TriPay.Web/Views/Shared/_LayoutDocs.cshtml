@@ -1,0 +1,16 @@
+@{
+    Layout = "_Layout";
+    ViewData["DocsSection"] = true;
+}
+<div class="mx-auto flex max-w-7xl gap-0 px-4 sm:px-6 lg:gap-10">
+    @await Html.PartialAsync("~/Areas/Docs/Views/Shared/_DocSidebar.cshtml")
+    <div class="min-w-0 flex-1 py-10 lg:py-12">
+        @if (ViewData["DocLead"] is string lead)
+        {
+            <p class="text-lg text-ink-600">@lead</p>
+        }
+        <article class="prose-doc @(ViewData["DocLead"] != null ? "mt-6" : "") max-w-3xl">
+            @RenderBody()
+        </article>
+    </div>
+</div>

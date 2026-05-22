@@ -1,14 +1,24 @@
 @{
+    Layout = "/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Nasıl çalışır?";
+    ViewData["HeroTitle"] = "Hosted ödeme akışı";
+    ViewData["HeroLead"] = "Müşteri yolculuğu ve backend sorumlulukları — uçtan uca.";
+    ViewData["HeroBadge"] = "/pay";
+    ViewData["HeroPrimaryText"] = "Demo dene";
+    ViewData["HeroPrimaryUrl"] = SiteLinks.PayDemoUrl;
+    ViewData["HeroCompact"] = true;
 }
-<section class="mx-auto max-w-3xl px-4 py-16 prose-doc sm:px-6">
-    <h1 class="text-3xl font-bold text-ink-950">Hosted ödeme akışı</h1>
-    <ol>
-        <li>Müşteri sitenizde ödemeye tıklar.</li>
-        <li>Sunucunuz TriPay’e ödeme oturumu açar ve dönüş adreslerini iletir.</li>
-        <li>Müşteri <strong>/pay</strong> ödeme sayfasında kart ve 3D adımlarını tamamlar.</li>
-        <li>Banka sonucu TriPay’e döner; TriPay sizi yapılandırdığınız adrese yönlendirir.</li>
-        <li>Arka planda imzalı bir bildirim ile sipariş durumunu güncellersiniz.</li>
+@await Html.PartialAsync("_PageHero")
+<section class="mx-auto max-w-3xl px-4 py-16 prose-doc sm:px-6 lg:px-8">
+    <ol class="space-y-6">
+        <li><strong>Müşteri sitenizde ödemeye tıklar.</strong> Sepet ve sipariş kimliği sizin sistemde oluşturulmuş olmalıdır.</li>
+        <li><strong>Sunucunuz ödeme oturumu açar.</strong> Tutar, para birimi ve dönüş URL’leri TriPay’e iletilir.</li>
+        <li><strong>Yönlendirme.</strong> Müşteri güvenli hosted ödeme sayfasına aktarılır; kart ve 3D adımları burada tamamlanır.</li>
+        <li><strong>Banka sonucu.</strong> Onay veya red bankadan TriPay’e döner; müşteri sizin başarı/hata sayfanıza yönlendirilir.</li>
+        <li><strong>Arka plan bildirimi.</strong> İmzalı webhook ile sipariş, stok ve bildirim süreçleriniz güncellenir.</li>
     </ol>
-    <p><a href="@SiteLinks.DocsPath/Kilavuz/PaymentFlow">Kılavuzda detaylı anlatım →</a></p>
+    <div class="mt-10 flex flex-wrap gap-4">
+        <a href="@SiteLinks.DocsPath/Guide/PaymentFlow" class="btn-primary">Kılavuzda detaylı anlatım</a>
+        <a href="@SiteLinks.PayPath" class="btn-secondary">Hosted ödeme ana sayfa</a>
+    </div>
 </section>

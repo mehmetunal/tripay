@@ -1,0 +1,103 @@
+@{
+    ViewData["Title"] = "Entegrasyon";
+    ViewData["Description"] = "TriPay framework, hosted ödeme ve yönetim paneli entegrasyon modlarını karşılaştırın.";
+    ViewData["HeroTitle"] = "Entegrasyon modları";
+    ViewData["HeroLead"] = "Risk, veri konumu ve operasyon yüküne göre doğru modeli seçin. Üç yol da aynı ödeme mantığını paylaşır.";
+    ViewData["HeroBadge"] = "Karşılaştırma";
+    ViewData["HeroPrimaryText"] = "Hızlı başlangıç";
+    ViewData["HeroPrimaryUrl"] = SiteLinks.DocsPath + "/Guide/GettingStarted";
+    ViewData["HeroCompact"] = true;
+}
+@await Html.PartialAsync("_PageHero")
+
+<section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <table class="w-full min-w-[640px] text-left text-sm">
+            <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-ink-600">
+                <tr>
+                    <th class="px-6 py-4">Kriter</th>
+                    <th class="px-6 py-4">Framework (NuGet)</th>
+                    <th class="px-6 py-4">Hosted ödeme</th>
+                    <th class="px-6 py-4">Yönetim paneli</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-ink-700">
+                <tr>
+                    <td class="px-6 py-4 font-medium text-ink-900">Veri konumu</td>
+                    <td class="px-6 py-4">Sizin sunucunuz / MSSQL</td>
+                    <td class="px-6 py-4">TriPay hosted + sizin sipariş DB</td>
+                    <td class="px-6 py-4">TriPay MSSQL (operasyon)</td>
+                </tr>
+                <tr>
+                    <td class="px-6 py-4 font-medium text-ink-900">PCI yüzeyi</td>
+                    <td class="px-6 py-4">Sizin uygulama kapsamında</td>
+                    <td class="px-6 py-4">Küçültülmüş (sayfa TriPay’de)</td>
+                    <td class="px-6 py-4">Panel erişimi ayrı</td>
+                </tr>
+                <tr>
+                    <td class="px-6 py-4 font-medium text-ink-900">Go-live süresi</td>
+                    <td class="px-6 py-4">2–4 hafta (banka testine bağlı)</td>
+                    <td class="px-6 py-4">Birkaç gün (pilot)</td>
+                    <td class="px-6 py-4">Hosted ile birlikte</td>
+                </tr>
+                <tr>
+                    <td class="px-6 py-4 font-medium text-ink-900">Özelleştirme</td>
+                    <td class="px-6 py-4">Tam kontrol</td>
+                    <td class="px-6 py-4">Marka ve yönlendirme</td>
+                    <td class="px-6 py-4">Yapılandırma ve rapor</td>
+                </tr>
+                <tr>
+                    <td class="px-6 py-4 font-medium text-ink-900">İdeal senaryo</td>
+                    <td class="px-6 py-4 font-semibold text-brand-800">KVKK, tam kontrol</td>
+                    <td class="px-6 py-4">Hızlı lansman, MVP</td>
+                    <td class="px-6 py-4">Çoklu üye işyeri ops</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-16 grid gap-8 lg:grid-cols-3">
+        <div class="card border-brand-200">
+            <h3 class="text-lg font-bold text-brand-800">Framework seçin eğer…</h3>
+            <ul class="mt-4 space-y-2 text-sm text-ink-600">
+                <li>· Müşteri verisi mutlaka sizde kalmalı</li>
+                <li>· Checkout deneyimini tam özelleştireceksiniz</li>
+                <li>· Mevcut .NET ekibiniz var</li>
+            </ul>
+        </div>
+        <div class="card">
+            <h3 class="text-lg font-bold text-ink-950">Hosted seçin eğer…</h3>
+            <ul class="mt-4 space-y-2 text-sm text-ink-600">
+                <li>· En kısa sürede canlı ödeme lazım</li>
+                <li>· Kart formu sizin sunucunuza gelmemeli</li>
+                <li>· Backend yalnızca sipariş yönetiyor</li>
+            </ul>
+        </div>
+        <div class="card">
+            <h3 class="text-lg font-bold text-ink-950">Panel seçin eğer…</h3>
+            <ul class="mt-4 space-y-2 text-sm text-ink-600">
+                <li>· Operasyon ekibi işlem izleyecek</li>
+                <li>· Çok sayıda üye işyeri var</li>
+                <li>· Hosted veya framework ile birlikte</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="card mt-12">
+        <h3 class="font-bold text-ink-950">Kurulum özeti</h3>
+        <ol class="mt-4 list-decimal space-y-2 pl-6 text-sm text-ink-600">
+            <li>İş modelinize göre modu seçin ve test ortamı bilgilerini alın.</li>
+            <li>Banka veya kuruluş terminal ayarlarını yapılandırın.</li>
+            <li>İlk test ödemesini sandbox’ta tamamlayın.</li>
+            <li>Webhook veya callback URL’lerini canlıya taşıyın.</li>
+            <li>Operasyon ekibini panele ve raporlara alıştırın.</li>
+        </ol>
+        <p class="mt-6 text-sm text-ink-600">
+            Adım adım anlatım:
+            <a href="@SiteLinks.DocsPath/Guide/GettingStarted" class="font-semibold text-brand-700">Hızlı başlangıç kılavuzu</a>
+            · Teknik mimari: geliştirici ekibiniz için <code class="rounded bg-slate-100 px-1.5 py-0.5 text-xs">docs/</code> klasörü
+        </p>
+    </div>
+</section>
+
+@await Html.PartialAsync("_MarketingCta")

@@ -1,0 +1,98 @@
+@{
+    ViewData["Title"] = "Ürün";
+    ViewData["Description"] = "TriPay Payment Hub özellikleri: çoklu sanal POS, 3D Secure, taksit, iade, webhook ve yönetim paneli.";
+    ViewData["HeroTitle"] = "TriPay Payment Hub";
+    ViewData["HeroLead"] = "Ödeme kanallarını tek .NET katmanında birleştiren, genişletilebilir ve üretime hazır altyapı.";
+    ViewData["HeroBadge"] = "Ürün özellikleri";
+    ViewData["HeroPrimaryText"] = "Hızlı başlangıç kılavuzu";
+    ViewData["HeroPrimaryUrl"] = SiteLinks.DocsPath + "/Guide/GettingStarted";
+    ViewData["HeroSecondaryText"] = "Demo talep edin";
+    ViewData["HeroSecondaryUrl"] = "/Contact";
+    ViewData["HeroCompact"] = true;
+}
+@await Html.PartialAsync("_PageHero")
+
+<section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <h2 class="section-title">Ödeme yaşam döngüsünün tamamı</h2>
+    <p class="section-lead">Başlatmadan iadeye, bildirimden rapora — tek platformda tutarlı davranış.</p>
+    <div class="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div class="card">
+            <h3 class="text-lg font-bold text-ink-950">Çoklu gateway</h3>
+            <p class="mt-2 text-sm leading-relaxed text-ink-600">Aynı sipariş akışında farklı banka ve kuruluşlar. Üye işyeri veya kanal bazında hangi POS’un kullanılacağını tanımlarsınız.</p>
+        </div>
+        <div class="card">
+            <h3 class="text-lg font-bold text-ink-950">3D Secure ve taksit</h3>
+            <p class="mt-2 text-sm leading-relaxed text-ink-600">Kartlı ödemede bankanın istediği doğrulama adımları; BIN’e göre taksit seçenekleri standart akışta sunulur.</p>
+        </div>
+        <div class="card">
+            <h3 class="text-lg font-bold text-ink-950">İade ve iptal</h3>
+            <p class="mt-2 text-sm leading-relaxed text-ink-600">Başarılı işlemler için iade talebi; operasyon ekibi panelden durumu izler ve müşteriye geri bildirim verir.</p>
+        </div>
+        <div class="card">
+            <h3 class="text-lg font-bold text-ink-950">Güvenli geri dönüş</h3>
+            <p class="mt-2 text-sm leading-relaxed text-ink-600">Bankadan dönen sonuçlar doğrulanır; kart numarası ve CVV kalıcı depoda tutulmaz, loglarda maskelenir.</p>
+        </div>
+        <div class="card">
+            <h3 class="text-lg font-bold text-ink-950">Webhook ve outbox</h3>
+            <p class="mt-2 text-sm leading-relaxed text-ink-600">Ödeme sonucu bildirimleri imzalı ve tekrarlanabilir; yoğun trafikte mesaj kuyruğu ile güvenilir teslimat.</p>
+        </div>
+        <div class="card">
+            <h3 class="text-lg font-bold text-ink-950">Önbellek (Redis)</h3>
+            <p class="mt-2 text-sm leading-relaxed text-ink-600">Gateway ayarları ve sık okunan yapılandırmalar önbelleklenir; yüksek trafikte gecikme düşer.</p>
+        </div>
+    </div>
+</section>
+
+<section class="bg-slate-100/80 py-16">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <h2 class="section-title">Teknik altyapı</h2>
+        <p class="section-lead">Kurumsal projeler için tasarlanmış katmanlar ve operasyon araçları.</p>
+        <div class="mt-12 grid gap-8 lg:grid-cols-2">
+            <div class="card">
+                <h3 class="font-bold text-ink-950">Uygulama katmanı</h3>
+                <ul class="mt-4 space-y-2 text-sm text-ink-600">
+                    <li>· ASP.NET Core 8 ve Clean Architecture</li>
+                    <li>· CQRS (MediatR) ve FluentValidation</li>
+                    <li>· Swagger ile sürümlü API dokümantasyonu</li>
+                    <li>· Global exception handler ve standart API yanıtları</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3 class="font-bold text-ink-950">Operasyon katmanı</h3>
+                <ul class="mt-4 space-y-2 text-sm text-ink-600">
+                    <li>· Ayrı yönetim paneli (Bootstrap 5)</li>
+                    <li>· Rol ve izin tabanlı erişim (Identity)</li>
+                    <li>· İşlem listesi, gateway hataları, raporlar</li>
+                    <li>· Bakım modu ve IP kısıtı seçenekleri</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <h2 class="section-title">Modüller</h2>
+    <div class="mt-10 grid gap-6 md:grid-cols-3">
+        <a href="@SiteLinks.DocsPath" class="card block transition hover:border-brand-300 hover:shadow-md">
+            <span class="badge">/docs</span>
+            <h3 class="mt-3 font-bold text-ink-950">Kullanım kılavuzu</h3>
+            <p class="mt-2 text-sm text-ink-600">Adım adım, sınıf adı olmadan öğretici anlatım.</p>
+        </a>
+        <a href="@SiteLinks.PayPath" class="card block transition hover:border-brand-300 hover:shadow-md">
+            <span class="badge">/pay</span>
+            <h3 class="mt-3 font-bold text-ink-950">Hosted ödeme</h3>
+            <p class="mt-2 text-sm text-ink-600">Ödeme sayfasını TriPay sunar; siz sonucu alırsınız.</p>
+        </a>
+        <a href="@SiteLinks.AdminPath" class="card block transition hover:border-brand-300 hover:shadow-md">
+            <span class="badge">/admin</span>
+            <h3 class="mt-3 font-bold text-ink-950">Yönetim paneli</h3>
+            <p class="mt-2 text-sm text-ink-600">İşlem, üye işyeri ve gateway yönetimi.</p>
+        </a>
+    </div>
+</section>
+
+@{
+    ViewData["CtaSecondaryText"] = "Entegrasyon modları";
+    ViewData["CtaSecondaryUrl"] = "/Integration";
+}
+@await Html.PartialAsync("_MarketingCta")

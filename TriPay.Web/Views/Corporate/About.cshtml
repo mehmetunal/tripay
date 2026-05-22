@@ -1,0 +1,73 @@
+@{
+    ViewData["Title"] = "Hakkımızda";
+    ViewData["Description"] = "TriPay misyonu: Türkiye'de .NET ekosistemi için öngörülebilir Payment Hub.";
+    ViewData["HeroTitle"] = "Ödeme entegrasyonunu öngörülebilir kılıyoruz";
+    ViewData["HeroLead"] = "TriPay, Türkiye’deki parçalanmış ödeme API’lerine .NET odaklı, üretime hazır bir cevap vermek için geliştirilmiştir.";
+    ViewData["HeroBadge"] = "Kurumsal";
+    ViewData["HeroCompact"] = true;
+}
+@await Html.PartialAsync("_PageHero")
+
+<section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <div class="grid gap-12 lg:grid-cols-2 lg:items-start">
+        <div class="prose-doc max-w-none">
+            <p>
+                Her banka ve ödeme kuruluşu farklı API, farklı callback ve farklı hata kodu sunar.
+                E-ticaret ve yazılım ekipleri bu farkları her proje için yeniden öğrenmek zorunda kalır.
+                TriPay bu karmaşıklığı tek, tutarlı bir ödeme deneyiminin arkasına alır.
+            </p>
+            <p>
+                <strong>Banka değiliz.</strong> Üye işyerinin kendi sözleşmesi ve terminal bilgileriyle çalışırız.
+                Komisyon ve hukuki ilişki doğrudan sizin bankanızla kalır; TriPay entegrasyon ve operasyon katmanıdır.
+            </p>
+            <h2>Misyon</h2>
+            <p>Ödeme entegrasyonunu öngörülebilir, test edilebilir ve güvenli hale getirmek; ekiplerin ürün ve müşteri deneyimine odaklanmasını sağlamak.</p>
+            <h2>Vizyon</h2>
+            <p>Türkiye’de .NET ekosisteminin referans Payment Hub’ı olmak; yerli ve global ölçekte güvenilir altyapı sunmak.</p>
+        </div>
+        <div class="grid gap-4 sm:grid-cols-2">
+            <div class="card text-center">
+                <p class="stat-value">.NET 8</p>
+                <p class="stat-label">Modern stack</p>
+            </div>
+            <div class="card text-center">
+                <p class="stat-value">Clean</p>
+                <p class="stat-label">Architecture</p>
+            </div>
+            <div class="card text-center">
+                <p class="stat-value">MSSQL</p>
+                <p class="stat-label">Kurumsal veri</p>
+            </div>
+            <div class="card text-center">
+                <p class="stat-value">TR</p>
+                <p class="stat-label">Yerel ödeme ekosistemi</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="bg-slate-100/80 py-16">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <h2 class="section-title text-center">Değerlerimiz</h2>
+        <div class="mt-12 grid gap-6 md:grid-cols-3">
+            <div class="card">
+                <h3 class="font-bold text-ink-950">Şeffaflık</h3>
+                <p class="mt-2 text-sm text-ink-600">Veri nerede duruyor, kim işletiyor — entegrasyon modlarında net cevap veriyoruz.</p>
+            </div>
+            <div class="card">
+                <h3 class="font-bold text-ink-950">Güven</h3>
+                <p class="mt-2 text-sm text-ink-600">Kart verisi minimizasyonu ve imzalı bildirimler tasarımın merkezinde.</p>
+            </div>
+            <div class="card">
+                <h3 class="font-bold text-ink-950">Sürdürülebilirlik</h3>
+                <p class="mt-2 text-sm text-ink-600">Test, migrasyon ve dokümantasyon ile uzun vadeli bakım maliyetini düşürüyoruz.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+@{
+    ViewData["CtaTitle"] = "TriPay ile tanışın";
+    ViewData["CtaLead"] = "Ürün turu ve teknik görüşme için iletişime geçin.";
+}
+@await Html.PartialAsync("_MarketingCta")

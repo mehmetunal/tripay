@@ -1,0 +1,82 @@
+@{
+    ViewData["Title"] = "Çözümler";
+    ViewData["Description"] = "E-ticaret, pazaryeri ve SaaS için TriPay Payment Hub sektör çözümleri.";
+    ViewData["HeroTitle"] = "Sektöre göre çözümler";
+    ViewData["HeroLead"] = "Aynı ödeme hub’ı; e-ticaret mağazasından çok satıcılı pazaryerine, abonelik tabanlı SaaS’a kadar farklı iş modellerine uyum sağlar.";
+    ViewData["HeroBadge"] = "Çözümler";
+    ViewData["HeroPrimaryText"] = "Ürün özellikleri";
+    ViewData["HeroPrimaryUrl"] = "/Product";
+    ViewData["HeroCompact"] = true;
+}
+@await Html.PartialAsync("_PageHero")
+
+<section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <div class="space-y-10">
+        <article class="card lg:flex lg:gap-10 lg:p-8">
+            <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-brand-100 text-xl font-bold text-brand-800">E</div>
+            <div class="mt-6 lg:mt-0">
+                <h2 class="text-2xl font-bold text-ink-950">E-ticaret ve perakende</h2>
+                <p class="mt-3 leading-relaxed text-ink-600">
+                    Sepet onayından ödeme tamamlanmasına kadar tüm akış kendi sitenizde kalır.
+                    Kampanya, kupon ve taksit kurallarını iş kurallarınıza göre yönetirsiniz; TriPay banka protokollerini soyutlar.
+                </p>
+                <ul class="mt-4 grid gap-2 text-sm text-ink-600 sm:grid-cols-2">
+                    <li>✓ Tek sayfa veya çok adımlı checkout</li>
+                    <li>✓ Stok ve sipariş senkronizasyonu</li>
+                    <li>✓ 3D Secure ve mobil uyum</li>
+                    <li>✓ İade ve kısmi iade desteği</li>
+                </ul>
+            </div>
+        </article>
+        <article class="card lg:flex lg:gap-10 lg:p-8">
+            <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-brand-100 text-xl font-bold text-brand-800">P</div>
+            <div class="mt-6 lg:mt-0">
+                <h2 class="text-2xl font-bold text-ink-950">Pazaryeri ve çok satıcılı platform</h2>
+                <p class="mt-3 leading-relaxed text-ink-600">
+                    Her satıcının kendi banka anlaşması olabilir. Üye işyeri bazında gateway seçimi ve merkezi işlem raporu
+                    operasyon ekibinin işini kolaylaştırır.
+                </p>
+                <ul class="mt-4 grid gap-2 text-sm text-ink-600 sm:grid-cols-2">
+                    <li>✓ Satıcı bazlı terminal yapılandırması</li>
+                    <li>✓ Komisyon ve hakediş raporları</li>
+                    <li>✓ Çoklu üye işyeri paneli</li>
+                    <li>✓ Webhook ile satıcı bildirimi</li>
+                </ul>
+            </div>
+        </article>
+        <article class="card lg:flex lg:gap-10 lg:p-8">
+            <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-brand-100 text-xl font-bold text-brand-800">S</div>
+            <div class="mt-6 lg:mt-0">
+                <h2 class="text-2xl font-bold text-ink-950">SaaS, abonelik ve B2B</h2>
+                <p class="mt-3 leading-relaxed text-ink-600">
+                    Tekrarlayan tahsilat, plan yükseltme ve fatura senaryolarında ödeme durumu webhook ile
+                    abonelik kaydınıza yansır; manuel müdahale ihtiyacı azalır.
+                </p>
+                <ul class="mt-4 grid gap-2 text-sm text-ink-600 sm:grid-cols-2">
+                    <li>✓ Durum sorgulama ve yeniden deneme</li>
+                    <li>✓ Başarısız ödeme bildirimleri</li>
+                    <li>✓ API ve panel birlikte kullanım</li>
+                    <li>✓ KVKK dostu veri konumu</li>
+                </ul>
+            </div>
+        </article>
+        <article class="card lg:flex lg:gap-10 lg:p-8">
+            <div class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-brand-100 text-xl font-bold text-brand-800">K</div>
+            <div class="mt-6 lg:mt-0">
+                <h2 class="text-2xl font-bold text-ink-950">Kurumsal ve özel yazılım evleri</h2>
+                <p class="mt-3 leading-relaxed text-ink-600">
+                    Müşteri projelerinde ödeme modülünü hızlı devreye almak için framework paketi veya hosted model.
+                    Teknik ekip Clean Architecture ve test altyapısıyla tanışık kalır.
+                </p>
+                <ul class="mt-4 grid gap-2 text-sm text-ink-600 sm:grid-cols-2">
+                    <li>✓ Beyaz etiket hosted sayfa</li>
+                    <li>✓ Çoklu ortam (test / prod)</li>
+                    <li>✓ Dokümantasyon ve demo ortamı</li>
+                    <li>✓ İş ortaklığı ve lisans modeli</li>
+                </ul>
+            </div>
+        </article>
+    </div>
+</section>
+
+@await Html.PartialAsync("_MarketingCta")

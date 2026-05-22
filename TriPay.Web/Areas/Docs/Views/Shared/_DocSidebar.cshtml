@@ -1,13 +1,29 @@
-<aside class="hidden w-56 shrink-0 border-r border-slate-100 py-10 pr-6 lg:block">
-    <p class="text-xs font-semibold uppercase tracking-wider text-ink-500">Kullanım kılavuzu</p>
-    <nav class="mt-4 space-y-1 text-sm" aria-label="Kılavuz menüsü">
-        <a asp-controller="Kilavuz" asp-action="Index" class="block rounded-lg px-3 py-2 text-ink-700 hover:bg-slate-50">Genel bakış</a>
-        <a asp-controller="Kilavuz" asp-action="GettingStarted" class="block rounded-lg px-3 py-2 text-ink-700 hover:bg-slate-50">Hızlı başlangıç</a>
-        <a asp-controller="Kilavuz" asp-action="IntegrationModes" class="block rounded-lg px-3 py-2 text-ink-700 hover:bg-slate-50">Entegrasyon modları</a>
-        <a asp-controller="Kilavuz" asp-action="Setup" class="block rounded-lg px-3 py-2 text-ink-700 hover:bg-slate-50">Kurulum</a>
-        <a asp-controller="Kilavuz" asp-action="PaymentFlow" class="block rounded-lg px-3 py-2 text-ink-700 hover:bg-slate-50">Ödeme akışı</a>
-        <a asp-controller="Kilavuz" asp-action="Security" class="block rounded-lg px-3 py-2 text-ink-700 hover:bg-slate-50">Güvenlik</a>
-        <a asp-controller="Kilavuz" asp-action="Webhook" class="block rounded-lg px-3 py-2 text-ink-700 hover:bg-slate-50">Bildirimler</a>
-        <a asp-controller="Kilavuz" asp-action="Faq" class="block rounded-lg px-3 py-2 text-ink-700 hover:bg-slate-50">Sık sorulanlar</a>
+@{
+    var area = ViewContext.RouteData.Values["area"]?.ToString() ?? "";
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
+
+    bool isDocsArea = area.Equals("Docs", StringComparison.OrdinalIgnoreCase);
+
+    string DocNavClass(bool active) => active ? "doc-nav-link doc-nav-link-active" : "doc-nav-link";
+
+    bool DocActive(string ctrl, string act = "Index")
+    {
+        if (!isDocsArea) return false;
+        return controller.Equals(ctrl, StringComparison.OrdinalIgnoreCase)
+            && action.Equals(act, StringComparison.OrdinalIgnoreCase);
+    }
+}
+<aside class="w-full shrink-0 border-b border-slate-200 pb-6 lg:block lg:w-56 lg:border-b-0 lg:border-r lg:border-slate-100 lg:py-10 lg:pr-6">
+    <p class="rounded-lg bg-brand-50 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-brand-800 ring-1 ring-brand-200">Kullanım kılavuzu</p>
+    <nav class="mt-4 flex flex-wrap gap-1 text-sm lg:flex-col lg:gap-0 lg:space-y-1" aria-label="Kılavuz menüsü">
+        <a asp-area="Docs" asp-controller="Home" asp-action="Index" class="@DocNavClass(DocActive("Home"))" aria-current="@(DocActive("Home") ? "page" : null)">Genel bakış</a>
+        <a asp-area="Docs" asp-controller="Guide" asp-action="GettingStarted" class="@DocNavClass(DocActive("Guide", "GettingStarted"))" aria-current="@(DocActive("Guide", "GettingStarted") ? "page" : null)">Hızlı başlangıç</a>
+        <a asp-area="Docs" asp-controller="Guide" asp-action="IntegrationModes" class="@DocNavClass(DocActive("Guide", "IntegrationModes"))" aria-current="@(DocActive("Guide", "IntegrationModes") ? "page" : null)">Entegrasyon modları</a>
+        <a asp-area="Docs" asp-controller="Guide" asp-action="Setup" class="@DocNavClass(DocActive("Guide", "Setup"))" aria-current="@(DocActive("Guide", "Setup") ? "page" : null)">Kurulum</a>
+        <a asp-area="Docs" asp-controller="Guide" asp-action="PaymentFlow" class="@DocNavClass(DocActive("Guide", "PaymentFlow"))" aria-current="@(DocActive("Guide", "PaymentFlow") ? "page" : null)">Ödeme akışı</a>
+        <a asp-area="Docs" asp-controller="Guide" asp-action="Security" class="@DocNavClass(DocActive("Guide", "Security"))" aria-current="@(DocActive("Guide", "Security") ? "page" : null)">Güvenlik</a>
+        <a asp-area="Docs" asp-controller="Guide" asp-action="Webhook" class="@DocNavClass(DocActive("Guide", "Webhook"))" aria-current="@(DocActive("Guide", "Webhook") ? "page" : null)">Bildirimler</a>
+        <a asp-area="Docs" asp-controller="Guide" asp-action="Faq" class="@DocNavClass(DocActive("Guide", "Faq"))" aria-current="@(DocActive("Guide", "Faq") ? "page" : null)">Sık sorulanlar</a>
     </nav>
 </aside>

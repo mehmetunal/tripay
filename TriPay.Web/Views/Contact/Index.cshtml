@@ -1,0 +1,79 @@
+@model TriPay.Web.Models.ContactFormModel
+@{
+    ViewData["Title"] = "İletişim";
+    ViewData["Description"] = "TriPay entegrasyon, demo ve iş ortaklığı için iletişim formu.";
+    ViewData["HeroTitle"] = "Bizimle iletişime geçin";
+    ViewData["HeroLead"] = "Entegrasyon planı, sandbox erişimi, fiyatlandırma veya teknik sorularınız için formu doldurun; ekibimiz 1–2 iş günü içinde dönüş yapar.";
+    ViewData["HeroBadge"] = "İletişim";
+    ViewData["HeroCompact"] = true;
+}
+@await Html.PartialAsync("_PageHero")
+
+<section class="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
+    <div class="grid gap-12 lg:grid-cols-5">
+        <div class="lg:col-span-3">
+            <form asp-action="Index" method="post" class="card space-y-5">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-800"></div>
+                <div class="grid gap-5 sm:grid-cols-2">
+                    <div>
+                        <label asp-for="AdSoyad" class="label-field"></label>
+                        <input asp-for="AdSoyad" class="input-field" placeholder="Ad Soyad" />
+                        <span asp-validation-for="AdSoyad" class="text-sm text-red-600"></span>
+                    </div>
+                    <div>
+                        <label asp-for="Eposta" class="label-field"></label>
+                        <input asp-for="Eposta" class="input-field" placeholder="ornek@sirket.com" />
+                        <span asp-validation-for="Eposta" class="text-sm text-red-600"></span>
+                    </div>
+                </div>
+                <div>
+                    <label asp-for="Sirket" class="label-field"></label>
+                    <input asp-for="Sirket" class="input-field" placeholder="Şirket unvanı" />
+                </div>
+                <div>
+                    <label asp-for="Konu" class="label-field"></label>
+                    <select asp-for="Konu" class="input-field">
+                        <option value="entegrasyon">Entegrasyon ve teknik görüşme</option>
+                        <option value="hosted">Hosted ödeme / pilot</option>
+                        <option value="ortaklik">İş ortaklığı ve lisans</option>
+                        <option value="diger">Diğer</option>
+                    </select>
+                </div>
+                <div>
+                    <label asp-for="Mesaj" class="label-field"></label>
+                    <textarea asp-for="Mesaj" rows="5" class="input-field" placeholder="Proje ölçeği, hedef go-live tarihi ve kullanmak istediğiniz entegrasyon modeli…"></textarea>
+                    <span asp-validation-for="Mesaj" class="text-sm text-red-600"></span>
+                </div>
+                <button type="submit" class="btn-primary w-full sm:w-auto">Mesajı gönder</button>
+            </form>
+        </div>
+        <aside class="space-y-6 lg:col-span-2">
+            <div class="card">
+                <h2 class="font-bold text-ink-950">Doğrudan e-posta</h2>
+                <p class="mt-2 text-sm text-ink-600">Teknik ve ticari sorular için:</p>
+                <a href="mailto:@SiteLinks.ContactEmail" class="mt-3 inline-block font-semibold text-brand-700">@SiteLinks.ContactEmail</a>
+            </div>
+            <div class="card">
+                <h2 class="font-bold text-ink-950">Hemen deneyin</h2>
+                <p class="mt-2 text-sm text-ink-600">Checkout demosu ve kılavuz ile sandbox akışını test edin.</p>
+                <div class="mt-4 flex flex-col gap-2">
+                    <a href="@SiteLinks.PayDemoUrl" class="btn-secondary text-center" rel="noopener">Demo ödeme</a>
+                    <a href="@SiteLinks.DocsPath/Guide/GettingStarted" class="btn-ghost text-center">Hızlı başlangıç</a>
+                </div>
+            </div>
+            <div class="card bg-brand-50 ring-1 ring-brand-200">
+                <h2 class="font-bold text-brand-900">Görüşmede hazırlık</h2>
+                <ul class="mt-3 space-y-2 text-sm text-brand-900/90">
+                    <li>· Aylık işlem hacmi tahmini</li>
+                    <li>· Kullanılacak banka / kuruluşlar</li>
+                    <li>· Framework veya hosted tercihi</li>
+                    <li>· Hedef canlıya çıkış tarihi</li>
+                </ul>
+            </div>
+        </aside>
+    </div>
+</section>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

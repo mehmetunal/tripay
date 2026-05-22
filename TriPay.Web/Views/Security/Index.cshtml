@@ -1,0 +1,66 @@
+@{
+    ViewData["Title"] = "Güvenlik";
+    ViewData["Description"] = "TriPay güvenlik: kart verisi saklanmaz, imzalı webhook, HTTPS, rol tabanlı panel.";
+    ViewData["HeroTitle"] = "Güvenlik ve uyumluluk";
+    ViewData["HeroLead"] = "Ödeme sistemlerinde güven, tasarımın parçasıdır — sonradan eklenmez. TriPay, veri minimizasyonu ve doğrulanabilir bildirimler üzerine kuruludur.";
+    ViewData["HeroBadge"] = "Güven";
+    ViewData["HeroPrimaryText"] = "Güvenlik kılavuzu";
+    ViewData["HeroPrimaryUrl"] = SiteLinks.DocsPath + "/Guide/Security";
+    ViewData["HeroCompact"] = true;
+}
+@await Html.PartialAsync("_PageHero")
+
+<section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="card">
+            <h2 class="font-bold text-ink-950">Kart verisi saklanmaz</h2>
+            <p class="mt-2 text-sm leading-relaxed text-ink-600">PAN ve CVV kalıcı depoda tutulmaz. Log ve raporlarda maskeleme uygulanır; yalnızca işlem meta verisi saklanır.</p>
+        </div>
+        <div class="card">
+            <h2 class="font-bold text-ink-950">İmzalı bildirimler</h2>
+            <p class="mt-2 text-sm leading-relaxed text-ink-600">Üye işyerine giden ödeme sonucu webhook’ları paylaşılan gizli anahtar ile doğrulanır; sahte bildirim riski azalır.</p>
+        </div>
+        <div class="card">
+            <h2 class="font-bold text-ink-950">HTTPS ve güvenli çerez</h2>
+            <p class="mt-2 text-sm leading-relaxed text-ink-600">Canlı ortamda TLS zorunludur. Panel ve ödeme sayfalarında güvenli çerez ve HSTS politikaları uygulanır.</p>
+        </div>
+        <div class="card">
+            <h2 class="font-bold text-ink-950">Kimlik ve yetki</h2>
+            <p class="mt-2 text-sm leading-relaxed text-ink-600">Yönetim panelinde rol ve izin tabanlı erişim; hassas uçlar için IP kısıtı yapılandırılabilir.</p>
+        </div>
+        <div class="card">
+            <h2 class="font-bold text-ink-950">Bakım ve izolasyon</h2>
+            <p class="mt-2 text-sm leading-relaxed text-ink-600">Bakım modu ile kontrollü kesinti; API ve panel katmanları ayrı projelerde dağıtılabilir.</p>
+        </div>
+        <div class="card">
+            <h2 class="font-bold text-ink-950">Denetim izi</h2>
+            <p class="mt-2 text-sm leading-relaxed text-ink-600">Önemli operasyonlar loglanır; hata ve gateway yanıtları operasyon ekibi için izlenebilir.</p>
+        </div>
+    </div>
+</section>
+
+<section class="bg-slate-100/80 py-16">
+    <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+        <h2 class="section-title text-center">Uyumluluk kontrol listesi</h2>
+        <ul class="mt-10 space-y-4">
+            <li class="flex gap-3 rounded-xl border border-slate-200 bg-white px-5 py-4 text-sm text-ink-700">
+                <span class="text-brand-600">✓</span>
+                <span><strong class="text-ink-950">KVKK:</strong> Framework modunda kişisel veri işleme kaydı sizin sistemlerinizde; TriPay yalnızca entegrasyon sağlar.</span>
+            </li>
+            <li class="flex gap-3 rounded-xl border border-slate-200 bg-white px-5 py-4 text-sm text-ink-700">
+                <span class="text-brand-600">✓</span>
+                <span><strong class="text-ink-950">PCI DSS:</strong> Kart verisini işlemeyen backend, scope’u daraltır; hosted model ek yüzeyi TriPay tarafına taşır.</span>
+            </li>
+            <li class="flex gap-3 rounded-xl border border-slate-200 bg-white px-5 py-4 text-sm text-ink-700">
+                <span class="text-brand-600">✓</span>
+                <span><strong class="text-ink-950">Operasyon:</strong> İade, iptal ve şüpheli işlem süreçleri panel üzerinden yönetilebilir.</span>
+            </li>
+        </ul>
+        <div class="mt-10 text-center">
+            <a href="@SiteLinks.DocsPath/Guide/Security" class="btn-primary">Kılavuz: güvenlik bölümü</a>
+            <a asp-controller="Legal" asp-action="Kvkk" class="btn-secondary ml-3">KVKK metni</a>
+        </div>
+    </div>
+</section>
+
+@await Html.PartialAsync("_MarketingCta")
