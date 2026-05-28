@@ -10,6 +10,7 @@ using TriPay.Services.Models;
 using TriPay.Services.Providers.Vakifbank.Helpers;
 using TriPay.Core.Gateways;
 using TriPay.Core.Vakifbank;
+using TriPay.Services.Diagnostics;
 using TriPay.Services.Providers.Vakifbank.Models;
 
 namespace TriPay.Services.Providers.Vakifbank;
@@ -155,6 +156,17 @@ public sealed class VakifbankGatewayProvider : HttpPaymentGatewayBase
             if (string.IsNullOrEmpty(acsUrl))
                 return Result<PaymentGatewayInitializeResponseDto>.Failure("Vakıfbank ACS URL alınamadı.");
 
+            PaymentDiagnostic.LogOutbound3DForm(
+                GatewayName,
+                acsUrl,
+                new Dictionary<string, string>
+                {
+                    ["PaReq"] = paReq,
+                    ["TermUrl"] = termUrl,
+                    ["MD"] = md
+                },
+                "MPI Enrollment sonrası ACS otomatik POST");
+
             var orderCode = sessionInfo;
             await _saleStateStore.SetAsync(orderCode, new VakifbankSaleState
             {
@@ -192,6 +204,8 @@ public sealed class VakifbankGatewayProvider : HttpPaymentGatewayBase
 
             if (request.RawData.Count == 0)
                 return Result<PaymentGatewayCallbackResponseDto>.Failure("Vakıfbank callback verisi boş.");
+
+            PaymentDiagnostic.LogInboundCallback(GatewayName, request.RawData, "ProcessCallbackAsync");
 
             var status = GetRawValue(request.RawData, "Status");
             var verifyEnrollmentRequestId = GetRawValue(request.RawData, "VerifyEnrollmentRequestId");
@@ -238,6 +252,8 @@ public sealed class VakifbankGatewayProvider : HttpPaymentGatewayBase
 
             if (request.RawData.Count == 0)
                 return Result<PaymentGatewayAuth3DSResponseDto>.Failure("Vakıfbank Auth3DS için callback verisi gerekli.");
+
+            PaymentDiagnostic.LogInboundCallback(GatewayName, request.RawData, "Auth3DSAsync (VPOS öncesi)");
 
             var status = GetRawValue(request.RawData, "Status");
             if (!Is3DSuccessStatus(status))

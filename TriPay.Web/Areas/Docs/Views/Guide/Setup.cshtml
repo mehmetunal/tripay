@@ -1,29 +1,26 @@
 @{
     ViewData["Title"] = "Kurulum";
-    ViewData["DocLead"] = "Projeye TriPay ekleme ve banka ayarlarını yapılandırma.";
+    ViewData["DocLead"] = "NuGet, appsettings, DI kaydı ve ilk test isteği — adım adım.";
 }
 <h1>Kurulum</h1>
 
-<h2>Gereksinimler</h2>
+<h2>Adım 1 — Gereksinimler</h2>
 <ul>
-    <li>.NET 8 veya üzeri web uygulaması</li>
-    <li>Bankanızdan alınmış sanal POS / üye işyeri bilgileri</li>
-    <li>Canlıda HTTPS zorunlu</li>
-    <li>İsteğe bağlı: Redis (3D oturum durumu için), RabbitMQ (arka plan bildirimleri)</li>
+    <li>.NET 8 veya üzeri ASP.NET Core uygulaması</li>
+    <li>Bankadan alınmış sanal POS / üye işyeri bilgileri</li>
+    <li>Canlıda HTTPS (callback ve ödeme formu)</li>
+    <li>Önerilen: Redis (3D oturum durumu ve idempotency için — Framework modunda <code>AddTriPayFramework</code> ile gelir)</li>
 </ul>
 
-<h2>Paket kurulumu</h2>
-<p>Proje dosyanıza TriPay NuGet paketini ekleyin. Paket yalnızca ödeme katmanını getirir; veritabanı şeması zorunlu değildir (Framework modu).</p>
+<h2>Adım 2 — NuGet paketi</h2>
 <pre><code>dotnet add package TriPay</code></pre>
+<p>Paket ödeme katmanını getirir; Framework modunda TriPay MSSQL zorunlu değildir.</p>
 
-<h2>Yapılandırma dosyası</h2>
-<p>
-    <code>appsettings.json</code> veya ortam değişkenlerinde banka kanalınızı açın.
-    Her kanal için: test modu anahtarı, üye işyeri kimliği, terminal ve şifre alanları bulunur.
-    Canlı ve test bilgilerini asla aynı dosyada karıştırmayın.
-</p>
+<h2>Adım 3 — appsettings.json</h2>
+<p>Test ve canlı bilgilerini ayrı dosyalarda tutun. Örnek VakıfPayS kanalı:</p>
 <pre><code>{
   "TriPay": {
+    "DefaultGateway": "VakifPays",
     "Persistence": {
       "Enabled": false
     },
@@ -33,20 +30,99 @@
         "IsTestMode": true,
         "Settings": {
           "MerchantId": "BANKADAN_ALINAN",
-          "MerchantPassword": "GIZLI",
-          "TerminalNo": "TERMINAL"
+          "MerchantPassword": "GIZLI_SIFRE",
+          "TerminalNo": "TERMINAL_NO"
         }
       }
     }
   }
 }</code></pre>
 
-<h2>Uygulama kaydı</h2>
-<p>
-    Uygulama ayağa kalkarken TriPay’i yapılandırmayla kaydedin.
-    Framework modunda “veritabanı kapalı” bayrağının açık olduğundan emin olun — böylece TriPay kendi MSSQL’ine yazmaya çalışmaz.
-    Tam kayıt satırı için geliştirici ekibiniz <code>docs/TriPay_Program_cs_ve_DI.md</code> dosyasına bakmalıdır; bu kılavuzda yalnızca kavram anlatılır.
-</p>
+<table class="w-full text-left text-sm border border-slate-200 rounded-xl overflow-hidden my-4">
+    <thead class="bg-slate-50 font-semibold">
+        <tr><th class="p-3">Anahtar</th><th class="p-3">Açıklama</th></tr>
+    </thead>
+    <tbody class="divide-y text-ink-700">
+        <tr><td class="p-3"><code>Persistence:Enabled</code></td><td class="p-3">Framework modunda <code>false</code> — TriPay kendi DB’sine yazmaz</td></tr>
+        <tr><td class="p-3"><code>IsTestMode</code></td><td class="p-3"><code>true</code> iken banka test uçları kullanılır</td></tr>
+        <tr><td class="p-3"><code>DefaultGateway</code></td><td class="p-3">Boş bırakılırsa VakıfPayS varsayılan</td></tr>
+    </tbody>
+</table>
 
-<h2>Test</h2>
-<p>Test modunda bankanın verdiği test kartlarıyla küçük tutar deneyin. Başarılı işlemde sipariş satırınızı güncelleyin; başarısızda kullanıcıya anlaşılır Türkçe mesaj gösterin.</p>
+<h2>Adım 4 — Program.cs (DI kaydı)</h2>
+<p>Üretimde <strong>Framework</strong> modu için tek satır:</p>
+<pre><code>using TriPay.Persistence.DependencyInjection;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddControllersWithViews();
+builder.Services.AddTriPayFramework(builder.Configuration);
+
+var app = builder.Build();
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+app.Run();</code></pre>
+
+<p><code>AddTriPayFramework</code> şunları içerir:</p>
+<ul>
+    <li><code>IPaymentGatewayService</code> — ödeme başlat, callback, sorgu, iade</li>
+    <li><code>IGatewaySettingsProvider</code> — ayarları <code>appsettings</code>’ten okur</li>
+    <li><code>IGatewayMetadataService</code> — Vakıfbank MPI vb. varsayılan URL’ler</li>
+    <li>Redis / bellek içi 3D state</li>
+</ul>
+<p>Hosted (TriPay MSSQL + checkout sayfası) için <code>AddTriPayHosted</code> kullanın — <a href="@SiteLinks.DocsPath/Guide/IntegrationModes">mod karşılaştırması</a>.</p>
+
+<h2>Adım 5 — Controller enjeksiyonu</h2>
+<pre><code>public class PaymentController : Controller
+{
+    private readonly IPaymentGatewayService _payment;
+
+    public PaymentController(IPaymentGatewayService payment)
+    {
+        _payment = payment;
+    }
+}</code></pre>
+
+<h2>Adım 6 — İlk test isteği</h2>
+<ol>
+    <li>Test modu açık (<code>IsTestMode: true</code>, <code>TestPlatform: true</code>).</li>
+    <li>Bankanın verdiği test kartı ile küçük tutar.</li>
+    <li><code>ReturnUrl</code> olarak <code>https://localhost:PORT/payment/callback</code> tanımlayın.</li>
+    <li>Başarılı akışta sipariş satırını güncelleyin.</li>
+</ol>
+
+<h3>Minimal başlatma kodu</h3>
+<pre><code>var result = await _payment.InitializePaymentAsync(new PaymentGatewayInitializeRequestDto
+{
+    GatewayName = PaymentGatewayNames.VakifPays,
+    Payment = new PaymentRequest
+    {
+        OrderNumber = Guid.NewGuid().ToString("N"),
+        Amount = 1.00m,
+        ReturnUrl = $"{Request.Scheme}://{Request.Host}/payment/callback",
+        TestPlatform = true,
+        Use3D = true,
+        // ... kart ve müşteri alanları
+    }
+});</code></pre>
+
+<h2>Adım 7 — Callback endpoint</h2>
+<pre><code>[HttpPost]
+[AllowAnonymous]
+[IgnoreAntiforgeryToken]
+public Task&lt;IActionResult&gt; Callback(IFormCollection form) =&gt; HandleAsync(form);
+
+[HttpGet]
+[AllowAnonymous]
+public Task&lt;IActionResult&gt; CallbackGet() =&gt;
+    HandleAsync(Request.Query.ToDictionary(k =&gt; k.Key, v =&gt; v.ToString()));</code></pre>
+
+<p>Detaylı istek/yanıt örnekleri: <a href="@SiteLinks.DocsPath/Guide/PaymentFlow">Ödeme akışı</a>.</p>
+
+<h2>Sık kurulum hataları</h2>
+<ul>
+    <li><strong>Credential bulunamadı:</strong> <code>AddTriPay()</code> tek başına çağrılmış — <code>AddTriPayFramework</code> kullanın.</li>
+    <li><strong>Callback 404:</strong> <code>ReturnUrl</code> yanlış veya HTTPS sertifikası geçersiz.</li>
+    <li><strong>Anti-forgery 400:</strong> Callback action’da <code>[IgnoreAntiforgeryToken]</code> eksik.</li>
+</ul>

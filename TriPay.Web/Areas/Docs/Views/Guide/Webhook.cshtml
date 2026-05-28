@@ -1,30 +1,90 @@
 @{
     ViewData["Title"] = "Bildirimler (Webhook)";
-    ViewData["DocLead"] = "Ödeme sonucunun sunucunuza güvenli iletilmesi.";
+    ViewData["DocLead"] = "Ödeme sonucunun sunucunuza güvenli iletilmesi — istek, yanıt ve yeniden deneme.";
 }
 <h1>Bildirimler (Webhook)</h1>
 
 <h2>Neden gerekli?</h2>
 <p>
     Müşteri 3D sonrası tarayıcıyı kapatabilir veya ağ kesilebilir.
-    Bu yüzden “ödendi” bilgisini yalnızca müşterinin gördüğü başarı sayfasına bağlamayın;
-    banka sonucu sunucunuza ayrıca bildirilmelidir.
+    “Ödendi” bilgisini yalnızca müşterinin gördüğü başarı sayfasına bağlamayın;
+    banka/TriPay sonucu sunucunuza ayrıca bildirmelidir.
+</p>
+<p>
+    <strong>Callback</strong> (ReturnUrl): tarayıcı üzerinden gelir, manipüle edilebilir — işleyin ama tek kaynak saymayın.<br />
+    <strong>Webhook</strong>: sunucudan sunucuya; imzalı ve idempotent işlenmelidir.
 </p>
 
-<h2>Nasıl çalışır?</h2>
+<h2>Adım adım</h2>
 <ol>
-    <li>Üye işyeri panelinde veya yapılandırmada bir bildirim URL’si tanımlarsınız.</li>
-    <li>Ödeme sonuçlandığında TriPay bu adrese JSON gövde ve imza başlıkları gönderir.</li>
-    <li>Sunucunuz imzayı doğrular, siparişi günceller ve HTTP 200 döner.</li>
-    <li>Geçici hata olursa TriPay belirli aralıklarla yeniden dener (yeniden deneme politikası yapılandırmaya bağlıdır).</li>
+    <li>Panel veya <code>appsettings</code> içinde bildirim URL’nizi tanımlayın (HTTPS).</li>
+    <li>Ödeme sonuçlandığında TriPay <code>POST</code> gönderir.</li>
+    <li>Sunucunuz imzayı doğrular, siparişi günceller, <strong>HTTP 200</strong> döner.</li>
+    <li>2xx dışı yanıtta belirli aralıklarla yeniden deneme yapılır (politika yapılandırmaya bağlı).</li>
 </ol>
 
-<h2>Örnek gövde (kavramsal)</h2>
-<pre><code>{
+<h2>Örnek gelen istek</h2>
+<pre><code>POST https://api.magaza.com/webhooks/tripay HTTP/1.1
+Content-Type: application/json
+X-TriPay-Signature: sha256=abc123...
+X-TriPay-Timestamp: 1716739200
+
+{
+  "event": "payment.completed",
   "orderId": "SIP-2026-001",
   "status": "success",
-  "amount": 150.00,
+  "amount": 1500.00,
   "currency": "TRY",
-  "paidAt": "2026-05-22T14:30:00Z"
+  "transactionId": "VP-TRX-998877",
+  "paidAt": "2026-05-22T14:30:00Z",
+  "gateway": "VakifPays"
 }</code></pre>
-<p>Gerçek alan adları banka ve moda göre değişebilir; entegrasyon testinde loglayıp doğrulayın.</p>
+<p>Gerçek alan adları kanal ve sürüme göre değişebilir; entegrasyon testinde ham gövdeyi loglayın.</p>
+
+<h2>Örnek işleyici (C#)</h2>
+<pre><code>[HttpPost("webhooks/tripay")]
+public async Task&lt;IActionResult&gt; TriPayWebhook()
+{
+    using var reader = new StreamReader(Request.Body);
+    var body = await reader.ReadToEndAsync();
+
+    var signature = Request.Headers["X-TriPay-Signature"].ToString();
+    if (!VerifySignature(body, signature, _webhookSecret))
+        return Unauthorized();
+
+    var payload = JsonSerializer.Deserialize&lt;WebhookPayload&gt;(body);
+    if (payload?.Status == "success")
+        await _orders.MarkPaidAsync(payload.OrderId, payload.TransactionId);
+
+    return Ok();
+}</code></pre>
+
+<h2>Beklenen yanıtlarınız</h2>
+<table class="w-full text-left text-sm border border-slate-200 rounded-xl overflow-hidden my-4">
+    <thead class="bg-slate-50 font-semibold">
+        <tr><th class="p-3">HTTP</th><th class="p-3">Anlam</th><th class="p-3">TriPay davranışı</th></tr>
+    </thead>
+    <tbody class="divide-y text-ink-700">
+        <tr><td class="p-3"><code>200</code></td><td class="p-3">Alındı ve işlendi</td><td class="p-3">Yeniden gönderilmez</td></tr>
+        <tr><td class="p-3"><code>401</code></td><td class="p-3">İmza hatalı</td><td class="p-3">Yeniden dener / alarm</td></tr>
+        <tr><td class="p-3"><code>500</code></td><td class="p-3">Geçici sunucu hatası</td><td class="p-3">Exponential backoff ile yeniden dener</td></tr>
+    </tbody>
+</table>
+
+<h2>Idempotency (çift işlem önleme)</h2>
+<pre><code>// Aynı orderId + event ikinci kez gelirse yine 200 dönün, DB'yi tekrar güncellemeyin
+if (await _processedEvents.ExistsAsync(payload.EventId))
+    return Ok();
+
+await _orders.MarkPaidAsync(payload.OrderId, payload.TransactionId);
+await _processedEvents.SaveAsync(payload.EventId);
+return Ok();</code></pre>
+
+<h2>Callback ile birlikte kullanım</h2>
+<ol>
+    <li>Callback: kullanıcıya anında sonuç sayfası göster.</li>
+    <li>Webhook: sipariş durumunun kesin kaydı (stok, fatura, e-posta).</li>
+    <li>Şüphede: <code>GetPaymentStatusAsync</code> ile bankadan sorgula (<a href="@SiteLinks.DocsPath/Guide/PaymentFlow">ödeme akışı</a>).</li>
+</ol>
+
+<p>Güvenlik: <a href="@SiteLinks.DocsPath/Guide/Security">Güvenlik</a>.</p>

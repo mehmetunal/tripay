@@ -1,23 +1,50 @@
 @{
     ViewData["Title"] = "Sık sorulanlar";
-    ViewData["DocLead"] = "En çok gelen sorular ve kısa yanıtlar.";
+    ViewData["DocLead"] = "API, test, hata kodları ve mod seçimi — kısa yanıtlar.";
 }
 <h1>Sık sorulanlar</h1>
 
 <h2>TriPay banka mı?</h2>
 <p>Hayır. Ödeme lisansı ve sözleşme sizin bankanızla; TriPay yazılım entegrasyon katmanıdır.</p>
 
-<h2>Hangi bankalar destekleniyor?</h2>
-<p>Yol haritasında iyzico, Garanti, PayTR ve diğer sanal POS kanalları vardır. Canlıda hangi kanalın açık olduğunu proje yöneticinizden veya admin panelindeki gateway listesinden öğrenin.</p>
+<h2>Hangi servisi enjekte etmeliyim?</h2>
+<ul>
+    <li><strong>Framework:</strong> <code>IPaymentGatewayService</code> — <code>AddTriPayFramework</code></li>
+    <li><strong>Hosted:</strong> <code>IPaymentCheckoutService</code> — <code>AddTriPayHosted</code></li>
+</ul>
 
-<h2>Verilerim TriPay sunucusunda kalır mı?</h2>
-<p>Framework modunda hayır — işlem özeti sizin veritabanınızda. Hosted modda yapılandırmaya göre özet kayıt TriPay MSSQL’inde tutulabilir.</p>
+<h2>ReturnUrl kim tanımlar?</h2>
+<p>Siz. <code>PaymentRequest.ReturnUrl</code> bankanın 3D sonrası POST edeceği adresinizdir (ör. <code>/payment/callback</code>). TriPay domain’i değildir.</p>
+
+<h2>responseCode 00 ne demek?</h2>
+<p>VakıfPayS için genelde onay. Diğer kanallarda kod tablosu banka dokümanından alınmalı; callback tek başına yetmez — <code>GetPaymentStatusAsync</code> ile doğrulayın.</p>
+
+<h2>RedirectHtml mi RedirectUrl mi?</h2>
+<p>Çoğu Türk bankası auto-post HTML döner (<code>RedirectHtml</code>). Varsa <code>Content(html, "text/html")</code> kullanın; iframe içine gömmek callback’i bozabilir.</p>
+
+<h2>Callback POST mu GET mi?</h2>
+<p>Çoğunlukla POST. Demo projede her ikisi de desteklenir. Production’da POST + isteğe bağlı GET dinleyin.</p>
 
 <h2>Test kartı nereden?</h2>
-<p>Bankanızın sanal POS test dokümanından. Test modu bayrağı açıkken gerçek tahsilat yapılmaz.</p>
+<p>Bankanızın sanal POS test dokümanından. <code>TestPlatform: true</code> ve <code>IsTestMode: true</code> iken gerçek tahsilat yapılmaz.</p>
+
+<h2>Verilerim TriPay sunucusunda kalır mı?</h2>
+<p>Framework modunda hayır — işlem özeti sizin DB’nizde. Hosted modda özet TriPay MSSQL’de tutulabilir.</p>
+
+<h2>“Credential bulunamadı” hatası</h2>
+<p><code>AddTriPay()</code> tek başına çağrılmış olabilir. Üretimde <code>AddTriPayFramework</code> veya <code>AddTriPayHosted</code> kullanın (<a href="@SiteLinks.DocsPath/Guide/Setup">kurulum</a>).</p>
+
+<h2>Callback 400 Anti-forgery</h2>
+<p>Callback action’a <code>[IgnoreAntiforgeryToken]</code> ekleyin.</p>
+
+<h2>Hosted ile Framework farkı?</h2>
+<p><a href="@SiteLinks.DocsPath/Guide/IntegrationModes">Entegrasyon modları</a> tablosuna bakın.</p>
+
+<h2>Adım adım istek/yanıt örnekleri nerede?</h2>
+<p><a href="@SiteLinks.DocsPath/Guide/PaymentFlow">Ödeme akışı</a> sayfasında başlatma, callback, sorgu, taksit ve iade örnekleri var.</p>
 
 <h2>Demo site ile üretim farkı?</h2>
-<p><code>TriPay</code> klasöründeki web projesi yalnızca hosted checkout demosudur. Üretimde kendi siteniz veya <a href="@SiteLinks.Root">tripay.com.tr</a> kurumsal yüzünüz kullanılır.</p>
+<p><code>TriPay.Demo</code> Framework referansıdır. Kurumsal site <a href="@SiteLinks.Root">ana sayfa</a>; teknik markdown repoda <code>docs/</code> altındadır.</p>
 
-<h2>Daha teknik detay?</h2>
-<p>Geliştirici markdown dokümanları repoda <code>docs/</code> altındadır: mimari kurallar, veritabanı şeması ve genişletme planı.</p>
+<h2>Desteklenen gateway’ler?</h2>
+<p>Kodda kayıtlı: VakıfPayS, Vakıfbank, Iyzico (yapılandırmaya bağlı). Liste: <code>GetActiveGatewaysAsync()</code>.</p>

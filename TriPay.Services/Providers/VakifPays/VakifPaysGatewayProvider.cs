@@ -5,6 +5,7 @@ using Newtonsoft.Json.Linq;
 using TriPay.Core.Common;
 using TriPay.Services.Configuration;
 using TriPay.Services.Models;
+using TriPay.Services.Diagnostics;
 using TriPay.Services.Providers.VakifPays.Helpers;
 using TriPay.Services.Providers.VakifPays.Models;
 
@@ -62,6 +63,12 @@ public sealed class VakifPaysGatewayProvider : HttpPaymentGatewayBase
         }
 
         var model = await Get3DSecureUrlAsync(request.Payment);
+        PaymentDiagnostic.LogOutbound3DForm(
+            GatewayName,
+            model.PostUrl,
+            model.PostData,
+            "Tarayıcı otomatik POST (sale3d)");
+
         var html = VakifPaysAutoPostHtmlBuilder.Build(model.PostUrl, model.PostData);
 
         return Result<PaymentGatewayInitializeResponseDto>.Success(new PaymentGatewayInitializeResponseDto
@@ -77,6 +84,8 @@ public sealed class VakifPaysGatewayProvider : HttpPaymentGatewayBase
     public override Task<Result<PaymentGatewayCallbackResponseDto>> ProcessCallbackAsync(
         PaymentGatewayCallbackRequestDto request)
     {
+        PaymentDiagnostic.LogInboundCallback(GatewayName, request.RawData, "ProcessCallbackAsync");
+
         var success = request.RawData.TryGetValue("responseCode", out var code) && code == "00";
         request.RawData.TryGetValue("responseMsg", out var msg);
         request.RawData.TryGetValue("merchantPaymentId", out var order);

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace TriPay.Web.Areas.Docs.Controllers;
 
 [Area("Docs")]
+[Route("docs/Guide/[action]")]
 public sealed class GuideController : Controller
 {
     public IActionResult Index() => View();

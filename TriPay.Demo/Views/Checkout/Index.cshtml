@@ -1,83 +1,157 @@
 @model TriPay.Services.Providers.VakifPays.Models.PaymentRequest
 @{
     ViewData["Title"] = "Güvenli Ödeme";
+    ViewData["CheckoutPage"] = true;
+    var gateway = ViewData["Gateway"] as CheckoutGatewaySnapshot;
 }
 
-<div class="pay-page">
-    <div class="pay-card">
-        <div class="pay-head">
-            <h1>Güvenli Kart Ödemesi</h1>
-            <p>3D Secure ile korunur. Kart bilgileriniz sistemde tutulmaz.</p>
-        </div>
-
-        <form asp-action="Pay" method="post" class="pay-form">
-            <label asp-for="CardOwner">Kart Üzerindeki İsim</label>
-            <input asp-for="CardOwner" type="text" value="MEHMET UNAL" required />
-
-            <label asp-for="CardNumber">Kart Numarası</label>
-            <input asp-for="CardNumber" id="cardNumber" type="text" value="4938410157705590" required />
-
-            <div class="pay-grid">
-                <div>
-                    <label asp-for="ExpiryMonth">Ay</label>
-                    <input asp-for="ExpiryMonth" type="text" value="12" maxlength="2" required />
+<div class="checkout-shell">
+    <div class="checkout-layout">
+        <aside class="checkout-summary" aria-label="Ödeme özeti">
+            <div class="checkout-summary-brand">
+                <div class="checkout-summary-logo" aria-hidden="true">TP</div>
+                <span>TriPay</span>
+            </div>
+            @if (gateway is not null)
+            {
+                <div class="checkout-provider" aria-label="Ödeme kanalı">
+                    <p class="checkout-provider-label">Ödeme kanalı</p>
+                    <p class="checkout-provider-name">@gateway.ActiveDisplayName</p>
+                    <p class="checkout-provider-code"><code>@gateway.ActiveCode</code></p>
+                    <div class="checkout-provider-badges">
+                        @if (gateway.IsEnabled)
+                        {
+                            <span class="checkout-provider-badge checkout-provider-badge-active">Aktif</span>
+                        }
+                        else
+                        {
+                            <span class="checkout-provider-badge checkout-provider-badge-warn">Yapılandırma kapalı</span>
+                        }
+                        <span class="checkout-provider-badge">@(gateway.IsTestMode ? "Test ortamı" : "Canlı ortam")</span>
+                    </div>
+                    @if (gateway.EnabledGateways.Count > 1)
+                    {
+                        <p class="checkout-provider-others-label">Diğer açık kanallar</p>
+                        <ul class="checkout-provider-others">
+                            @foreach (var g in gateway.EnabledGateways.Where(x => !x.IsActive))
+                            {
+                                <li><span>@g.DisplayName</span> <code class="small">@g.Code</code></li>
+                            }
+                        </ul>
+                    }
                 </div>
+            }
+            <div class="checkout-summary-amount">
+                <label>Ödenecek tutar</label>
                 <div>
-                    <label asp-for="ExpiryYear">Yıl</label>
-                    <input asp-for="ExpiryYear" type="text" value="2029" maxlength="4" required />
-                </div>
-                <div>
-                    <label asp-for="Cvv">CVV</label>
-                    <input asp-for="Cvv" type="password" value="453" maxlength="4" required />
+                    <span class="amount-value">@Model.Amount.ToString("N2")</span>
+                    <span class="amount-currency">@Model.Currency</span>
                 </div>
             </div>
+            <ul class="checkout-trust-list">
+                <li>
+                    <span class="checkout-trust-icon" aria-hidden="true">✓</span>
+                    3D Secure ile doğrulanmış ödeme
+                </li>
+                <li>
+                    <span class="checkout-trust-icon" aria-hidden="true">✓</span>
+                    Kart bilgisi kalıcı saklanmaz
+                </li>
+                <li>
+                    <span class="checkout-trust-icon" aria-hidden="true">✓</span>
+                    TLS ile şifreli bağlantı
+                </li>
+            </ul>
+            <span class="checkout-mode-pill">Framework demo</span>
+        </aside>
 
-            <label for="installmentSelect">Taksit Seçimi</label>
-            <select id="installmentSelect" asp-for="InstallmentCount">
-                <option value="1">1 (Tek Çekim)</option>
-            </select>
-            <small id="installmentHint" style="color:#486581;">Kart numarasına göre taksit seçenekleri otomatik gelir.</small>
+        <div class="checkout-card">
+            <div class="checkout-card-header">
+                <h1>Güvenli kart ödemesi</h1>
+                <p>Ödeme bilgilerinizi girin; bankanızın 3D Secure ekranına yönlendirileceksiniz.</p>
+            </div>
 
-            <input asp-for="Amount" type="hidden" />
-            <input asp-for="Currency" type="hidden" />
-            <input asp-for="OrderNumber" type="hidden" />
-            <input asp-for="CustomerId" type="hidden" />
-            <input asp-for="CustomerName" type="hidden" />
-            <input asp-for="CustomerEmail" type="hidden" />
-            <input asp-for="CustomerIp" type="hidden" />
-            <input asp-for="CustomerPhone" type="hidden" />
-            <input asp-for="ReturnUrl" type="hidden" />
-            <input asp-for="BillToAddressLine" type="hidden" />
-            <input asp-for="BillToCity" type="hidden" />
-            <input asp-for="BillToCountry" type="hidden" />
-            <input asp-for="BillToPostalCode" type="hidden" />
-            <input asp-for="BillToPhone" type="hidden" />
-            <input asp-for="ShipToAddressLine" type="hidden" />
-            <input asp-for="ShipToCity" type="hidden" />
-            <input asp-for="ShipToCountry" type="hidden" />
-            <input asp-for="ShipToPostalCode" type="hidden" />
-            <input asp-for="ShipToPhone" type="hidden" />
+            <div class="checkout-framework-note" role="status">
+                <strong>Framework modu:</strong> Ödeme <code>IPaymentGatewayService</code> ile başlatılır;
+                sipariş özeti demo uygulamanızda tutulur. TriPay MSSQL kullanılmaz.
+            </div>
 
-            <button type="submit" class="pay-btn">3D Secure ile Ödemeye Devam Et</button>
-        </form>
+            <div class="checkout-card-body">
+                <form asp-action="Pay" method="post" class="checkout-form">
+                    <p class="checkout-section-title">Kart bilgileri</p>
+
+                    <div class="checkout-field">
+                        <label asp-for="CardOwner">Kart Üzerindeki İsim</label>
+                        <input asp-for="CardOwner" type="text" value="MEHMET UNAL" required />
+                    </div>
+
+                    <div class="checkout-field checkout-field-card">
+                        <label asp-for="CardNumber">Kart Numarası</label>
+                        <input asp-for="CardNumber" id="cardNumber" type="text" value="5404355404355405" required />
+                    </div>
+
+                    <div class="checkout-grid">
+                        <div class="checkout-field">
+                            <label asp-for="ExpiryMonth">Ay</label>
+                            <input asp-for="ExpiryMonth" type="text" value="12" maxlength="2" required />
+                        </div>
+                        <div class="checkout-field">
+                            <label asp-for="ExpiryYear">Yıl</label>
+                            <input asp-for="ExpiryYear" type="text" value="2030" maxlength="4" required />
+                        </div>
+                        <div class="checkout-field">
+                            <label asp-for="Cvv">CVV</label>
+                            <input asp-for="Cvv" type="text" value="001" maxlength="4" required />
+                        </div>
+                    </div>
+
+                    <p class="checkout-section-title">Taksit</p>
+
+                    <div class="checkout-field">
+                        <label for="installmentSelect">Taksit Seçimi</label>
+                        <select id="installmentSelect" asp-for="InstallmentCount">
+                            <option value="1">1 (Tek Çekim)</option>
+                        </select>
+                        <small id="installmentHint" class="checkout-hint">Kart numarasına göre taksit seçenekleri otomatik gelir.</small>
+                    </div>
+
+                    <input asp-for="Amount" type="hidden" />
+                    <input asp-for="Currency" type="hidden" />
+                    <input asp-for="OrderNumber" type="hidden" />
+                    <input asp-for="CustomerId" type="hidden" />
+                    <input asp-for="CustomerName" type="hidden" />
+                    <input asp-for="CustomerEmail" type="hidden" />
+                    <input asp-for="CustomerIp" type="hidden" />
+                    <input asp-for="CustomerPhone" type="hidden" />
+                    <input asp-for="ReturnUrl" type="hidden" />
+                    <input asp-for="BillToAddressLine" type="hidden" />
+                    <input asp-for="BillToCity" type="hidden" />
+                    <input asp-for="BillToCountry" type="hidden" />
+                    <input asp-for="BillToPostalCode" type="hidden" />
+                    <input asp-for="BillToPhone" type="hidden" />
+                    <input asp-for="ShipToAddressLine" type="hidden" />
+                    <input asp-for="ShipToCity" type="hidden" />
+                    <input asp-for="ShipToCountry" type="hidden" />
+                    <input asp-for="ShipToPostalCode" type="hidden" />
+                    <input asp-for="ShipToPhone" type="hidden" />
+
+                    <button type="submit" class="checkout-submit">
+                        <span class="checkout-submit-icon" aria-hidden="true">🔒</span>
+                        3D Secure ile Ödemeye Devam Et
+                    </button>
+
+                    <div class="checkout-badges">
+                        <span class="checkout-badge-item">Visa</span>
+                        <span class="checkout-badge-item">Mastercard</span>
+                        <span class="checkout-badge-item">3D Secure</span>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 
-<style>
-    .pay-page { min-height: 78vh; display: flex; justify-content: center; align-items: center; padding: 24px; background: radial-gradient(circle at 10% 10%, #f5f7ff 0%, #e7edf9 40%, #dde6f5 100%); }
-    .pay-card { width: 100%; max-width: 560px; background: #ffffff; border-radius: 18px; padding: 28px; box-shadow: 0 18px 48px rgba(22, 37, 66, 0.18); border: 1px solid #e4eaf5; }
-    .pay-head h1 { margin: 0 0 6px; font-size: 28px; color: #102a43; }
-    .pay-head p { margin: 0 0 20px; color: #486581; }
-    .pay-form { display: grid; gap: 10px; }
-    .pay-form label { font-weight: 600; color: #243b53; }
-    .pay-form input, .pay-form select { width: 100%; border: 1px solid #bcccdc; border-radius: 10px; padding: 12px; font-size: 15px; background: #f9fbff; }
-    .pay-form input:focus, .pay-form select:focus { outline: none; border-color: #2f6fed; box-shadow: 0 0 0 3px rgba(47, 111, 237, 0.14); }
-    .pay-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
-    .pay-btn { margin-top: 8px; border: 0; border-radius: 12px; padding: 14px; color: #fff; font-weight: 700; font-size: 15px; background: linear-gradient(135deg, #1f5fe0, #1247b8); cursor: pointer; }
-    .pay-btn:hover { filter: brightness(1.03); }
-    @@media (max-width: 640px) { .pay-page { justify-content: center; padding: 16px; } .pay-card { padding: 18px; } .pay-head h1 { font-size: 22px; } .pay-grid { grid-template-columns: 1fr; } }
-</style>
-
+@section Scripts {
 <script>
     const cardInput = document.getElementById("cardNumber");
     const installmentSelect = document.getElementById("installmentSelect");
@@ -123,3 +197,4 @@
     });
     loadInstallments();
 </script>
+}

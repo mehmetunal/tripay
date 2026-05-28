@@ -1,14 +1,29 @@
 @{
     ViewData["Title"] = "Kullanım kılavuzu";
-    ViewData["DocLead"] = "TriPay ile çalışmaya başlamak için önerilen okuma sırası.";
+    ViewData["DocLead"] = "TriPay ile çalışmaya başlamak için önerilen okuma sırası — her bölümde istek/yanıt örnekleri.";
 }
 <h1>Kullanım kılavuzu</h1>
+<p>Aşağıdaki sırayla okumanız önerilir. Her sayfada adım adım akış ve örnek JSON/C# istek-yanıt bulunur.</p>
 <ol>
-    <li><a asp-action="GettingStarted">Hızlı başlangıç</a> — ortam ve ilk yapılandırma</li>
-    <li><a asp-action="IntegrationModes">Entegrasyon modları</a> — risk ve veri konumu</li>
-    <li><a asp-action="Setup">Kurulum</a> — paket, ayar dosyası, banka bilgileri</li>
-    <li><a asp-action="PaymentFlow">Ödeme akışı</a> — başlat, 3D, dönüş</li>
-    <li><a asp-action="Security">Güvenlik</a> — kart verisi, imza, PCI</li>
-    <li><a asp-action="Webhook">Bildirimler</a> — sunucunuza ödeme sonucu</li>
-    <li><a asp-action="Faq">Sık sorulanlar</a></li>
+    <li><a href="@SiteLinks.DocsPath/Guide/GettingStarted">Hızlı başlangıç</a> — beş adımda ilk ödeme, özet tablo</li>
+    <li><a href="@SiteLinks.DocsPath/Guide/IntegrationModes">Entegrasyon modları</a> — Framework vs Hosted, hangi servis?</li>
+    <li><a href="@SiteLinks.DocsPath/Guide/Setup">Kurulum</a> — NuGet, appsettings, Program.cs, ilk test</li>
+    <li><a href="@SiteLinks.DocsPath/Guide/PaymentFlow">Ödeme akışı</a> — başlatma, 3D, callback, sorgu, taksit, iade (ana referans)</li>
+    <li><a href="@SiteLinks.DocsPath/Guide/Security">Güvenlik</a> — PCI, HTTPS, imza, idempotency</li>
+    <li><a href="@SiteLinks.DocsPath/Guide/Webhook">Bildirimler</a> — webhook istek/yanıt ve yeniden deneme</li>
+    <li><a href="@SiteLinks.DocsPath/Guide/Faq">Sık sorulanlar</a> — hata ve mod soruları</li>
 </ol>
+
+<h2>Hızlı API özeti</h2>
+<table class="w-full text-left text-sm border border-slate-200 rounded-xl overflow-hidden my-4">
+    <thead class="bg-slate-50 font-semibold">
+        <tr><th class="p-3">Adım</th><th class="p-3">Metot</th><th class="p-3">Döküman</th></tr>
+    </thead>
+    <tbody class="divide-y text-ink-700">
+        <tr><td class="p-3">Ödeme başlat</td><td class="p-3"><code>InitializePaymentAsync</code></td><td class="p-3"><a href="@SiteLinks.DocsPath/Guide/PaymentFlow#adim-1-odeme-baslatma">Ödeme akışı §1</a></td></tr>
+        <tr><td class="p-3">3D callback</td><td class="p-3"><code>ProcessCallbackAsync</code></td><td class="p-3"><a href="@SiteLinks.DocsPath/Guide/PaymentFlow#adim-4-callback">Ödeme akışı §4</a></td></tr>
+        <tr><td class="p-3">Durum sorgu</td><td class="p-3"><code>GetPaymentStatusAsync</code></td><td class="p-3"><a href="@SiteLinks.DocsPath/Guide/PaymentFlow#adim-5-durum-sorgu">Ödeme akışı §5</a></td></tr>
+        <tr><td class="p-3">Taksit</td><td class="p-3"><code>GetInstallmentInfoAsync</code></td><td class="p-3"><a href="@SiteLinks.DocsPath/Guide/PaymentFlow#taksit-sorgulama">Ödeme akışı — taksit</a></td></tr>
+        <tr><td class="p-3">İade</td><td class="p-3"><code>RefundPaymentAsync</code></td><td class="p-3"><a href="@SiteLinks.DocsPath/Guide/PaymentFlow#iade-refund">Ödeme akışı — iade</a></td></tr>
+    </tbody>
+</table>

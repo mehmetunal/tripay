@@ -30,7 +30,7 @@
         </div>
         <div class="card">
             <h2 class="font-bold text-ink-950">Bakım ve izolasyon</h2>
-            <p class="mt-2 text-sm leading-relaxed text-ink-600">Bakım modu ile kontrollü kesinti; API ve panel katmanları ayrı projelerde dağıtılabilir.</p>
+            <p class="mt-2 text-sm leading-relaxed text-ink-600">Bakım modu ile kontrollü kesinti; ödeme ve operasyon yüzleri birbirinden izole çalışabilir.</p>
         </div>
         <div class="card">
             <h2 class="font-bold text-ink-950">Denetim izi</h2>
@@ -45,7 +45,7 @@
         <ul class="mt-10 space-y-4">
             <li class="flex gap-3 rounded-xl border border-slate-200 bg-white px-5 py-4 text-sm text-ink-700">
                 <span class="text-brand-600">✓</span>
-                <span><strong class="text-ink-950">KVKK:</strong> Framework modunda kişisel veri işleme kaydı sizin sistemlerinizde; TriPay yalnızca entegrasyon sağlar.</span>
+                <span><strong class="text-ink-950">KVKK:</strong> Doğrudan entegrasyonda kişisel veri işleme kaydı sizin sistemlerinizde; TriPay yalnızca altyapı sağlar.</span>
             </li>
             <li class="flex gap-3 rounded-xl border border-slate-200 bg-white px-5 py-4 text-sm text-ink-700">
                 <span class="text-brand-600">✓</span>
@@ -58,7 +58,7 @@
         </ul>
         <div class="mt-10 text-center">
             <a href="@SiteLinks.DocsPath/Guide/Security" class="btn-primary">Kılavuz: güvenlik bölümü</a>
-            <a asp-controller="Legal" asp-action="Kvkk" class="btn-secondary ml-3">KVKK metni</a>
+            <a asp-area="" asp-controller="Legal" asp-action="Kvkk" class="btn-secondary ml-3">KVKK metni</a>
         </div>
     </div>
 </section>

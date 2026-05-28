@@ -498,9 +498,6 @@
   .overflow-x-auto {
     overflow-x: auto;
   }
-  .rounded {
-    border-radius: 0.25rem;
-  }
   .rounded-2xl {
     border-radius: var(--radius-2xl);
   }
@@ -600,9 +597,6 @@
   .bg-slate-50 {
     background-color: var(--color-slate-50);
   }
-  .bg-slate-100 {
-    background-color: var(--color-slate-100);
-  }
   .bg-slate-100\/80 {
     background-color: color-mix(in srgb, oklch(96.8% 0.007 247.896) 80%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -640,9 +634,6 @@
   }
   .p-6 {
     padding: calc(var(--spacing) * 6);
-  }
-  .px-1\.5 {
-    padding-inline: calc(var(--spacing) * 1.5);
   }
   .px-2 {
     padding-inline: calc(var(--spacing) * 2);
@@ -1470,7 +1461,7 @@
     padding-left: calc(var(--spacing) * 6);
     color: var(--color-ink-700);
   }
-  .prose-doc a {
+  .prose-doc a:not([class*="btn-"]) {
     --tw-font-weight: var(--font-weight-medium);
     font-weight: var(--font-weight-medium);
     color: var(--color-brand-700);
@@ -1480,6 +1471,16 @@
     &:hover {
       @media (hover: hover) {
         color: var(--color-brand-800);
+      }
+    }
+  }
+  .prose-doc .btn-primary {
+    color: var(--color-white) !important;
+    text-decoration-line: none;
+    text-decoration-color: transparent;
+    &:hover {
+      @media (hover: hover) {
+        color: var(--color-white) !important;
       }
     }
   }

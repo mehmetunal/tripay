@@ -1,24 +1,287 @@
 @{
     ViewData["Title"] = "Ödeme akışı";
-    ViewData["DocLead"] = "Sepetten başarılı tahsilata kadar standart yol.";
+    ViewData["DocLead"] = "Sepetten tahsilata kadar her adım: istek, yanıt ve örnek kod.";
 }
 <h1>Ödeme akışı</h1>
 
-<h2>Genel akış</h2>
+<p>
+    Bu sayfa <strong>Framework modu</strong> (kendi checkout’unuz) için uçtan uca akışı anlatır.
+    Hosted modda kart ekranı TriPay’de açılır; siz yalnızca oturum başlatma ve sonuç URL’lerini yönetirsiniz
+    (<a href="@SiteLinks.DocsPath/Guide/IntegrationModes">entegrasyon modları</a>).
+</p>
+
+<h2>Genel sıra (3D Secure)</h2>
 <ol>
-    <li><strong>Sepet onayı:</strong> Müşteri ödemeye geçer; siz benzersiz bir sipariş numarası üretirsiniz.</li>
-    <li><strong>Ödeme başlatma:</strong> Tutar, para birimi, taksit tercihi ve dönüş adresleri TriPay’e iletilir. Banka 3D gerektiriyorsa müşteri banka sayfasına yönlendirilir.</li>
-    <li><strong>3D Secure:</strong> Müşteri SMS veya banka uygulaması ile doğrular. Bu adım bankaya özeldir.</li>
-    <li><strong>Geri dönüş (callback):</strong> Banka sonucu TriPay’e post eder; TriPay doğrulayıp sizin belirlediğiniz URL’ye yönlendirir. Bu uç için tarayıcı dışı doğrulama kurallarına uyun.</li>
-    <li><strong>Sipariş güncelleme:</strong> Başarı koduna göre siparişi “ödendi” yapın; stok ve fatura süreçlerini tetikleyin.</li>
-    <li><strong>Arka plan bildirimi:</strong> Müşteri tarayıcıyı kapatsa bile sunucunuza imzalı bir HTTP bildirimi gelebilir — bunu tek gerçek kaynak olarak kullanın.</li>
+    <li>Müşteri ödeme formunu gönderir → sizin API’niz <strong>ödeme başlatır</strong>.</li>
+    <li>TriPay bankaya gider → size <code>RedirectHtml</code> veya <code>RedirectUrl</code> döner.</li>
+    <li>Tarayıcı banka 3D sayfasına gider; müşteri SMS/onay yapar.</li>
+    <li>Banka, sizin tanımladığınız <code>ReturnUrl</code> adresine <strong>POST</strong> eder (callback).</li>
+    <li>Siz callback’i <code>ProcessCallbackAsync</code> ile işlersiniz; isteğe bağlı <code>GetPaymentStatusAsync</code> ile doğrularsınız.</li>
+    <li>Siparişi “ödendi” yaparsınız; stok/fatura süreçlerini tetiklersiniz.</li>
+    <li>Arka planda webhook gelirse (Hosted / yapılandırılmışsa) aynı siparişi idempotent güncellersiniz.</li>
 </ol>
 
-<h2>Taksit sorgulama</h2>
-<p>BIN (kartın ilk 6–8 hanesi) ile bankanın izin verdiği taksit listesini ödeme öncesi gösterebilirsiniz. Liste bankaya göre değişir.</p>
+<div class="not-prose my-6 overflow-x-auto rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-ink-800">
+<pre class="m-0 whitespace-pre font-mono text-xs leading-relaxed">Müşteri → [POST /checkout/pay] → TriPay.InitializePaymentAsync
+         ← RedirectHtml (banka auto-post)
+Müşteri → Banka 3D
+Banka   → [POST ReturnUrl] → TriPay.ProcessCallbackAsync
+         → Sipariş DB güncelle
+         → (opsiyonel) Webhook → sunucu bildirimi</pre>
+</div>
 
-<h2>İade</h2>
-<p>Başarılı işlemden sonra tam veya kısmi iade banka kurallarına tabidir. İade talebini kendi panelinizden veya API’nizden TriPay üzerinden iletirsiniz.</p>
+<h2 id="adim-1-odeme-baslatma">Adım 1 — Ödeme başlatma isteği</h2>
+<p>
+    Uygulamanız <code>IPaymentGatewayService.InitializePaymentAsync</code> çağırır.
+    Kart ve sipariş bilgisi <code>PaymentRequest</code> içinde; kanal adı <code>PaymentGatewayNames</code> sabitlerinden gelir (string literal kullanmayın).
+</p>
 
-<h2>Hosted farkı</h2>
-<p>Hosted modda 2–4. adımlar müşteriye TriPay ödeme sayfasında gösterilir; siz yalnızca oturum açma ve sonuç URL’lerini yönetirsiniz.</p>
+<h3>İstek gövdesi (kavramsal JSON)</h3>
+<pre><code>{
+  "gatewayName": "VakifPays",
+  "payment": {
+    "orderNumber": "SIP-2026-00042",
+    "amount": 1500.00,
+    "currency": "TRY",
+    "installmentCount": 1,
+    "use3D": true,
+    "testPlatform": true,
+    "cardOwner": "Ahmet Yılmaz",
+    "cardNumber": "4111111111111111",
+    "expiryMonth": "12",
+    "expiryYear": "2028",
+    "cvv": "123",
+    "customerName": "Ahmet Yılmaz",
+    "customerEmail": "ahmet@ornek.com",
+    "customerPhone": "5551234567",
+    "customerIp": "203.0.113.10",
+    "returnUrl": "https://magaza.com/payment/callback"
+  }
+}</code></pre>
+
+<h3>C# örneği</h3>
+<pre><code>var initRequest = new PaymentGatewayInitializeRequestDto
+{
+    GatewayName = PaymentGatewayNames.VakifPays,
+    Payment = new PaymentRequest
+    {
+        OrderNumber = "SIP-2026-00042",
+        Amount = 1500.00m,
+        Currency = "TRY",
+        InstallmentCount = 1,
+        Use3D = true,
+        TestPlatform = true,
+        CardOwner = "Ahmet Yılmaz",
+        CardNumber = "4111111111111111",
+        ExpiryMonth = "12",
+        ExpiryYear = "2028",
+        Cvv = "123",
+        CustomerName = "Ahmet Yılmaz",
+        CustomerEmail = "ahmet@ornek.com",
+        CustomerPhone = "5551234567",
+        CustomerIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1",
+        ReturnUrl = "https://magaza.com/payment/callback"
+    }
+};
+
+var result = await _payment.InitializePaymentAsync(initRequest);
+
+if (!result.IsSuccess)
+    return BadRequest(result.ErrorMessage);
+
+var data = result.Data!;</code></pre>
+
+<h3>Başarılı yanıt (3D — HTML yönlendirme)</h3>
+<pre><code>{
+  "success": true,
+  "message": "3D Secure yönlendirmesi hazır",
+  "redirectHtml": "&lt;form method='post' action='https://banka...'&gt;...&lt;/form&gt;&lt;script&gt;document.forms[0].submit();&lt;/script&gt;",
+  "redirectUrl": null,
+  "paymentId": null,
+  "conversationId": "SIP-2026-00042"
+}</code></pre>
+<p>
+    <strong>Sizin yapmanız gereken:</strong> <code>RedirectHtml</code> varsa tarayıcıya <code>text/html</code> olarak yazın
+    (auto-post formu). Demo projede: <code>return Content(data.RedirectHtml, "text/html");</code>
+</p>
+
+<h3>Başarılı yanıt (3D’siz — anında sonuç)</h3>
+<pre><code>{
+  "success": true,
+  "message": "İşlem onaylandı",
+  "redirectHtml": null,
+  "redirectUrl": null,
+  "paymentId": "pgTranId-987654"
+}</code></pre>
+
+<h3>Hatalı yanıt</h3>
+<pre><code>{
+  "isSuccess": false,
+  "errorMessage": "Geçersiz kart numarası."
+}</code></pre>
+<p><code>Result&lt;T&gt;</code> katmanında <code>IsSuccess == false</code> ise <code>ErrorMessage</code> kullanıcıya veya log’a gider; kart bilgisini loglamayın.</p>
+
+<h2>Adım 2 — 3D Secure (tarayıcı)</h2>
+<p>TriPay sizin adınıza banka oturumunu açar. Müşteri bankanın sayfasında doğrulama yapar. Bu adımda sizin sunucunuza henüz “ödendi” yazmayın.</p>
+<ul>
+    <li><code>RedirectHtml</code>: Gizli alanlarla bankaya POST eden HTML — en yaygın yöntem.</li>
+    <li><code>RedirectUrl</code>: Doğrudan GET yönlendirme (kanala göre nadiren).</li>
+</ul>
+
+<h2>Adım 3 — Banka callback (ReturnUrl)</h2>
+<p>
+    <code>ReturnUrl</code> <strong>sizin</strong> controller adresiniz olmalıdır (ör. <code>/payment/callback</code>).
+    Banka genelde <code>application/x-www-form-urlencoded</code> ile POST eder; bazı kanallar GET de gönderebilir — her ikisini de dinleyin.
+</p>
+
+<h3>Örnek gelen POST (VakıfPayS — form alanları)</h3>
+<pre><code>POST /payment/callback HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+
+merchantPaymentId=SIP-2026-00042
+&amp;responseCode=00
+&amp;responseMsg=Approved
+&amp;pgTranId=VP-TRX-998877
+&amp;amount=1500.00
+&amp;errorMsg=</code></pre>
+
+<table class="w-full text-left text-sm border border-slate-200 rounded-xl overflow-hidden my-4">
+    <thead class="bg-slate-50 font-semibold">
+        <tr><th class="p-3">Alan</th><th class="p-3">Anlam</th></tr>
+    </thead>
+    <tbody class="divide-y text-ink-700">
+        <tr><td class="p-3"><code>merchantPaymentId</code></td><td class="p-3">Sizin <code>OrderNumber</code></td></tr>
+        <tr><td class="p-3"><code>responseCode</code></td><td class="p-3"><code>00</code> = başarı (kanala göre değişebilir)</td></tr>
+        <tr><td class="p-3"><code>pgTranId</code></td><td class="p-3">Banka işlem kimliği — iade ve sorgu için saklayın</td></tr>
+        <tr><td class="p-3"><code>responseMsg</code></td><td class="p-3">Banka açıklama metni</td></tr>
+    </tbody>
+</table>
+
+<h2 id="adim-4-callback">Adım 4 — Callback işleme (sizin kod)</h2>
+<pre><code>[HttpPost]
+[AllowAnonymous]
+[IgnoreAntiforgeryToken]
+public async Task&lt;IActionResult&gt; Callback(IFormCollection form)
+{
+    var raw = form.Keys.ToDictionary(
+        k =&gt; k,
+        k =&gt; form[k].ToString() ?? string.Empty);
+
+    var callbackResult = await _payment.ProcessCallbackAsync(
+        new PaymentGatewayCallbackRequestDto
+        {
+            GatewayName = PaymentGatewayNames.VakifPays,
+            RawData = raw
+        });
+
+    if (!callbackResult.IsSuccess)
+        return BadRequest(callbackResult.ErrorMessage);
+
+    var cb = callbackResult.Data!;
+    // cb.Success, cb.OrderNumber, cb.TransactionId, cb.ResponseCode
+    return RedirectToAction("Result", new { order = cb.OrderNumber });
+}</code></pre>
+
+<h3>TriPay’in döndürdüğü normalize yanıt</h3>
+<pre><code>{
+  "success": true,
+  "message": "Approved",
+  "orderNumber": "SIP-2026-00042",
+  "transactionId": "VP-TRX-998877",
+  "responseCode": "00",
+  "errorMessage": ""
+}</code></pre>
+
+<h2 id="adim-5-durum-sorgu">Adım 5 — Durum sorgusu (çift doğrulama)</h2>
+<p>Callback tek başına yetmez; bankadan tekrar sorgulayın:</p>
+<pre><code>var statusResult = await _payment.GetPaymentStatusAsync(
+    paymentId: cb.OrderNumber,  // veya pgTranId — kanala göre
+    gatewayName: PaymentGatewayNames.VakifPays);
+
+if (statusResult.IsSuccess)
+{
+    var q = statusResult.Data!;
+    var onayli = cb.Success
+        &amp;&amp; q.Success
+        &amp;&amp; q.ResponseCode == "00";
+}</code></pre>
+
+<h3>Örnek sorgu yanıtı</h3>
+<pre><code>{
+  "success": true,
+  "status": "success",
+  "paymentStatus": "SUCCESS",
+  "paymentId": "VP-TRX-998877",
+  "paidAmount": 1500.00,
+  "currency": "TRY",
+  "responseCode": "00",
+  "message": "İşlem onaylandı"
+}</code></pre>
+
+<h2>Adım 6 — Sipariş güncelleme</h2>
+<p>Yalnızca callback + sorgu uyumluysa veritabanında:</p>
+<ul>
+    <li><code>Status = Paid</code></li>
+    <li><code>TransactionId = pgTranId</code></li>
+    <li><code>PaidAt = UTC now</code></li>
+</ul>
+<p>Aynı <code>orderNumber</code> için ikinci kez “başarılı” yazmayın (idempotency).</p>
+
+<h2 id="taksit-sorgulama">Taksit sorgulama (ödeme öncesi)</h2>
+<p>BIN ile bankanın izin verdiği taksitleri listeleyin.</p>
+
+<h3>İstek</h3>
+<pre><code>GET /checkout/installments?cardNumber=4111111111111111&amp;amount=6000</code></pre>
+
+<h3>Sunucu çağrısı</h3>
+<pre><code>var result = await _payment.GetInstallmentInfoAsync(
+    new PaymentGatewayInstallmentRequestDto
+    {
+        GatewayName = PaymentGatewayNames.VakifPays,
+        CardNumber = "4111111111111111",
+        Amount = 6000m,
+        Currency = "TRY",
+        TestPlatform = true
+    });</code></pre>
+
+<h3>JSON yanıt (frontend)</h3>
+<pre><code>{
+  "success": true,
+  "installments": [
+    { "count": 1, "monthly": 6000.00, "total": 6000.00, "rate": 0, "label": "1 (Tek Çekim) - 6.000,00 TL" },
+    { "count": 3, "monthly": 2060.00, "total": 6180.00, "rate": 3.0, "label": "3 Taksit - %3,00 vade farkı..." }
+  ]
+}</code></pre>
+
+<h2 id="iade-refund">İade (refund)</h2>
+<pre><code>// Tam iade
+await _payment.RefundPaymentAsync(
+    paymentId: "VP-TRX-998877",
+    gatewayName: PaymentGatewayNames.VakifPays);
+
+// Kısmi iade
+await _payment.RefundPaymentAsync(
+    paymentId: "VP-TRX-998877",
+    amount: 250.00m,
+    gatewayName: PaymentGatewayNames.VakifPays);</code></pre>
+
+<h2>Alan referansı — PaymentRequest</h2>
+<table class="w-full text-left text-sm border border-slate-200 rounded-xl overflow-hidden my-4">
+    <thead class="bg-slate-50 font-semibold">
+        <tr><th class="p-3">Alan</th><th class="p-3">Zorunlu</th><th class="p-3">Açıklama</th></tr>
+    </thead>
+    <tbody class="divide-y text-ink-700">
+        <tr><td class="p-3"><code>OrderNumber</code></td><td class="p-3">Evet</td><td class="p-3">Benzersiz sipariş no</td></tr>
+        <tr><td class="p-3"><code>Amount</code></td><td class="p-3">Evet</td><td class="p-3">Tahsil tutarı</td></tr>
+        <tr><td class="p-3"><code>CardNumber, Expiry*, Cvv</code></td><td class="p-3">3D/sale için</td><td class="p-3">DB’ye yazmayın</td></tr>
+        <tr><td class="p-3"><code>ReturnUrl</code></td><td class="p-3">3D için</td><td class="p-3">Callback adresiniz (HTTPS)</td></tr>
+        <tr><td class="p-3"><code>TestPlatform</code></td><td class="p-3">Hayır</td><td class="p-3"><code>true</code> = test ortamı</td></tr>
+        <tr><td class="p-3"><code>Use3D</code></td><td class="p-3">Hayır</td><td class="p-3">Varsayılan <code>true</code></td></tr>
+    </tbody>
+</table>
+
+<p>
+    Referans uygulama: repodaki <code>TriPay.Demo</code> projesi (<code>CheckoutController</code>).
+    Kurulum için <a href="@SiteLinks.DocsPath/Guide/Setup">Kurulum</a>,
+    bildirimler için <a href="@SiteLinks.DocsPath/Guide/Webhook">Webhook</a> sayfalarına bakın.
+</p>

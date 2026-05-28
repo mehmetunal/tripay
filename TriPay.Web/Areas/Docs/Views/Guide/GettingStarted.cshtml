@@ -1,31 +1,79 @@
 @{
     ViewData["Title"] = "Hızlı başlangıç";
-    ViewData["DocLead"] = "TriPay’i tanıyın ve ilk ödeme denemenizi yapın.";
+    ViewData["DocLead"] = "TriPay’i tanıyın; beş adımda ilk ödemeyi test edin.";
 }
 <h1>Hızlı başlangıç</h1>
 
 <h2>TriPay ne yapar?</h2>
 <p>
-    TriPay, farklı banka ve ödeme kuruluşlarının sanal POS API’lerini tek bir .NET katmanında toplar.
-    Siz yalnızca “ödeme başlat”, “sonucu al”, “iade et” gibi tutarlı adımlarla çalışırsınız;
-    hangi bankanın hangi alan adını istediği arka planda çözülür.
+    TriPay, banka sanal POS API’lerini tek bir .NET arayüzünde birleştirir.
+    Siz <em>ödeme başlat → 3D yönlendir → callback işle → sorgula → iade et</em> adımlarıyla çalışırsınız;
+    alan adı farkları (ör. <code>merchantPaymentId</code> vs <code>orderId</code>) provider katmanında normalize edilir.
 </p>
 
 <h2>Beş adımda ilk ödeme</h2>
 <ol>
-    <li><strong>Mod seçin:</strong> Veriyi kendi sunucunuzda tutacaksanız “kendi uygulamanız” modunu; hazır ödeme sayfası istiyorsanız “hosted” modunu seçin.</li>
-    <li><strong>Paketi ekleyin:</strong> .NET projenize TriPay NuGet paketini referans verin (geliştirici dokümantasyonundaki paket adı).</li>
-    <li><strong>Banka bilgilerini girin:</strong> Bankanızdan aldığınız üye işyeri numarası, terminal ve şifreyi yapılandırma dosyasına veya gizli anahtar kasanıza yazın — asla kaynak koduna gömülü tutmayın.</li>
-    <li><strong>Uygulamayı kaydedin:</strong> Proje başlarken TriPay’in ödeme servislerini sisteme tanıtın (tek satırlık kayıt; ayrıntı geliştirici DI dokümanında).</li>
-    <li><strong>Test ödemesi:</strong> Test modunda küçük bir tutarla 3D’li ödeme deneyin; sipariş durumunu kendi veritabanınızda “bekliyor → başarılı” olarak güncelleyin.</li>
+    <li>
+        <strong>Mod seçin</strong> —
+        Kendi checkout: Framework (<code>AddTriPayFramework</code>).
+        Hazır ödeme sayfası: Hosted (<code>AddTriPayHosted</code>).
+        <a href="@SiteLinks.DocsPath/Guide/IntegrationModes">Karşılaştırma →</a>
+    </li>
+    <li>
+        <strong>Paket ve ayar</strong> —
+        <code>dotnet add package TriPay</code>, banka bilgilerini <code>appsettings</code>’e yazın.
+        <a href="@SiteLinks.DocsPath/Guide/Setup">Kurulum rehberi →</a>
+    </li>
+    <li>
+        <strong>DI kaydı</strong> —
+        <code>builder.Services.AddTriPayFramework(builder.Configuration);</code>
+    </li>
+    <li>
+        <strong>Ödeme başlat</strong> —
+        <code>InitializePaymentAsync</code> → <code>RedirectHtml</code> dönerse tarayıcıya yazın.
+    </li>
+    <li>
+        <strong>Callback + sipariş</strong> —
+        Banka <code>ReturnUrl</code>’e POST eder; <code>ProcessCallbackAsync</code> ile işleyip siparişi güncelleyin.
+        <a href="@SiteLinks.DocsPath/Guide/PaymentFlow">Tüm istek/yanıt örnekleri →</a>
+    </li>
 </ol>
+
+<h2>İlk istek özeti</h2>
+<table class="w-full text-left text-sm border border-slate-200 rounded-xl overflow-hidden my-4">
+    <thead class="bg-slate-50 font-semibold">
+        <tr><th class="p-3">Adım</th><th class="p-3">Metot</th><th class="p-3">Ne döner?</th></tr>
+    </thead>
+    <tbody class="divide-y text-ink-700">
+        <tr><td class="p-3">1. Başlat</td><td class="p-3"><code>InitializePaymentAsync</code></td><td class="p-3"><code>RedirectHtml</code> veya anında <code>Success</code></td></tr>
+        <tr><td class="p-3">2. 3D</td><td class="p-3">Tarayıcı → banka</td><td class="p-3">Müşteri onayı</td></tr>
+        <tr><td class="p-3">3. Callback</td><td class="p-3"><code>ProcessCallbackAsync</code></td><td class="p-3"><code>OrderNumber</code>, <code>TransactionId</code>, <code>ResponseCode</code></td></tr>
+        <tr><td class="p-3">4. Doğrula</td><td class="p-3"><code>GetPaymentStatusAsync</code></td><td class="p-3"><code>ResponseCode == "00"</code> (kanala göre)</td></tr>
+        <tr><td class="p-3">5. Kaydet</td><td class="p-3">Kendi DB</td><td class="p-3">Sipariş = Ödendi</td></tr>
+    </tbody>
+</table>
+
+<h2>Örnek başlatma yanıtı (kısa)</h2>
+<pre><code>// Başarılı 3D
+{
+  "success": true,
+  "redirectHtml": "&lt;form ... banka ACS ...&gt;",
+  "conversationId": "SIP-2026-00001"
+}</code></pre>
 
 <h2>Sizin sorumluluğunuzda kalanlar</h2>
 <ul>
-    <li>Sipariş ve müşteri kayıtları</li>
-    <li>Banka sözleşmesi ve komisyon</li>
-    <li>Canlı ortamda TLS sertifikası ve domain</li>
-    <li>KVKK aydınlatma metinleri (kendi siteniz için)</li>
+    <li>Sipariş ve müşteri kayıtları (kendi veritabanınız)</li>
+    <li>Banka sözleşmesi, komisyon ve mutabakat</li>
+    <li>Canlıda TLS ve domain</li>
+    <li>KVKK aydınlatma metinleri</li>
+    <li>Webhook URL ve imza doğrulama (<a href="@SiteLinks.DocsPath/Guide/Webhook">bildirimler</a>)</li>
 </ul>
 
-<p>Detaylı mod karşılaştırması için <a asp-action="IntegrationModes">Entegrasyon modları</a> sayfasına geçin.</p>
+<h2>Demo proje</h2>
+<p>
+    Repoda <code>TriPay.Demo</code> — Framework modu referansı.
+    Çalıştırıp ödeme formu, 3D yönlendirme ve callback loglarını canlı görebilirsiniz.
+</p>
+
+<p>Detaylı mod karşılaştırması: <a href="@SiteLinks.DocsPath/Guide/IntegrationModes">Entegrasyon modları</a>.</p>

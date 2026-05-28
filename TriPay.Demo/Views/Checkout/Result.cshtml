@@ -1,18 +1,62 @@
 @{
     ViewData["Title"] = "Ödeme Sonucu";
+    ViewData["CheckoutPage"] = true;
+    var isSuccess = string.Equals(ViewBag.Status as string, "Success", StringComparison.OrdinalIgnoreCase);
+    var gateway = ViewData["Gateway"] as CheckoutGatewaySnapshot;
 }
 
-<h2>Ödeme Sonucu</h2>
-<p><strong>Durum:</strong> @ViewBag.Status</p>
-<p><strong>Mesaj:</strong> @ViewBag.Message</p>
-<p><strong>Tutar:</strong> @ViewBag.Amount</p>
-<p><strong>Sipariş No:</strong> @ViewBag.OrderNumber</p>
-<p><strong>İşlem No:</strong> @ViewBag.TransactionId</p>
-<hr />
-<p><strong>Callback responseCode:</strong> @ViewBag.ResponseCode</p>
-<p><strong>Callback responseMsg:</strong> @ViewBag.ResponseMsg</p>
-<p><strong>Callback errorMsg:</strong> @ViewBag.ErrorMsg</p>
-<p><strong>Query responseCode:</strong> @ViewBag.QueryCode</p>
-<pre>@ViewBag.CallbackFields</pre>
+<div class="checkout-result-shell">
+    <div class="checkout-result-card">
+        <div class="checkout-result-icon @(isSuccess ? "success" : "declined")" aria-hidden="true">
+            @(isSuccess ? "✓" : "✕")
+        </div>
+        <h2>@(isSuccess ? "Ödeme başarılı" : "Ödeme tamamlanamadı")</h2>
+        <p class="text-muted mb-0">@ViewBag.Message</p>
 
-<a asp-controller="Home" asp-action="Index">Yeni ödeme dene</a>
+        @if (gateway is not null)
+        {
+            <p class="checkout-result-provider">
+                Kanal: <strong>@gateway.ActiveDisplayName</strong>
+                <code class="ms-1">@gateway.ActiveCode</code>
+                · @(gateway.IsTestMode ? "Test" : "Canlı")
+            </p>
+        }
+        <div class="checkout-result-meta">
+            <dl>
+                <dt>Durum</dt>
+                <dd>@ViewBag.Status</dd>
+                <dt>Tutar</dt>
+                <dd>@ViewBag.Amount ₺</dd>
+                <dt>Sipariş no</dt>
+                <dd>@ViewBag.OrderNumber</dd>
+                @if (!string.IsNullOrWhiteSpace(ViewBag.TransactionId as string))
+                {
+                    <dt>İşlem no</dt>
+                    <dd>@ViewBag.TransactionId</dd>
+                }
+            </dl>
+        </div>
+
+        @if (ViewBag.PaymentEvents is IReadOnlyList<TriPay.Services.Diagnostics.PaymentDiagnosticEntry> paymentEvents)
+        {
+            @await Html.PartialAsync("_PaymentEventLog", paymentEvents)
+        }
+
+        <details class="checkout-result-details">
+            <summary>Teknik detaylar (callback)</summary>
+            <dl class="mt-2 mb-2 small">
+                <dt class="text-muted">responseCode</dt>
+                <dd>@ViewBag.ResponseCode</dd>
+                <dt class="text-muted">responseMsg</dt>
+                <dd>@ViewBag.ResponseMsg</dd>
+                <dt class="text-muted">errorMsg</dt>
+                <dd>@ViewBag.ErrorMsg</dd>
+                <dt class="text-muted">queryCode</dt>
+                <dd>@ViewBag.QueryCode</dd>
+            </dl>
+            <pre>@ViewBag.CallbackFields</pre>
+        </details>
+
+        <a asp-controller="Checkout" asp-action="Index" class="checkout-btn-back">Yeni ödeme dene</a>
+    </div>
+</div>

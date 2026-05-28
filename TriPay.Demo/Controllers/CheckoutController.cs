@@ -1,25 +1,51 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using TriPay.Demo.Models;
+using TriPay.Demo.Services;
 using TriPay.Services;
-using TriPay.Services.Checkout;
+using TriPay.Services.Configuration;
+using TriPay.Services.Diagnostics;
 using TriPay.Services.Providers.VakifPays.Models;
 
 namespace TriPay.Demo.Controllers;
 
 /// <summary>
-/// Referans ödeme controller'ı: başlatma, 3D callback ve taksit sorgusu (kılavuz §18).
-/// Tutar doğrulaması MSSQL Transactions tablosundan yapılır.
+/// Framework modu referans controller: <see cref="TriPay.Services.Interfaces.IPaymentGatewayService"/> +
+/// üye işyeri sipariş deposu (demo: bellek içi).
 /// </summary>
 public class CheckoutController : Controller
 {
-    private readonly IPaymentCheckoutService _checkout;
+    private readonly FrameworkDemoPaymentService _payments;
+    private readonly CheckoutGatewayInfoService _gatewayInfo;
+    private readonly DemoPaymentDiagnosticStore _diagnosticStore;
+    private readonly IOptions<TriPayOptions> _triPayOptions;
 
-    /// <summary>Checkout servisini enjekte eder.</summary>
-    public CheckoutController(IPaymentCheckoutService checkout) => _checkout = checkout;
+    public CheckoutController(
+        FrameworkDemoPaymentService payments,
+        CheckoutGatewayInfoService gatewayInfo,
+        DemoPaymentDiagnosticStore diagnosticStore,
+        IOptions<TriPayOptions> triPayOptions)
+    {
+        _payments = payments;
+        _gatewayInfo = gatewayInfo;
+        _diagnosticStore = diagnosticStore;
+        _triPayOptions = triPayOptions;
+    }
 
-    /// <summary>Demo ödeme formunu gösterir.</summary>
+    private string ActiveGatewayCode =>
+        string.IsNullOrWhiteSpace(_triPayOptions.Value.DefaultGateway)
+            ? PaymentGatewayNames.VakifPays
+            : _triPayOptions.Value.DefaultGateway;
+
+    private void SetGatewayViewData()
+    {
+        ViewData["Gateway"] = _gatewayInfo.GetSnapshot();
+    }
+
     public IActionResult Index()
     {
+        SetGatewayViewData();
         var model = new PaymentRequest
         {
             Amount = 6000.00m,
@@ -45,13 +71,38 @@ public class CheckoutController : Controller
         return View(model);
     }
 
-    /// <summary>Formdan gelen ödeme isteğini başlatır; 3D HTML veya sonuç sayfası döner.</summary>
     [HttpPost]
     public async Task<IActionResult> Pay(PaymentRequest model, CancellationToken cancellationToken)
     {
+        SetGatewayViewData();
         try
         {
-            var result = await _checkout.PayAsync(model, PaymentGatewayNames.Default, cancellationToken);
+            var gateway = ActiveGatewayCode;
+            if (string.IsNullOrWhiteSpace(model.OrderNumber))
+                model.OrderNumber = Guid.NewGuid().ToString("N");
+
+            PaymentDiagnosticContext.CurrentOrderNumber = model.OrderNumber;
+            _diagnosticStore.ClearOrder(model.OrderNumber);
+
+            PaymentDiagnostic.LogCheckoutPayRequest(gateway, new Dictionary<string, string?>
+            {
+                ["OrderNumber"] = model.OrderNumber,
+                ["Amount"] = model.Amount.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                ["Currency"] = model.Currency,
+                ["InstallmentCount"] = model.InstallmentCount.ToString(),
+                ["CardNumber"] = model.CardNumber,
+                ["ExpiryMonth"] = model.ExpiryMonth,
+                ["ExpiryYear"] = model.ExpiryYear,
+                ["Cvv"] = model.Cvv,
+                ["CardOwner"] = model.CardOwner,
+                ["CustomerName"] = model.CustomerName,
+                ["CustomerEmail"] = model.CustomerEmail,
+                ["CustomerPhone"] = model.CustomerPhone,
+                ["CustomerIp"] = model.CustomerIp,
+                ["ReturnUrl"] = model.ReturnUrl,
+                ["Use3D"] = model.Use3D.ToString()
+            });
+            var result = await _payments.PayAsync(model, gateway, cancellationToken);
             if (!result.IsSuccess)
             {
                 ModelState.AddModelError("", result.ErrorMessage ?? "Ödeme başlatılamadı.");
@@ -61,8 +112,13 @@ public class CheckoutController : Controller
             var payment = result.Data ?? throw new InvalidOperationException("Ödeme yanıtı boş.");
 
             if (!string.IsNullOrWhiteSpace(payment.RedirectHtml))
+            {
+                PaymentDiagnostic.LogHtmlResponse(gateway, payment.RedirectHtml);
+                // 3D bankaya yönlendirme HTML'ini doğrudan döndürmek callback dönüşünü en stabil hale getirir.
                 return Content(payment.RedirectHtml, "text/html", System.Text.Encoding.UTF8);
+            }
 
+            ViewBag.PaymentEvents = _diagnosticStore.GetForOrder(model.OrderNumber);
             ViewBag.Status = payment.Success ? "Success" : "Declined";
             ViewBag.Message = payment.Message;
             ViewBag.Amount = model.Amount.ToString("N2");
@@ -78,15 +134,33 @@ public class CheckoutController : Controller
         }
     }
 
-    /// <summary>Bankadan dönen 3D callback formunu işler ve sonucu doğrular.</summary>
     [HttpPost]
     [AllowAnonymous]
     [IgnoreAntiforgeryToken]
     public async Task<IActionResult> Callback(IFormCollection form, CancellationToken cancellationToken)
     {
         var raw = form.Keys.ToDictionary(k => k, k => form[k].ToString());
-        var outcome = await _checkout.ProcessCallbackAsync(raw, PaymentGatewayNames.Default, cancellationToken);
+        return await HandleCallbackAsync(raw, cancellationToken);
+    }
 
+    [HttpGet]
+    [AllowAnonymous]
+    public async Task<IActionResult> Callback(CancellationToken cancellationToken)
+    {
+        var raw = Request.Query.ToDictionary(k => k.Key, v => v.Value.ToString());
+        return await HandleCallbackAsync(raw, cancellationToken);
+    }
+
+    private async Task<IActionResult> HandleCallbackAsync(Dictionary<string, string> raw, CancellationToken cancellationToken)
+    {
+        SetGatewayViewData();
+        var orderNumber = ResolveOrderNumberFromCallback(raw);
+        PaymentDiagnosticContext.CurrentOrderNumber = orderNumber;
+
+        var outcome = await _payments.ProcessCallbackAsync(raw, ActiveGatewayCode, cancellationToken);
+
+        var resolvedOrder = !string.IsNullOrWhiteSpace(outcome.OrderNumber) ? outcome.OrderNumber : orderNumber;
+        ViewBag.PaymentEvents = _diagnosticStore.GetForOrderWithGlobalFallback(resolvedOrder);
         ViewBag.Status = outcome.Success ? "Success" : "Declined";
         ViewBag.Message = outcome.Message;
         ViewBag.Amount = outcome.AmountText;
@@ -101,16 +175,50 @@ public class CheckoutController : Controller
         return View("Result");
     }
 
-    /// <summary>Kart numarası ve tutara göre taksit seçeneklerini JSON olarak döner.</summary>
     [HttpGet]
     public async Task<IActionResult> Installments(string cardNumber, decimal amount = 0, CancellationToken cancellationToken = default)
     {
-        var result = await _checkout.GetInstallmentsAsync(cardNumber, amount, PaymentGatewayNames.Default, cancellationToken);
+        var result = await _payments.GetInstallmentsAsync(cardNumber, amount, ActiveGatewayCode, cancellationToken);
 
         return Json(new
         {
             success = result.IsSuccess,
             installments = result.Data?.Installments ?? new List<TriPay.Services.Models.InstallmentOptionDto>()
         });
+    }
+
+    private static string? ResolveOrderNumberFromCallback(IReadOnlyDictionary<string, string> raw)
+    {
+        string[] keys = ["merchantPaymentId", "orderId", "OrderId", "VerifyEnrollmentRequestId", "SessionInfo"];
+        foreach (var key in keys)
+        {
+            if (TryGetValueCaseInsensitive(raw, key, out var v) && !string.IsNullOrWhiteSpace(v))
+                return v.Trim();
+        }
+
+        return raw.FirstOrDefault(x =>
+            x.Key.Contains("order", StringComparison.OrdinalIgnoreCase)
+            && !string.IsNullOrWhiteSpace(x.Value)).Value?.Trim();
+    }
+
+    private static bool TryGetValueCaseInsensitive(
+        IReadOnlyDictionary<string, string> raw,
+        string key,
+        out string value)
+    {
+        if (raw.TryGetValue(key, out value!))
+            return true;
+
+        foreach (var item in raw)
+        {
+            if (string.Equals(item.Key, key, StringComparison.OrdinalIgnoreCase))
+            {
+                value = item.Value;
+                return true;
+            }
+        }
+
+        value = string.Empty;
+        return false;
     }
 }

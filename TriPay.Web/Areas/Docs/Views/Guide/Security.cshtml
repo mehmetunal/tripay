@@ -1,26 +1,61 @@
 @{
     ViewData["Title"] = "Güvenlik";
-    ViewData["DocLead"] = "Kart verisi, imza doğrulama ve uyumluluk özeti.";
+    ViewData["DocLead"] = "Kart verisi, HTTPS, imza doğrulama ve idempotency — entegrasyon kontrol listesi.";
 }
 <h1>Güvenlik</h1>
 
-<h2>Kart bilgisi</h2>
-<p>
-    Tam kart numarası, CVV veya magnetic track verisi iş veritabanına <strong>yazılmamalıdır</strong>.
-    TriPay loglarında da maskeleme uygulanır (ör. yalnızca son dört hane).
-</p>
+<h2>Kart bilgisi (PCI)</h2>
+<ul>
+    <li>Tam kart numarası, CVV veya track verisi <strong>iş veritabanına yazılmamalı</strong>.</li>
+    <li>Loglarda maskeleme: yalnızca son 4 hane (ör. <code>411111******1111</code>).</li>
+    <li>Framework modunda kart yalnızca ödeme isteği sırasında bellekte; TriPay diagnostic logları hassas alanları maskeleyebilir.</li>
+</ul>
 
 <h2>HTTPS</h2>
-<p>Tüm ödeme ve callback trafiği TLS üzerinden olmalıdır. Test ortamında bile mümkünse HTTPS kullanın.</p>
-
-<h2>Bildirim imzası</h2>
 <p>
-    Sunucunuza gelen “ödeme tamamlandı” bildirimlerinde, TriPay’in gönderdiği imza ve zaman damgasını
-    sizinle paylaşılan gizli anahtarla doğrulayın. İmza uyuşmuyorsa siparişi otomatik onaylamayın.
+    Ödeme formu, <code>ReturnUrl</code> (callback) ve webhook URL’leri TLS üzerinden olmalıdır.
+    Test ortamında bile mümkünse <code>https://localhost</code> veya ngrok benzeri güvenli tünel kullanın.
 </p>
 
-<h2>Idempotency (çift işlem)</h2>
-<p>Aynı sipariş numarasıyla iki kez başarılı tahsilat oluşmaması için sipariş kimliğini benzersiz tutun ve callback’i yalnızca bir kez işleyin.</p>
+<h2>Callback güvenliği</h2>
+<table class="w-full text-left text-sm border border-slate-200 rounded-xl overflow-hidden my-4">
+    <thead class="bg-slate-50 font-semibold">
+        <tr><th class="p-3">Kontrol</th><th class="p-3">Açıklama</th></tr>
+    </thead>
+    <tbody class="divide-y text-ink-700">
+        <tr><td class="p-3">Anti-forgery</td><td class="p-3">Banka POST’u için <code>[IgnoreAntiforgeryToken]</code> — yalnızca callback action’da</td></tr>
+        <tr><td class="p-3">Çift doğrulama</td><td class="p-3">Callback sonrası <code>GetPaymentStatusAsync</code></td></tr>
+        <tr><td class="p-3">Tutar kontrolü</td><td class="p-3">Callback’teki tutar = sipariş tutarı</td></tr>
+        <tr><td class="p-3">Sipariş eşleşmesi</td><td class="p-3"><code>merchantPaymentId</code> sizin beklediğiniz <code>OrderNumber</code> mı?</td></tr>
+    </tbody>
+</table>
+
+<h2>Webhook imzası</h2>
+<pre><code>// Kavramsal: HMAC-SHA256(body, webhookSecret)
+var expected = ComputeHmacSha256(rawBody, _webhookSecret);
+if (!CryptographicOperations.FixedTimeEquals(
+        Encoding.UTF8.GetBytes(expected),
+        Encoding.UTF8.GetBytes(receivedSignature)))
+    return Unauthorized();</code></pre>
+<p>İmza uyuşmuyorsa siparişi otomatik onaylamayın; güvenlik ekibine alarm verin.</p>
+
+<h2>Idempotency</h2>
+<p>
+    Aynı <code>OrderNumber</code> ile iki kez başarılı tahsilat oluşmaması için:
+</p>
+<ul>
+    <li>Sipariş numarasını benzersiz üretin (UUID veya monoton seri).</li>
+    <li>Callback/webhook handler’da “zaten ödendi” ise yine <code>200 OK</code> dönün.</li>
+    <li>TriPay tarafında aynı sipariş için ikinci başlatma reddedilebilir (demo: “Bu sipariş numarası ile başarılı ödeme zaten var”).</li>
+</ul>
+
+<h2>Gizli bilgiler</h2>
+<ul>
+    <li><code>MerchantPassword</code>, API anahtarları: ortam değişkeni veya secret manager.</li>
+    <li><code>appsettings.Production.json</code> repoya commit edilmemeli.</li>
+</ul>
 
 <h2>Admin paneli</h2>
-<p>Operasyon paneline rol bazlı erişim verin; mümkünse ofis IP aralığıyla sınırlayın.</p>
+<p>Rol bazlı erişim; mümkünse ofis IP aralığı. Operasyon loglarında kart verisi olmamalı.</p>
+
+<p>Ödeme akışı örnekleri: <a href="@SiteLinks.DocsPath/Guide/PaymentFlow">Ödeme akışı</a>.</p>

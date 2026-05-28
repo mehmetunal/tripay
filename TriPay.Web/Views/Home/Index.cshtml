@@ -1,19 +1,19 @@
 @{
     ViewData["Title"] = "Ana Sayfa";
-    ViewData["Description"] = "TriPay Payment Hub: sanal POS ve ödeme kuruluşlarını tek .NET katmanında birleştirin. KVKK dostu framework, hosted ödeme ve yönetim paneli.";
+    ViewData["Description"] = "TriPay: sanal POS ve ödeme kuruluşlarını tek platformda birleştirin. KVKK dostu entegrasyon, hosted ödeme ve yönetim paneli.";
 }
 <section class="relative overflow-hidden bg-gradient-to-br from-ink-950 via-ink-900 to-brand-900">
     <div class="page-hero-glow" aria-hidden="true"></div>
     <div class="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-28 lg:px-8">
         <div class="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
             <div>
-                <span class="badge bg-brand-500/20 text-brand-100 ring-brand-400/40">Payment Hub · ASP.NET Core 8</span>
+                <span class="badge bg-brand-500/20 text-brand-100 ring-brand-400/40">Ödeme altyapısı · Türkiye</span>
                 <h1 class="mt-6 text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
                     Ödeme entegrasyonunu tek yerde toplayın
                 </h1>
                 <p class="mt-6 text-lg leading-relaxed text-slate-300 sm:text-xl">
-                    Banka sanal POS, 3D Secure ve ödeme kuruluşu API’lerini tek, tutarlı .NET arayüzünde birleştirin.
-                    Veriyi kendi sunucunuzda tutun veya hosted ödeme ile hızlı canlıya çıkın — kontrol sizde.
+                    Banka sanal POS, 3D Secure ve ödeme kuruluşlarını tek, tutarlı bir ödeme deneyiminde birleştirin.
+                    Veriyi kendi sistemlerinizde tutun veya hazır ödeme sayfası ile hızlı canlıya çıkın — kontrol sizde.
                 </p>
                 <ul class="mt-8 space-y-3 text-sm text-slate-300">
                     <li class="flex items-start gap-3">
@@ -22,16 +22,16 @@
                     </li>
                     <li class="flex items-start gap-3">
                         <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-500/30 text-brand-200">✓</span>
-                        Framework modunda müşteri ve işlem verisi kendi MSSQL’inizde; merkezi kart deposu yok.
+                        Doğrudan entegrasyonda müşteri ve işlem verisi kendi sistemlerinizde; merkezi kart deposu yok.
                     </li>
                     <li class="flex items-start gap-3">
                         <span class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-500/30 text-brand-200">✓</span>
-                        Üretim için 3D, taksit, iade, imzalı webhook ve operasyon paneli hazır.
+                        3D Secure, taksit, iade, anlık bildirimler ve operasyon paneli hazır.
                     </li>
                 </ul>
                 <div class="mt-10 flex flex-wrap gap-4">
-                    <a href="@SiteLinks.DocsPath/Guide/GettingStarted" class="btn-primary bg-brand-500 hover:bg-brand-400">5 dakikada başlayın</a>
-                    <a asp-controller="Contact" asp-action="Index" class="btn-outline-light">Demo ve teklif alın</a>
+                    <a asp-area="" asp-controller="Contact" asp-action="Index" class="btn-primary bg-brand-500 hover:bg-brand-400">Demo ve teklif alın</a>
+                    <a href="@SiteLinks.DocsPath" class="btn-outline-light">Kullanım kılavuzu</a>
                 </div>
             </div>
             <div class="mock-panel lg:ml-auto lg:max-w-md" aria-hidden="true">
@@ -74,7 +74,7 @@
             </div>
             <div class="text-center">
                 <p class="stat-value">%100</p>
-                <p class="stat-label">.NET odaklı mimari</p>
+                <p class="stat-label">Türkiye odaklı</p>
             </div>
             <div class="text-center">
                 <p class="stat-value">KVKK</p>
@@ -82,7 +82,7 @@
             </div>
             <div class="text-center">
                 <p class="stat-value">7/24</p>
-                <p class="stat-label">Webhook ve outbox</p>
+                <p class="stat-label">Anlık bildirimler</p>
             </div>
         </div>
     </div>
@@ -90,7 +90,7 @@
 
 <section class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
     <p class="text-center text-sm font-semibold uppercase tracking-wider text-brand-700">Neden TriPay?</p>
-    <h2 class="section-title mt-2 text-center">Parçalanmış ödeme API’lerine tek cevap</h2>
+    <h2 class="section-title mt-2 text-center">Parçalanmış ödeme kanallarına tek cevap</h2>
     <p class="mx-auto mt-4 max-w-2xl text-center text-ink-600">
         Her yeni banka veya kuruluş ayrı dokümantasyon, ayrı callback ve ayrı hata kodu demek.
         TriPay bu farkları tek ödeme deneyiminin arkasına alır; ekibiniz iş kurallarına odaklanır.
@@ -108,7 +108,7 @@
                 <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
             </div>
             <h3 class="mt-4 text-lg font-bold text-ink-950">KVKK’ya uygun dağıtım</h3>
-            <p class="mt-2 text-sm leading-relaxed text-ink-600">Framework modunda müşteri ve işlem kayıtları kendi veritabanınızda kalır; kart numarası kalıcı olarak saklanmaz.</p>
+            <p class="mt-2 text-sm leading-relaxed text-ink-600">Doğrudan entegrasyonda müşteri ve işlem kayıtları kendi sistemlerinizde kalır; kart bilgileri kalıcı olarak saklanmaz.</p>
         </div>
         <div class="card">
             <div class="icon-feature">
@@ -129,14 +129,14 @@
                 <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
             </div>
             <h3 class="mt-4 text-lg font-bold text-ink-950">Operasyonel görünürlük</h3>
-            <p class="mt-2 text-sm leading-relaxed text-ink-600">İşlem listesi, gateway hataları, outbox kuyruğu ve raporlar yönetim panelinde; ekip tek ekrandan izler.</p>
+            <p class="mt-2 text-sm leading-relaxed text-ink-600">İşlem listesi, hata kayıtları ve raporlar yönetim panelinde; ekip tek ekrandan izler.</p>
         </div>
         <div class="card">
             <div class="icon-feature">
                 <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
             </div>
-            <h3 class="mt-4 text-lg font-bold text-ink-950">Test edilebilir mimari</h3>
-            <p class="mt-2 text-sm leading-relaxed text-ink-600">Clean Architecture, CQRS ve birim testleri ile ödeme mantığı öngörülebilir; regresyon riski düşer.</p>
+            <h3 class="mt-4 text-lg font-bold text-ink-950">Öngörülebilir süreçler</h3>
+            <p class="mt-2 text-sm leading-relaxed text-ink-600">Standart ödeme akışı ve net operasyon adımları; ekipleriniz her kanalda aynı iş kurallarını uygular.</p>
         </div>
     </div>
 </section>
@@ -176,12 +176,12 @@
     <div class="mt-14 grid gap-8 lg:grid-cols-3">
         <article class="card border-brand-200 ring-2 ring-brand-500/20">
             <span class="badge">Önerilen</span>
-            <h3 class="mt-4 text-xl font-bold text-ink-950">Framework (NuGet)</h3>
-            <p class="mt-2 text-sm leading-relaxed text-ink-600">Ödeme mantığı kendi ASP.NET Core uygulamanızda. Müşteri verisi ve işlem kayıtları sizin MSSQL’inizde.</p>
+            <h3 class="mt-4 text-xl font-bold text-ink-950">Kendi altyapınızda</h3>
+            <p class="mt-2 text-sm leading-relaxed text-ink-600">Ödeme akışı kendi sistemlerinizde çalışır. Müşteri verisi ve işlem kayıtları sizin kontrolünüzde kalır.</p>
             <ul class="mt-4 space-y-2 text-sm text-ink-600">
                 <li>· Tam KVKK kontrolü</li>
-                <li>· Özelleştirilebilir checkout</li>
-                <li>· Birim testleri ve CI/CD uyumu</li>
+                <li>· Özelleştirilebilir ödeme ekranı</li>
+                <li>· Mevcut e-ticaret altyapınıza uyum</li>
             </ul>
             <a href="@SiteLinks.DocsPath/Guide/IntegrationModes" class="mt-6 inline-block text-sm font-semibold text-brand-700 hover:text-brand-800">Mod detayları →</a>
         </article>
@@ -201,13 +201,13 @@
             <ul class="mt-4 space-y-2 text-sm text-ink-600">
                 <li>· Rol ve izin yönetimi</li>
                 <li>· İade ve iptal takibi</li>
-                <li>· Sistem durumu ve outbox</li>
+                <li>· Sistem durumu ve raporlar</li>
             </ul>
             <a href="@SiteLinks.AdminPath" class="mt-6 inline-block text-sm font-semibold text-brand-700 hover:text-brand-800">Panel bilgisi →</a>
         </article>
     </div>
     <p class="mt-10 text-center">
-        <a asp-controller="Integration" asp-action="Index" class="font-semibold text-brand-700 hover:text-brand-800">Tüm modları karşılaştırın →</a>
+        <a asp-area="" asp-controller="Integration" asp-action="Index" class="font-semibold text-brand-700 hover:text-brand-800">Tüm modları karşılaştırın →</a>
     </p>
 </section>
 
@@ -217,7 +217,7 @@
             <div>
                 <h2 class="section-title">Kimler için?</h2>
                 <p class="section-lead">E-ticaret, pazaryeri ve SaaS ekipleri aynı hub üzerinden farklı dağıtım modelleri kullanır.</p>
-                <a asp-controller="Solutions" asp-action="Index" class="mt-6 inline-flex btn-primary">Sektör çözümlerini inceleyin</a>
+                <a asp-area="" asp-controller="Solutions" asp-action="Index" class="mt-6 inline-flex btn-primary">Sektör çözümlerini inceleyin</a>
             </div>
             <div class="space-y-4">
                 <div class="card flex gap-4">
@@ -255,11 +255,11 @@
         </details>
         <details class="faq-details">
             <summary>Kart bilgileri nerede işlenir?</summary>
-            <p>Framework modunda ödeme akışı sizin uygulamanızda yürür; PAN ve CVV kalıcı depoda tutulmaz. Hosted modda kart adımları TriPay ödeme sayfasında işlenir.</p>
+            <p>Doğrudan entegrasyonda ödeme akışı sizin sistemlerinizde yürür; kart bilgileri kalıcı depoda tutulmaz. Hosted modelde kart adımları TriPay ödeme sayfasında işlenir.</p>
         </details>
         <details class="faq-details">
             <summary>Ne kadar sürede canlıya çıkabilirim?</summary>
-            <p>Hosted model ile birkaç gün içinde pilot mümkündür. Framework entegrasyonu, banka test onaylarına bağlı olarak genelde 2–4 hafta sürer.</p>
+            <p>Hosted model ile birkaç gün içinde pilot mümkündür. Doğrudan entegrasyon, banka test onaylarına bağlı olarak genelde 2–4 hafta sürer.</p>
         </details>
         <details class="faq-details">
             <summary>Test ortamı var mı?</summary>

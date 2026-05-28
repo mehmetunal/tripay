@@ -79,8 +79,11 @@
   .prose-doc ol {
     @apply mt-3 list-decimal space-y-2 pl-6 text-ink-700;
   }
-  .prose-doc a {
+  .prose-doc a:not([class*="btn-"]) {
     @apply font-medium text-brand-700 underline decoration-brand-300 underline-offset-2 hover:text-brand-800;
+  }
+  .prose-doc .btn-primary {
+    @apply text-white! no-underline decoration-transparent hover:text-white!;
   }
   .prose-doc code {
     @apply rounded bg-slate-100 px-1.5 py-0.5 font-mono text-sm text-ink-800;

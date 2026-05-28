@@ -3,7 +3,7 @@
 > **Program.cs:** [TriPay_Program_cs_ve_DI.md §4](./TriPay_Program_cs_ve_DI.md#4-aspnet-core-web--framework-önerilen)  
 > API örnekleri: [TriPay_Kullanim_Kilavuzu.md](./TriPay_Kullanim_Kilavuzu.md)
 
-**Versiyon:** 1.0 · **Tarih:** 22 Mayıs 2026
+**Versiyon:** 1.1 · **Tarih:** 26 Mayıs 2026
 
 ---
 
@@ -157,6 +157,7 @@ Framework modunda **çağırmayın:** `AddTriPayHosted`, `AddTriPayData`, yalnı
 | :--- | :--- |
 | `AddTriPay()` | `VakifPays`, `Iyzico`, `Vakifbank` provider + `IPaymentGatewayService` |
 | `AddTriPayRedis()` | Redis veya InMemory cache, idempotency, kilit, rate limit |
+| `IGatewayMetadataService` | `InMemoryGatewayMetadataService` (Vakıfbank MPI/VPOS URL varsayılanları; MSSQL metadata **yok**) |
 | `ConfigurationGatewaySettingsProvider` | Gateway ayarları yalnızca `appsettings` |
 | `IGatewaySettingsProvider` | Yukarıdaki provider (DB metadata **yok**) |
 | `TriPayPersistenceOptions` | Zorla `Enabled=false`, log/outbox kapalı |
@@ -209,6 +210,42 @@ public class PaymentController : Controller
 
 Framework modunda callback işleme yine `IPaymentGatewayService` üzerinden yapılır; TriPay otomatik `TransactionLogs` yazmaz.
 
+### 3D yönlendirme (önerilen)
+
+Bankanın döndürdüğü auto-submit HTML’i **doğrudan** tarayıcıya verin. `iframe` veya ara sarmal sayfa kullanmayın; bazı bankalar callback’in hiç düşmemesine yol açabilir.
+
+```csharp
+if (!string.IsNullOrEmpty(result.Data?.RedirectHtml))
+    return Content(result.Data.RedirectHtml, "text/html", Encoding.UTF8);
+```
+
+`ReturnUrl` (callback adresi) bankaya **HTTPS** ve dışarıdan erişilebilir olmalıdır (`https://sizin-domain/.../callback`).
+
+### Callback endpoint
+
+Banka dönüşü **POST** veya **GET** ile gelebilir; her iki yöntemi de karşılayın:
+
+```csharp
+[HttpPost]
+[AllowAnonymous]
+[IgnoreAntiforgeryToken]
+public async Task<IActionResult> Callback(IFormCollection form, CancellationToken ct)
+{
+    var raw = form.Keys.ToDictionary(k => k, k => form[k].ToString());
+    return await HandleCallbackAsync(raw, ct);
+}
+
+[HttpGet]
+[AllowAnonymous]
+public async Task<IActionResult> Callback(CancellationToken ct)
+{
+    var raw = Request.Query.ToDictionary(k => k.Key, v => v.Value.ToString());
+    return await HandleCallbackAsync(raw, ct);
+}
+```
+
+Ham alanları `PaymentGatewayCallbackRequestDto.RawData` sözlüğüne aktarın:
+
 ```csharp
 var callback = await _payment.ProcessCallbackAsync(new PaymentGatewayCallbackRequestDto
 {
@@ -218,6 +255,32 @@ var callback = await _payment.ProcessCallbackAsync(new PaymentGatewayCallbackReq
 ```
 
 Vakıfbank 3D sonrası tam tahsilat için `Auth3DSAsync` kullanın (Redis sale state gerekir).
+
+### Callback görünmüyorsa (kontrol listesi)
+
+| Kontrol | Açıklama |
+| :--- | :--- |
+| `ReturnUrl` | Ödeme başlatırken bankaya verdiğiniz URL ile uygulamanızdaki action aynı mı? |
+| HTTPS / localhost | Banka test panelinde callback URL whitelist’e ekli mi? |
+| 3D HTML | `RedirectHtml` doğrudan `Content(..., "text/html")` ile mi dönüyor? |
+| HTTP metodu | Endpoint hem `POST` hem `GET` kabul ediyor mu? |
+| Sipariş eşlemesi | Callback’te `merchantPaymentId` / `orderId` (case-insensitive) ile kendi sipariş kaydınız eşleşiyor mu? |
+
+---
+
+## TriPay.Demo — teknik destek olay günlüğü
+
+Repo’daki `TriPay.Demo` projesi **Framework modu** referans uygulamasıdır (`AddTriPayFramework`). Ödeme akışında ham POST alanları ekranda **Ödeme olay günlüğü** panelinde gösterilir (konsol değil).
+
+| Bileşen | Açıklama |
+| :--- | :--- |
+| `PaymentDiagnostic` | `TriPay.Services` — 3D giden, API giden, callback gelen kayıtları üretir |
+| `DemoPaymentDiagnosticStore` | Sipariş numarasına göre bellek içi log; sipariş bulunamazsa `_global` fallback |
+| `Program.cs` | `PaymentDiagnostic.Enabled = true` + `RegisterSink(diagnosticStore)` |
+| `Checkout/Result` | Callback sonrası tüm olaylar + ham callback alanları |
+| `Checkout/Callback` | `POST` + `GET` |
+
+Üretimde bu paneli **açmayın**; yalnızca test/demo ve teknik destek için kullanın. Kapatmak için `PaymentDiagnostic.Enabled = false` yeterlidir.
 
 ---
 

@@ -5,7 +5,7 @@
     <h1 class="text-3xl font-bold text-ink-950 sm:text-4xl">TriPay kullanım kılavuzu</h1>
     <p class="mt-4 max-w-2xl text-lg text-ink-700">
         Ödeme entegrasyonunu sıfırdan öğrenmek için adım adım rehber.
-        Teknik sınıf veya metot adı yerine süreç, kavram ve karar noktalarına odaklanır.
+        Her bölümde adım adım akış, örnek istek/yanıt (JSON ve C#) ve hata senaryoları bulunur.
     </p>
     <a href="@(SiteLinks.DocsPath)/Guide/GettingStarted" class="btn-primary mt-6">İlk ödemenize başlayın</a>
 </div>
@@ -13,27 +13,27 @@
 <section class="mt-12">
     <h2 class="text-sm font-semibold uppercase tracking-wider text-brand-700">Popüler konular</h2>
     <div class="mt-6 grid gap-4 sm:grid-cols-2">
-        <a asp-controller="Guide" asp-action="GettingStarted" class="card block transition hover:border-brand-300 hover:shadow-md">
+        <a href="@SiteLinks.DocsPath/Guide/GettingStarted" class="card block transition hover:border-brand-300 hover:shadow-md">
             <h3 class="font-bold text-ink-950">Hızlı başlangıç</h3>
-            <p class="mt-2 text-sm text-ink-600">İlk ödemenizi beş adımda hayata geçirin: ortam, kanal, test, canlı.</p>
+            <p class="mt-2 text-sm text-ink-600">Beş adım, özet API tablosu ve ilk test isteği örnekleri.</p>
         </a>
-        <a asp-controller="Guide" asp-action="IntegrationModes" class="card block transition hover:border-brand-300 hover:shadow-md">
+        <a href="@SiteLinks.DocsPath/Guide/IntegrationModes" class="card block transition hover:border-brand-300 hover:shadow-md">
             <h3 class="font-bold text-ink-950">Entegrasyon modları</h3>
             <p class="mt-2 text-sm text-ink-600">Framework, hosted ve panel — hangisi size uygun?</p>
         </a>
-        <a asp-controller="Guide" asp-action="PaymentFlow" class="card block transition hover:border-brand-300 hover:shadow-md">
+        <a href="@SiteLinks.DocsPath/Guide/PaymentFlow" class="card block transition hover:border-brand-300 hover:shadow-md">
             <h3 class="font-bold text-ink-950">Ödeme akışı</h3>
-            <p class="mt-2 text-sm text-ink-600">Sepetten 3D Secure’a, sonuç bildirimine kadar uçtan uca.</p>
+            <p class="mt-2 text-sm text-ink-600">Başlatma, callback POST, durum sorgusu, taksit ve iade — örneklerle.</p>
         </a>
-        <a asp-controller="Guide" asp-action="Webhook" class="card block transition hover:border-brand-300 hover:shadow-md">
+        <a href="@SiteLinks.DocsPath/Guide/Webhook" class="card block transition hover:border-brand-300 hover:shadow-md">
             <h3 class="font-bold text-ink-950">Webhook ve bildirimler</h3>
             <p class="mt-2 text-sm text-ink-600">İmzalı bildirim, yeniden deneme ve hata senaryoları.</p>
         </a>
-        <a asp-controller="Guide" asp-action="Security" class="card block transition hover:border-brand-300 hover:shadow-md">
+        <a href="@SiteLinks.DocsPath/Guide/Security" class="card block transition hover:border-brand-300 hover:shadow-md">
             <h3 class="font-bold text-ink-950">Güvenlik</h3>
             <p class="mt-2 text-sm text-ink-600">Veri minimizasyonu, KVKK ve operasyon güvenliği.</p>
         </a>
-        <a asp-controller="Guide" asp-action="Faq" class="card block transition hover:border-brand-300 hover:shadow-md">
+        <a href="@SiteLinks.DocsPath/Guide/Faq" class="card block transition hover:border-brand-300 hover:shadow-md">
             <h3 class="font-bold text-ink-950">Sık sorulanlar</h3>
             <p class="mt-2 text-sm text-ink-600">Test ortamı, hata kodları, destek ve lisans.</p>
         </a>
@@ -41,10 +41,10 @@
 </section>
 
 <section class="mt-12 rounded-2xl border border-slate-200 bg-slate-50 p-6">
-    <h2 class="font-bold text-ink-950">Geliştirici kaynakları</h2>
+    <h2 class="font-bold text-ink-950">Kurumsal site</h2>
     <p class="mt-2 text-sm text-ink-600">
-        Mimari kurallar, API sözleşmeleri ve migration notları repodaki <code>docs/</code> klasöründedir.
-        Bu kılavuz ürün ve operasyon ekipleri içindir.
+        Ürün tanıtımı, fiyatlandırma ve demo talebi için ana sitemizi ziyaret edin.
+        Bu bölüm yalnızca entegrasyon ve operasyon kılavuzudur.
     </p>
     <p class="mt-4 text-sm">
         <a href="@SiteLinks.Root" class="font-semibold text-brand-700">Kurumsal siteye dön →</a>

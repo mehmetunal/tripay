@@ -1,40 +1,81 @@
 @{
     ViewData["Title"] = "Entegrasyon modları";
-    ViewData["DocLead"] = "Hangi modelde veri nerede durur, operasyon yükü kime kalır?";
+    ViewData["DocLead"] = "Framework, Hosted ve panel — hangi API’yi, hangi isteği kullanırsınız?";
 }
 <h1>Entegrasyon modları</h1>
 
-<h2>1. Kendi uygulamanız (Framework) — önerilen</h2>
+<h2>1. Framework — kendi uygulamanız (önerilen)</h2>
 <p>
-    TriPay kütüphanesi sizin ASP.NET, API veya arka plan servisinizin içinde çalışır.
-    Ödeme isteği doğrudan bankaya gider; TriPay tarafında merkezi müşteri veritabanı tutulmaz.
-    KVKK açısından en şeffaf seçenektir.
+    TriPay kütüphanesi sizin ASP.NET uygulamanızda çalışır.
+    Kart formu sizde; ödeme isteği doğrudan bankaya gider. TriPay merkezi müşteri DB’si tutmaz.
 </p>
-<p><strong>Kimler için?</strong> E-ticaret, ERP entegrasyonu, özel checkout tasarımı isteyen ekipler.</p>
 
-<h2>2. Hosted ödeme sayfası</h2>
+<h3>Kayıt</h3>
+<pre><code>builder.Services.AddTriPayFramework(builder.Configuration);</code></pre>
+
+<h3>Ana servis ve metotlar</h3>
+<table class="w-full text-left text-sm border border-slate-200 rounded-xl overflow-hidden my-4">
+    <thead class="bg-slate-50 font-semibold">
+        <tr><th class="p-3">İşlem</th><th class="p-3">Servis / metot</th></tr>
+    </thead>
+    <tbody class="divide-y text-ink-700">
+        <tr><td class="p-3">Ödeme başlat</td><td class="p-3"><code>IPaymentGatewayService.InitializePaymentAsync</code></td></tr>
+        <tr><td class="p-3">3D callback</td><td class="p-3"><code>ProcessCallbackAsync</code></td></tr>
+        <tr><td class="p-3">Durum sorgu</td><td class="p-3"><code>GetPaymentStatusAsync</code></td></tr>
+        <tr><td class="p-3">Taksit</td><td class="p-3"><code>GetInstallmentInfoAsync</code></td></tr>
+        <tr><td class="p-3">İade</td><td class="p-3"><code>RefundPaymentAsync</code></td></tr>
+    </tbody>
+</table>
+<p><strong>Kimler için?</strong> E-ticaret, ERP, özel checkout. <a href="@SiteLinks.DocsPath/Guide/PaymentFlow">Adım adım akış →</a></p>
+
+<h2>2. Hosted — hazır ödeme sayfası</h2>
 <p>
-    Müşteri sizin siteden <a href="@SiteLinks.PayPath">/pay</a> ödeme sayfasına yönlendirilir;
-    kart ve 3D ekranları TriPay sunar. Siz sipariş kimliği ve geri dönüş URL’lerini verirsiniz.
+    Müşteri <a href="@SiteLinks.PayPath">/pay</a> üzerinde TriPay checkout’una yönlendirilir.
+    Kart ve 3D ekranları TriPay sunar; siz oturum ve sonuç URL’lerini verirsiniz.
 </p>
-<p><strong>Kimler için?</strong> Hızlı canlıya çıkmak, PCI kapsamını daraltmak isteyenler.</p>
 
-<h2>3. Yönetim paneli (Hosted operasyon)</h2>
+<h3>Kayıt</h3>
+<pre><code>builder.Services.AddTriPayHosted(builder.Configuration);</code></pre>
+
+<h3>Ana servis</h3>
+<pre><code>IPaymentCheckoutService.PayAsync(PaymentRequest model, string gatewayName)</code></pre>
+
+<h3>Tipik akış</h3>
+<ol>
+    <li>Sizin backend: sipariş oluştur, <code>PayAsync</code> çağır.</li>
+    <li>Yanıt: <code>RedirectHtml</code> veya yönlendirme URL’si → müşteriyi ödeme sayfasına gönder.</li>
+    <li>TriPay callback ve webhook ile sonucu bildirir.</li>
+</ol>
+
+<h3>Örnek başlatma isteği (sizin API’nizden checkout’a)</h3>
+<pre><code>var result = await _checkout.PayAsync(new PaymentRequest
+{
+    OrderNumber = "SIP-99",
+    Amount = 499.90m,
+    ReturnUrl = "https://magaza.com/pay/return",
+    CustomerEmail = "musteri@ornek.com"
+}, PaymentGatewayNames.VakifPays);</code></pre>
+
+<h2>3. Yönetim paneli</h2>
 <p>
-    <a href="@SiteLinks.AdminPath">/admin</a> modülü üzerinden işlem izleme, üye işyeri ve gateway ayarları (canlı panel ayrı uygulamadır).
-    Framework modunda panel zorunlu değildir; hosted operasyonda gereklidir.
+    <a href="@SiteLinks.AdminPath">/admin</a> — işlem izleme, gateway ayarları (Hosted operasyonda).
+    Framework modunda panel zorunlu değildir.
 </p>
 
 <h2>Karar tablosu</h2>
 <div class="overflow-x-auto rounded-xl border border-slate-200">
     <table class="w-full text-left text-sm">
         <thead class="bg-slate-50 font-semibold">
-            <tr><th class="p-3">Kriter</th><th class="p-3">Kendi uygulama</th><th class="p-3">Hosted</th></tr>
+            <tr><th class="p-3">Kriter</th><th class="p-3">Framework</th><th class="p-3">Hosted</th></tr>
         </thead>
         <tbody class="divide-y text-ink-700">
-            <tr><td class="p-3">Müşteri verisi</td><td class="p-3">Sizde</td><td class="p-3">Yapılandırmaya bağlı</td></tr>
-            <tr><td class="p-3">Checkout tasarımı</td><td class="p-3">Tam özgürlük</td><td class="p-3">TriPay sayfası</td></tr>
+            <tr><td class="p-3">Enjekte servis</td><td class="p-3"><code>IPaymentGatewayService</code></td><td class="p-3"><code>IPaymentCheckoutService</code></td></tr>
+            <tr><td class="p-3">TriPay MSSQL</td><td class="p-3">Hayır</td><td class="p-3">Evet</td></tr>
+            <tr><td class="p-3">Kart formu</td><td class="p-3">Sizin UI</td><td class="p-3">TriPay /pay</td></tr>
+            <tr><td class="p-3">Request/response kontrolü</td><td class="p-3">Tam (controller’da)</td><td class="p-3">Oturum + webhook odaklı</td></tr>
             <tr><td class="p-3">Go-live süresi</td><td class="p-3">Orta</td><td class="p-3">Kısa</td></tr>
         </tbody>
     </table>
 </div>
+
+<p class="mt-6">Kurulum adımları: <a href="@SiteLinks.DocsPath/Guide/Setup">Kurulum</a>.</p>

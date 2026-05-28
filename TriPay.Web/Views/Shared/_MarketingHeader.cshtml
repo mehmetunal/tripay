@@ -22,12 +22,12 @@
             TriPay
         </a>
         <nav class="hidden items-center gap-1 lg:flex" aria-label="Ana menü">
-            <a asp-controller="Product" asp-action="Index" class="@MainNavClass(MainActive("Product"))">Ürün</a>
-            <a asp-controller="Solutions" asp-action="Index" class="@MainNavClass(MainActive("Solutions"))">Çözümler</a>
-            <a asp-controller="Integration" asp-action="Index" class="@MainNavClass(MainActive("Integration"))">Entegrasyon</a>
-            <a asp-controller="Security" asp-action="Index" class="@MainNavClass(MainActive("Security"))">Güvenlik</a>
+            <a asp-area="" asp-controller="Product" asp-action="Index" class="@MainNavClass(MainActive("Product"))">Ürün</a>
+            <a asp-area="" asp-controller="Solutions" asp-action="Index" class="@MainNavClass(MainActive("Solutions"))">Çözümler</a>
+            <a asp-area="" asp-controller="Integration" asp-action="Index" class="@MainNavClass(MainActive("Integration"))">Entegrasyon</a>
+            <a asp-area="" asp-controller="Security" asp-action="Index" class="@MainNavClass(MainActive("Security"))">Güvenlik</a>
             <a href="@SiteLinks.DocsPath" class="@MainNavClass(isDocsArea)" aria-current="@(isDocsArea ? "page" : null)">Kullanım kılavuzu</a>
-            <a asp-controller="Corporate" asp-action="About" class="@MainNavClass(MainActive("Corporate", "About"))">Kurumsal</a>
+            <a asp-area="" asp-controller="Corporate" asp-action="About" class="@MainNavClass(MainActive("Corporate", "About"))">Kurumsal</a>
         </nav>
         <div class="flex items-center gap-2">
             @if (isDocsArea)
@@ -36,7 +36,7 @@
             }
             <a href="@SiteLinks.PayDemoUrl" class="hidden btn-ghost sm:inline-flex" rel="noopener">Demo</a>
             <a href="@SiteLinks.DocsPath/Guide/GettingStarted" class="hidden btn-secondary md:inline-flex">Başlangıç</a>
-            <a asp-controller="Contact" asp-action="Index" class="btn-primary">İletişim</a>
+            <a asp-area="" asp-controller="Contact" asp-action="Index" class="btn-primary">İletişim</a>
             <button type="button" id="nav-toggle" class="btn-ghost lg:hidden" aria-expanded="false" aria-controls="mobile-nav">Menü</button>
         </div>
     </div>
@@ -52,12 +52,12 @@
     }
     <div id="mobile-nav" class="hidden border-t border-slate-200 bg-white px-4 py-3 lg:hidden">
         <div class="flex flex-col gap-1">
-            <a asp-controller="Product" asp-action="Index" class="@MainNavClass(MainActive("Product")) justify-start">Ürün</a>
-            <a asp-controller="Solutions" asp-action="Index" class="@MainNavClass(MainActive("Solutions")) justify-start">Çözümler</a>
-            <a asp-controller="Integration" asp-action="Index" class="@MainNavClass(MainActive("Integration")) justify-start">Entegrasyon</a>
-            <a asp-controller="Security" asp-action="Index" class="@MainNavClass(MainActive("Security")) justify-start">Güvenlik</a>
+            <a asp-area="" asp-controller="Product" asp-action="Index" class="@MainNavClass(MainActive("Product")) justify-start">Ürün</a>
+            <a asp-area="" asp-controller="Solutions" asp-action="Index" class="@MainNavClass(MainActive("Solutions")) justify-start">Çözümler</a>
+            <a asp-area="" asp-controller="Integration" asp-action="Index" class="@MainNavClass(MainActive("Integration")) justify-start">Entegrasyon</a>
+            <a asp-area="" asp-controller="Security" asp-action="Index" class="@MainNavClass(MainActive("Security")) justify-start">Güvenlik</a>
             <a href="@SiteLinks.DocsPath" class="@MainNavClass(isDocsArea) justify-start" aria-current="@(isDocsArea ? "page" : null)">Kullanım kılavuzu</a>
-            <a asp-controller="Corporate" asp-action="About" class="@MainNavClass(MainActive("Corporate", "About")) justify-start">Kurumsal</a>
+            <a asp-area="" asp-controller="Corporate" asp-action="About" class="@MainNavClass(MainActive("Corporate", "About")) justify-start">Kurumsal</a>
             <a href="@SiteLinks.PayDemoUrl" class="btn-ghost justify-start" rel="noopener">Canlı demo</a>
         </div>
     </div>

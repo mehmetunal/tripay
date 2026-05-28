@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using TriPay.Services.Configuration;
+using TriPay.Services.Diagnostics;
 using TriPay.Services.Models;
 
 namespace TriPay.Core.Common;
@@ -68,6 +69,13 @@ public abstract class HttpPaymentGatewayBase : PaymentGatewayBase
         var response = await httpClient.SendAsync(request);
         var responseContent = await response.Content.ReadAsStringAsync();
 
+        PaymentDiagnostic.LogOutboundHttpPost(
+            GatewayName,
+            url,
+            content,
+            contentType,
+            responseContent);
+
         if (!response.IsSuccessStatusCode)
         {
             Logger.LogWarning("{Gateway} HTTP {Status} {Url}", GatewayName, response.StatusCode, url);
@@ -107,9 +115,22 @@ public abstract class HttpPaymentGatewayBase : PaymentGatewayBase
     {
         using var httpClient = _httpClientFactory.CreateClient();
         httpClient.Timeout = TimeSpan.FromSeconds(30);
+        PaymentDiagnostic.LogOutbound3DForm(
+            GatewayName,
+            url,
+            formFields,
+            "application/x-www-form-urlencoded (API)");
+
         using var content = new FormUrlEncodedContent(formFields);
         using var response = await httpClient.PostAsync(url, content, cancellationToken);
         var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+
+        PaymentDiagnostic.LogOutboundHttpPost(
+            GatewayName,
+            url,
+            string.Join("&", formFields.Select(kv => $"{kv.Key}={kv.Value}")),
+            "application/x-www-form-urlencoded",
+            responseContent);
 
         if (!response.IsSuccessStatusCode)
             Logger.LogWarning("{Gateway} form HTTP {Status} {Url}", GatewayName, response.StatusCode, url);

@@ -1,8 +1,8 @@
 @{
     ViewData["Title"] = "Ürün";
     ViewData["Description"] = "TriPay Payment Hub özellikleri: çoklu sanal POS, 3D Secure, taksit, iade, webhook ve yönetim paneli.";
-    ViewData["HeroTitle"] = "TriPay Payment Hub";
-    ViewData["HeroLead"] = "Ödeme kanallarını tek .NET katmanında birleştiren, genişletilebilir ve üretime hazır altyapı.";
+    ViewData["HeroTitle"] = "TriPay ödeme altyapısı";
+    ViewData["HeroLead"] = "Ödeme kanallarını tek platformda birleştiren, ölçeklenebilir ve üretime hazır altyapı.";
     ViewData["HeroBadge"] = "Ürün özellikleri";
     ViewData["HeroPrimaryText"] = "Hızlı başlangıç kılavuzu";
     ViewData["HeroPrimaryUrl"] = SiteLinks.DocsPath + "/Guide/GettingStarted";
@@ -33,37 +33,37 @@
             <p class="mt-2 text-sm leading-relaxed text-ink-600">Bankadan dönen sonuçlar doğrulanır; kart numarası ve CVV kalıcı depoda tutulmaz, loglarda maskelenir.</p>
         </div>
         <div class="card">
-            <h3 class="text-lg font-bold text-ink-950">Webhook ve outbox</h3>
-            <p class="mt-2 text-sm leading-relaxed text-ink-600">Ödeme sonucu bildirimleri imzalı ve tekrarlanabilir; yoğun trafikte mesaj kuyruğu ile güvenilir teslimat.</p>
+            <h3 class="text-lg font-bold text-ink-950">Anlık bildirimler</h3>
+            <p class="mt-2 text-sm leading-relaxed text-ink-600">Ödeme sonucu bildirimleri güvenli ve tekrarlanabilir; yoğun trafikte bile sipariş durumu güncel kalır.</p>
         </div>
         <div class="card">
-            <h3 class="text-lg font-bold text-ink-950">Önbellek (Redis)</h3>
-            <p class="mt-2 text-sm leading-relaxed text-ink-600">Gateway ayarları ve sık okunan yapılandırmalar önbelleklenir; yüksek trafikte gecikme düşer.</p>
+            <h3 class="text-lg font-bold text-ink-950">Yüksek performans</h3>
+            <p class="mt-2 text-sm leading-relaxed text-ink-600">Yoğun kampanya dönemlerinde bile hızlı yanıt; müşteri ödeme deneyimi kesintisiz devam eder.</p>
         </div>
     </div>
 </section>
 
 <section class="bg-slate-100/80 py-16">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <h2 class="section-title">Teknik altyapı</h2>
-        <p class="section-lead">Kurumsal projeler için tasarlanmış katmanlar ve operasyon araçları.</p>
+        <h2 class="section-title">Operasyon ve destek</h2>
+        <p class="section-lead">Satış sonrası süreçler için hazır araçlar ve uzman ekip desteği.</p>
         <div class="mt-12 grid gap-8 lg:grid-cols-2">
             <div class="card">
-                <h3 class="font-bold text-ink-950">Uygulama katmanı</h3>
+                <h3 class="font-bold text-ink-950">Yönetim paneli</h3>
                 <ul class="mt-4 space-y-2 text-sm text-ink-600">
-                    <li>· ASP.NET Core 8 ve Clean Architecture</li>
-                    <li>· CQRS (MediatR) ve FluentValidation</li>
-                    <li>· Swagger ile sürümlü API dokümantasyonu</li>
-                    <li>· Global exception handler ve standart API yanıtları</li>
+                    <li>· İşlem listesi ve durum takibi</li>
+                    <li>· İade ve iptal yönetimi</li>
+                    <li>· Çoklu üye işyeri ve kanal görünümü</li>
+                    <li>· Rol tabanlı erişim</li>
                 </ul>
             </div>
             <div class="card">
-                <h3 class="font-bold text-ink-950">Operasyon katmanı</h3>
+                <h3 class="font-bold text-ink-950">Müşteri başarısı</h3>
                 <ul class="mt-4 space-y-2 text-sm text-ink-600">
-                    <li>· Ayrı yönetim paneli (Bootstrap 5)</li>
-                    <li>· Rol ve izin tabanlı erişim (Identity)</li>
-                    <li>· İşlem listesi, gateway hataları, raporlar</li>
-                    <li>· Bakım modu ve IP kısıtı seçenekleri</li>
+                    <li>· Canlıya geçiş planlama</li>
+                    <li>· Test ortamı ve pilot desteği</li>
+                    <li>· Operasyon ekibi eğitimi</li>
+                    <li>· Sürekli iyileştirme ve danışmanlık</li>
                 </ul>
             </div>
         </div>

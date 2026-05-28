@@ -3,7 +3,7 @@
         <div class="lg:col-span-2">
             <p class="text-xl font-bold text-white">TriPay</p>
             <p class="mt-4 max-w-md text-sm leading-relaxed text-slate-400">
-                Türkiye’deki sanal POS ve ödeme kuruluşu API’lerini tek .NET arayüzünde birleştiren Payment Hub.
+                Türkiye’deki sanal POS ve ödeme kuruluşlarını tek platformda birleştiren ödeme altyapısı.
                 Banka sözleşmeniz ve müşteri veriniz sizde kalır; TriPay öngörülebilir entegrasyon sağlar.
             </p>
             <p class="mt-4 text-sm">
@@ -13,9 +13,9 @@
         <div>
             <p class="text-sm font-semibold uppercase tracking-wider text-slate-500">Ürün</p>
             <ul class="mt-4 space-y-2.5 text-sm">
-                <li><a asp-controller="Product" asp-action="Index" class="hover:text-white">Özellikler</a></li>
-                <li><a asp-controller="Integration" asp-action="Index" class="hover:text-white">Entegrasyon modları</a></li>
-                <li><a asp-controller="Solutions" asp-action="Index" class="hover:text-white">Sektör çözümleri</a></li>
+                <li><a asp-area="" asp-controller="Product" asp-action="Index" class="hover:text-white">Özellikler</a></li>
+                <li><a asp-area="" asp-controller="Integration" asp-action="Index" class="hover:text-white">Entegrasyon modları</a></li>
+                <li><a asp-area="" asp-controller="Solutions" asp-action="Index" class="hover:text-white">Sektör çözümleri</a></li>
                 <li><a href="@SiteLinks.PayPath" class="hover:text-white">Hosted ödeme</a></li>
             </ul>
         </div>
@@ -31,9 +31,9 @@
         <div>
             <p class="text-sm font-semibold uppercase tracking-wider text-slate-500">Şirket</p>
             <ul class="mt-4 space-y-2.5 text-sm">
-                <li><a asp-controller="Corporate" asp-action="About" class="hover:text-white">Hakkımızda</a></li>
-                <li><a asp-controller="Security" asp-action="Index" class="hover:text-white">Güvenlik</a></li>
-                <li><a asp-controller="Contact" asp-action="Index" class="hover:text-white">İletişim ve demo</a></li>
+                <li><a asp-area="" asp-controller="Corporate" asp-action="About" class="hover:text-white">Hakkımızda</a></li>
+                <li><a asp-area="" asp-controller="Security" asp-action="Index" class="hover:text-white">Güvenlik</a></li>
+                <li><a asp-area="" asp-controller="Contact" asp-action="Index" class="hover:text-white">İletişim ve demo</a></li>
             </ul>
         </div>
     </div>
@@ -41,9 +41,9 @@
         <div class="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
             <span>© @DateTime.Now.Year TriPay. Tüm hakları saklıdır.</span>
             <div class="flex flex-wrap gap-4">
-                <a asp-controller="Legal" asp-action="Kvkk" class="hover:text-slate-300">KVKK</a>
-                <a asp-controller="Legal" asp-action="Privacy" class="hover:text-slate-300">Gizlilik</a>
-                <a asp-controller="Legal" asp-action="Cookies" class="hover:text-slate-300">Çerez</a>
+                <a asp-area="" asp-controller="Legal" asp-action="Kvkk" class="hover:text-slate-300">KVKK</a>
+                <a asp-area="" asp-controller="Legal" asp-action="Privacy" class="hover:text-slate-300">Gizlilik</a>
+                <a asp-area="" asp-controller="Legal" asp-action="Cookies" class="hover:text-slate-300">Çerez</a>
             </div>
         </div>
     </div>

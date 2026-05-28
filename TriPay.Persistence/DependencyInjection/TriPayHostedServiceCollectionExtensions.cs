@@ -1,8 +1,10 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using TriPay.Core.Gateways;
 using TriPay.Core.Options;
 using TriPay.Data.DependencyInjection;
 using TriPay.Infrastructure.DependencyInjection;
+using TriPay.Infrastructure.Gateways;
 using TriPay.Services.Configuration;
 using TriPay.Services.DependencyInjection;
 
@@ -32,6 +34,8 @@ public static class TriPayHostedServiceCollectionExtensions
     {
         services.AddTriPay(configuration);
         services.AddTriPayRedis(configuration);
+        // Vakıfbank provider ctor; Hosted MSSQL metadata olmadan çözülemez — bellek içi varsayılanlar.
+        services.AddSingleton<IGatewayMetadataService>(_ => InMemoryGatewayMetadataService.CreateWithVakifbankDefaults());
         services.AddSingleton<ConfigurationGatewaySettingsProvider>();
         services.AddSingleton<IGatewaySettingsProvider>(sp =>
             sp.GetRequiredService<ConfigurationGatewaySettingsProvider>());

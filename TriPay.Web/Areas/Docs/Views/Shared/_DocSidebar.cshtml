@@ -17,13 +17,13 @@
 <aside class="w-full shrink-0 border-b border-slate-200 pb-6 lg:block lg:w-56 lg:border-b-0 lg:border-r lg:border-slate-100 lg:py-10 lg:pr-6">
     <p class="rounded-lg bg-brand-50 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-brand-800 ring-1 ring-brand-200">Kullanım kılavuzu</p>
     <nav class="mt-4 flex flex-wrap gap-1 text-sm lg:flex-col lg:gap-0 lg:space-y-1" aria-label="Kılavuz menüsü">
-        <a asp-area="Docs" asp-controller="Home" asp-action="Index" class="@DocNavClass(DocActive("Home"))" aria-current="@(DocActive("Home") ? "page" : null)">Genel bakış</a>
-        <a asp-area="Docs" asp-controller="Guide" asp-action="GettingStarted" class="@DocNavClass(DocActive("Guide", "GettingStarted"))" aria-current="@(DocActive("Guide", "GettingStarted") ? "page" : null)">Hızlı başlangıç</a>
-        <a asp-area="Docs" asp-controller="Guide" asp-action="IntegrationModes" class="@DocNavClass(DocActive("Guide", "IntegrationModes"))" aria-current="@(DocActive("Guide", "IntegrationModes") ? "page" : null)">Entegrasyon modları</a>
-        <a asp-area="Docs" asp-controller="Guide" asp-action="Setup" class="@DocNavClass(DocActive("Guide", "Setup"))" aria-current="@(DocActive("Guide", "Setup") ? "page" : null)">Kurulum</a>
-        <a asp-area="Docs" asp-controller="Guide" asp-action="PaymentFlow" class="@DocNavClass(DocActive("Guide", "PaymentFlow"))" aria-current="@(DocActive("Guide", "PaymentFlow") ? "page" : null)">Ödeme akışı</a>
-        <a asp-area="Docs" asp-controller="Guide" asp-action="Security" class="@DocNavClass(DocActive("Guide", "Security"))" aria-current="@(DocActive("Guide", "Security") ? "page" : null)">Güvenlik</a>
-        <a asp-area="Docs" asp-controller="Guide" asp-action="Webhook" class="@DocNavClass(DocActive("Guide", "Webhook"))" aria-current="@(DocActive("Guide", "Webhook") ? "page" : null)">Bildirimler</a>
-        <a asp-area="Docs" asp-controller="Guide" asp-action="Faq" class="@DocNavClass(DocActive("Guide", "Faq"))" aria-current="@(DocActive("Guide", "Faq") ? "page" : null)">Sık sorulanlar</a>
+        <a href="@SiteLinks.DocsPath" class="@DocNavClass(DocActive("Home"))" aria-current="@(DocActive("Home") ? "page" : null)">Genel bakış</a>
+        <a href="@SiteLinks.DocsPath/Guide/GettingStarted" class="@DocNavClass(DocActive("Guide", "GettingStarted"))" aria-current="@(DocActive("Guide", "GettingStarted") ? "page" : null)">Hızlı başlangıç</a>
+        <a href="@SiteLinks.DocsPath/Guide/IntegrationModes" class="@DocNavClass(DocActive("Guide", "IntegrationModes"))" aria-current="@(DocActive("Guide", "IntegrationModes") ? "page" : null)">Entegrasyon modları</a>
+        <a href="@SiteLinks.DocsPath/Guide/Setup" class="@DocNavClass(DocActive("Guide", "Setup"))" aria-current="@(DocActive("Guide", "Setup") ? "page" : null)">Kurulum</a>
+        <a href="@SiteLinks.DocsPath/Guide/PaymentFlow" class="@DocNavClass(DocActive("Guide", "PaymentFlow"))" aria-current="@(DocActive("Guide", "PaymentFlow") ? "page" : null)">Ödeme akışı</a>
+        <a href="@SiteLinks.DocsPath/Guide/Security" class="@DocNavClass(DocActive("Guide", "Security"))" aria-current="@(DocActive("Guide", "Security") ? "page" : null)">Güvenlik</a>
+        <a href="@SiteLinks.DocsPath/Guide/Webhook" class="@DocNavClass(DocActive("Guide", "Webhook"))" aria-current="@(DocActive("Guide", "Webhook") ? "page" : null)">Bildirimler</a>
+        <a href="@SiteLinks.DocsPath/Guide/Faq" class="@DocNavClass(DocActive("Guide", "Faq"))" aria-current="@(DocActive("Guide", "Faq") ? "page" : null)">Sık sorulanlar</a>
     </nav>
 </aside>

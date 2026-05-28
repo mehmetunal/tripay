@@ -1,0 +1,31 @@
+@model TriPay.Demo.Models.ThreeDRedirectViewModel
+@using System.Text
+@{
+    Layout = null;
+    ViewData["Title"] = "3D Secure yönlendirme";
+    var frameSrc = "data:text/html;charset=utf-8;base64," + Convert.ToBase64String(Encoding.UTF8.GetBytes(Model.RedirectHtml));
+}
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] — TriPay Demo</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/checkout.css" asp-append-version="true" />
+</head>
+<body class="checkout-3d-redirect-page">
+    <main class="checkout-3d-redirect-main">
+        @await Html.PartialAsync("_PaymentEventLog", Model.Events)
+
+        <div class="checkout-3d-redirect-notice alert alert-info" role="status">
+            <strong>Banka 3D sayfasına yönlendiriliyorsunuz…</strong>
+            <span class="d-block small mt-1">Sipariş: <code>@Model.OrderNumber</code></span>
+        </div>
+
+        <iframe class="checkout-3d-redirect-frame visually-hidden"
+                title="Banka 3D Secure"
+                src="@frameSrc"></iframe>
+    </main>
+</body>
+</html>

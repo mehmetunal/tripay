@@ -3,7 +3,7 @@
 > **Bu dosya, `Program.cs` ve servis kaydı için tek referanstır.**  
 > Diğer dokümanlar buraya link verir; aynı tabloları tekrar etmez.
 
-**Versiyon:** 1.0 · **Tarih:** 22 Mayıs 2026
+**Versiyon:** 1.1 · **Tarih:** 26 Mayıs 2026
 
 ---
 
@@ -52,6 +52,7 @@ builder.Services.AddTriPayFramework(builder.Configuration);
 | `AddHttpClient()` | Evet | Evet (AddTriPay üzerinden) |
 | `TriPayOptions` / `PersistenceOptions` config bind | Evet (config verilirse) | Evet |
 | **`IGatewaySettingsProvider`** (banka credential okuma) | **Hayır** | Evet — `ConfigurationGatewaySettingsProvider` (`appsettings`) |
+| **`IGatewayMetadataService`** (Vakıfbank MPI URL vb.) | **Hayır** | Evet — `InMemoryGatewayMetadataService` (MSSQL yok) |
 | **`AddTriPayRedis()`** (3D state, idempotency, kilit) | **Hayır** | Evet |
 | `TriPayDbContext` / MSSQL | Hayır | Hayır |
 | `IPaymentCheckoutService` | Hayır | Hayır (Persistence zorla kapalı) |
@@ -61,9 +62,10 @@ builder.Services.AddTriPayFramework(builder.Configuration);
 ### İç çağrı zinciri
 
 ```text
-AddTriPayFramework(configuration)
+  AddTriPayFramework(configuration)
   ├── AddTriPay(configuration)          ← provider'lar + IPaymentGatewayService
   ├── AddTriPayRedis(configuration)     ← Redis / bellek içi cache
+  ├── IGatewayMetadataService           ← InMemoryGatewayMetadataService (Vakıfbank varsayılanları)
   ├── IGatewaySettingsProvider          ← TriPay:Gateways:*:Settings
   └── PersistenceOptions → Enabled=false, log/outbox kapalı
 ```
@@ -181,6 +183,26 @@ public class PaymentController : Controller
 
 Detay (KVKK, API örnekleri): [TriPay_Framework_Modu.md](./TriPay_Framework_Modu.md)
 
+### TriPay.Demo — tanılama (olay günlüğü)
+
+`TriPay.Demo` Framework referansıdır; teknik destek için ekranda ham POST logu gösterir:
+
+```csharp
+using TriPay.Demo.Services;
+using TriPay.Services.Diagnostics;
+
+builder.Services.AddSingleton<DemoPaymentDiagnosticStore>();
+
+var app = builder.Build();
+var diagnosticStore = app.Services.GetRequiredService<DemoPaymentDiagnosticStore>();
+PaymentDiagnostic.Enabled = true;
+PaymentDiagnostic.RegisterSink(diagnosticStore);
+```
+
+Provider katmanı (`PaymentDiagnostic.LogOutbound3DForm`, `LogInboundCallback`, …) kayıtları sink’e yazar; demo controller sonuç sayfasında listeler. Üretim uygulamasında `Enabled = false` bırakın veya sink kaydetmeyin.
+
+Callback route: `Checkout/Callback` — **POST** ve **GET**. 3D yönlendirme: `RedirectHtml` → `Content(..., "text/html")` (iframe kullanmayın).
+
 ---
 
 ## 5. ASP.NET Core Web — Hosted (demo / operatör)
@@ -230,7 +252,7 @@ public class CheckoutController : Controller
 
 Detay (tablolar, health): [TriPay_Hosted_Modu.md](./TriPay_Hosted_Modu.md)
 
-**Canlı referans:** `TriPay.Demo/Program.cs` (repo).
+**Canlı referans:** `TriPay.Demo/Program.cs` — **Framework modu** (`AddTriPayFramework`), Hosted değil.
 
 ---
 

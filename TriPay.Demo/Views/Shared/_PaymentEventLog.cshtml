@@ -1,0 +1,71 @@
+@model IReadOnlyList<TriPay.Services.Diagnostics.PaymentDiagnosticEntry>
+@{
+    var events = Model ?? Array.Empty<TriPay.Services.Diagnostics.PaymentDiagnosticEntry>();
+    var hasEvents = events.Count > 0;
+}
+
+<section class="payment-event-log" aria-label="Ödeme olay günlüğü">
+    <div class="payment-event-log-header">
+        <h3>Ödeme olay günlüğü</h3>
+        <p class="text-muted small mb-0">Teknik destek için tüm POST alanları (3D giden / callback gelen / API).</p>
+        @if (hasEvents)
+        {
+            <button type="button" class="btn btn-sm btn-outline-secondary payment-event-log-copy" data-copy-target="payment-event-log-body">
+                Tümünü kopyala
+            </button>
+        }
+    </div>
+
+    @if (!hasEvents)
+    {
+        <p class="payment-event-log-empty text-muted small mb-0">Henüz kayıt yok.</p>
+    }
+    else
+    {
+        <div id="payment-event-log-body" class="payment-event-log-body">
+            @foreach (var ev in events)
+            {
+                var badgeClass = ev.Category switch
+                {
+                    "Callback Gelen" => "badge-callback",
+                    "3D Giden" => "badge-outbound",
+                    "API Giden" => "badge-api",
+                    "Checkout" => "badge-checkout",
+                    _ => "badge-default"
+                };
+                <article class="payment-event-item">
+                    <header class="payment-event-item-head">
+                        <span class="payment-event-badge @badgeClass">@ev.Category</span>
+                        @if (!string.IsNullOrWhiteSpace(ev.Gateway))
+                        {
+                            <span class="payment-event-gateway">@ev.Gateway</span>
+                        }
+                        <time class="payment-event-time" datetime="@ev.AtUtc.ToString("o")">
+                            @ev.AtUtc.ToLocalTime().ToString("HH:mm:ss.fff")
+                        </time>
+                    </header>
+                    <h4 class="payment-event-title">@ev.Title</h4>
+                    <pre class="payment-event-detail">@ev.Detail</pre>
+                </article>
+            }
+        </div>
+    }
+</section>
+
+<script>
+    document.querySelectorAll('.payment-event-log-copy').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var root = document.getElementById(btn.getAttribute('data-copy-target'));
+            if (!root) return;
+            var text = Array.from(root.querySelectorAll('.payment-event-detail'))
+                .map(function (pre, i) {
+                    var title = root.querySelectorAll('.payment-event-title')[i];
+                    return (title ? title.textContent + '\n' : '') + pre.textContent;
+                }).join('\n\n---\n\n');
+            navigator.clipboard.writeText(text).then(function () {
+                btn.textContent = 'Kopyalandı';
+                setTimeout(function () { btn.textContent = 'Tümünü kopyala'; }, 2000);
+            });
+        });
+    });
+</script>
