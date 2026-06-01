@@ -14,8 +14,15 @@ Kullanım kılavuzundaki entegrasyon modelleriyle uyumlu hale getirilmiştir:
 
 | Paket | Kullanım Tipi | İçerik |
 | :--- | :--- | :--- |
-| **TriPay** | **Framework (Mod A)** | `AddTriPayFramework` — Kendi uygulamanız, TriPay DB yok (**Önerilen**). Core, Services, Infrastructure ve Persistence birleşimidir. |
-| **TriPay.Hosted** | **Hosted (Mod C)** | `AddTriPayHosted` — MSSQL + checkout + operatör paneli. TriPay paketine ek olarak Data (DB) katmanını içerir. |
+| **TriPay** | **Framework (Mod A)** | `AddTriPayFramework` — Kendi uygulamanız, TriPay DB yok (**Önerilen**). İçerdiği DLL'ler: `TriPay.Services.dll`, `TriPay.Core.dll`, `TriPay.Infrastructure.dll`. |
+| **TriPay.Hosted** | **Hosted (Mod C)** | `AddTriPayHosted` — MSSQL + checkout + operatör paneli. TriPay paketine ek olarak `TriPay.Persistence.dll` ve `TriPay.Data.dll` katmanlarını içerir. |
+
+## Paket ve DLL Yapısı
+
+| NuGet Paketi | İçerdiği DLL Dosyaları |
+| :--- | :--- |
+| **`TriPay`** | `TriPay.Services.dll`, `TriPay.Core.dll`, `TriPay.Infrastructure.dll` |
+| **`TriPay.Hosted`** | `TriPay.Hosted.dll`, `TriPay.Persistence.dll`, `TriPay.Data.dll` (+ TriPay bağımlılıkları) |
 
 > **Not:** `TriPay.Core`, `TriPay.Data`, `TriPay.Infrastructure` ve `TriPay.Persistence` artık bağımsız paketler olarak yayınlanmamaktadır; ana paketlerin içine gömülmüştür.
 

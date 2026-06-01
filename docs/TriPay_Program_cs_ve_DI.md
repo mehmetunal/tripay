@@ -46,7 +46,7 @@ builder.Services.AddTriPayFramework(builder.Configuration);
 | Özellik | `AddTriPay()` | `AddTriPayFramework()` |
 | :--- | :---: | :---: |
 | **Sizin `Program.cs`’te çağrı** | Test / özel DI | **Üretim (Framework mod)** |
-| **Proje** | `TriPay.Services` | `TriPay.Persistence` (içinde `AddTriPay` çağırır) |
+| **Proje** | `TriPay.Services` | `TriPay.Services` |
 | `VakifPays` / `Iyzico` / `Vakifbank` provider | Evet | Evet (AddTriPay üzerinden) |
 | `IPaymentGatewayService` | Evet | Evet |
 | `AddHttpClient()` | Evet | Evet (AddTriPay üzerinden) |
@@ -134,7 +134,7 @@ Detaylı Hosted: [TriPay_Hosted_Modu.md](./TriPay_Hosted_Modu.md)
 **Proje:** Kendi MVC / API uygulamanız. **TriPay MSSQL yok.**
 
 ```csharp
-using TriPay.Persistence.DependencyInjection;
+using TriPay.Services.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -263,7 +263,7 @@ Eski kılavuzdaki `Host.CreateDefaultBuilder` + yalnız `AddTriPay()` **eksik ka
 ```csharp
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using TriPay.Persistence.DependencyInjection;
+using TriPay.Services.DependencyInjection;
 using TriPay.Services.Interfaces;
 using TriPay.Services.Models;
 using TriPay.Services.Providers;

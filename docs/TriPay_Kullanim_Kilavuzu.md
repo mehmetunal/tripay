@@ -343,15 +343,27 @@ TriPay.Infrastructure→ Redis, RabbitMQ, metadata cache
 
 ## 4. Paket ve DLL yapısı
 
-NuGet paket yapısı:
+TriPay, kullanım senaryosuna göre iki ana NuGet paketi sunar. Her paket, projenin farklı katmanlarını temsil eden DLL dosyalarını içerir:
 
+| NuGet Paketi | İçerdiği DLL Dosyaları | Açıklama |
+| :--- | :--- | :--- |
+| **`TriPay`** | `TriPay.Services.dll`<br>`TriPay.Core.dll`<br>`TriPay.Infrastructure.dll` | **Framework Modu:** Temel ödeme motoru, banka provider'ları ve Redis altyapısı. |
+| **`TriPay.Hosted`** | `TriPay.Hosted.dll`<br>`TriPay.Persistence.dll`<br>`TriPay.Data.dll` | **Hosted Modu:** MSSQL veritabanı desteği, Checkout servisi ve Admin paneli altyapısı. |
 
-| Paket / DLL                         | İçerik                                                      |
-| ----------------------------------- | ----------------------------------------------------------- |
-| `**TriPay`** (NuGet `PackageId`)    | Framework — `TriPay.Services` (TriPay.Data **dahil değil**) |
-| `**TriPay.Persistence`** (monorepo) | Hosted — `AddTriPayHosted`, `PaymentCheckoutService`        |
-| `**TriPay.Data**` (monorepo)        | MSSQL, FluentMigrator — Hosted ile                          |
+> **Not:** `TriPay.Hosted` paketi, `TriPay` paketine bağımlıdır. Dolayısıyla `TriPay.Hosted` yüklendiğinde yukarıdaki **6 DLL'in tamamı** projenize dahil edilir.
 
+### 4.1. DLL Görev Dağılımı
+
+Hangi DLL'in ne işe yaradığını aşağıdaki tabloda görebilirsiniz:
+
+| DLL Adı | Katman | Görevi |
+| :--- | :--- | :--- |
+| **`TriPay.Core.dll`** | Domain | Ortak modeller, interface'ler, gateway sabitleri ve temel seçenekler. |
+| **`TriPay.Infrastructure.dll`** | Infrastructure | Redis cache, Idempotency, 3D state yönetimi ve HTTP istemci altyapısı. |
+| **`TriPay.Services.dll`** | Application | Ödeme motoru (`PaymentGatewayService`), banka provider implementasyonları. |
+| **`TriPay.Data.dll`** | Domain/Data | Veritabanı varlıkları (Entities), DTO'lar ve FluentMigrator göçleri. |
+| **`TriPay.Persistence.dll`** | Persistence | EF Core DbContext, Repository'ler ve `PaymentCheckoutService`. |
+| **`TriPay.Hosted.dll`** | API/Entry | Hosted moduna özel DI kayıtları ve giriş noktası. |
 
 > **Neden `TriPay`?** Kısa marka adı; entegrasyon `dotnet add package TriPay` ile tek satır. Derleme çıktısı DLL adı `TriPay.Services.dll` olabilir — bu normaldir (`PackageId` ≠ assembly adı).
 

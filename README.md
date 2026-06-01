@@ -49,7 +49,7 @@ dotnet add package TriPay.Hosted --version 1.0.0
 ```
 
 ```csharp
-using TriPay.Persistence.DependencyInjection;
+using TriPay.Services.DependencyInjection;
 
 // Framework modu (TriPay DB yok — önerilen)
 builder.Services.AddTriPayFramework(builder.Configuration);
