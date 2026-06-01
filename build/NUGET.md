@@ -47,8 +47,8 @@ Repository secret: **`NUGET_API_KEY`** (nuget.org API anahtarı).
 
 | Workflow | Ne zaman? | Ne yapar? |
 | :--- | :--- | :--- |
-| **CI** → `nuget-publish` job | `main` push (testler geçince) | Sürüm +1 → **pack** → **nuget.org push** → sürüm commit |
-| **CI** → `nuget-pack-verify` | Pull request | Yalnızca pack doğrulama (**push yok**) |
+| **CI** → `nuget-pack` job | `main` push | Sürüm +1 → **pack** → **nuget.org push** → sürüm commit |
+| **CI** → `nuget-pack` job | Pull request | Yalnızca pack doğrulama (**push yok**) |
 | **NuGet Publish (manuel)** | Actions → Run workflow | İsteğe bağlı patch/minor/major |
 
 Sürüm commit mesajındaki `[skip ci]` ile yalnızca `TriPay.NuGet.Version.props` güncellenir; bu commit için CI yeniden çalışmaz (sonsuz döngü önlenir).
