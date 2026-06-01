@@ -1,4 +1,4 @@
-# PR ve main: derleme + test (NuGet yayını nuget-publish.yml)
+# PR ve main: derleme + test, ardından NuGet pack doğrulama (sıralı)
 name: CI
 
 on:
@@ -13,6 +13,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: |
+            TriPay.Web/package-lock.json
+            TriPay.Admin/package-lock.json
+
+      - name: npm ci (Tailwind / lightningcss native)
+        run: |
+          npm ci --prefix TriPay.Web
+          npm ci --prefix TriPay.Admin
+
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "10.0.x"
@@ -21,13 +34,14 @@ jobs:
         run: dotnet restore TriPay.sln
 
       - name: Build
-        run: dotnet build TriPay.sln -c Release --no-restore
+        run: dotnet build TriPay.sln -c Release --no-restore -p:RunTestsOnBuild=false
 
       - name: Test
         run: dotnet test TriPay.sln -c Release --no-build --verbosity normal
 
   nuget-pack-verify:
     runs-on: ubuntu-latest
+    needs: build-test
     steps:
       - uses: actions/checkout@v4
 
