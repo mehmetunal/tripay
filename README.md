@@ -42,7 +42,7 @@ Yapı ve kurallar: [TriPay_Test_Rehberi.md](./docs/TriPay_Test_Rehberi.md)
 
 ```bash
 # Framework modu (önerilen — kendi uygulamanız, TriPay DB yok)
-dotnet add package TriPay.Framework --version 1.0.0
+dotnet add package TriPay --version 1.0.0
 
 # Hosted modu (TriPay MSSQL + checkout)
 dotnet add package TriPay.Hosted --version 1.0.0

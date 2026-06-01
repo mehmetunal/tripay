@@ -11,7 +11,7 @@
     <PackageProjectUrl>https://tripay.com.tr</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mehmetunal/tripay.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageReleaseNotes>https://tripay.com.tr/docs — Kullanım kılavuzu ve entegrasyon dokümanları paket içi docs/ klasöründe.</PackageReleaseNotes>
+    <PackageReleaseNotes>Kullanım kılavuzu: https://tripay.com.tr/docs veya https://github.com/mehmetunal/tripay/blob/main/docs/TriPay_Kullanim_Kilavuzu.md — Tam markdown seti paket içi docs/ klasöründe.</PackageReleaseNotes>
     <PackageIcon>icon.png</PackageIcon>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>

@@ -8,22 +8,25 @@ Minor/major: `TRI_PAY_VERSION_BUMP=minor ./build/pack-and-push.sh`
 
 **Hedef çerçeveler:** `net8.0`, `net9.0`, `net10.0` (tüm kütüphane ve meta paketler). Uygulamanız .NET 8 veya üzeri olmalıdır.
 
-## Paketler (kullanıma göre)
+## Paketler (Kullanım Tipine Göre)
 
-| Paket | Kullanım |
-| :--- | :--- |
-| **TriPay.Framework** | `AddTriPayFramework` — kendi uygulamanız, TriPay DB yok (**önerilen**) |
-| **TriPay.Hosted** | `AddTriPayHosted` — MSSQL + checkout + operatör |
-| **TriPay** | Yalnızca `AddTriPay` — özel DI / test |
-| TriPay.Core, TriPay.Data, TriPay.Infrastructure, TriPay.Persistence | Bağımlılık; doğrudan nadiren |
+Kullanım kılavuzundaki entegrasyon modelleriyle uyumlu hale getirilmiştir:
+
+| Paket | Kullanım Tipi | İçerik |
+| :--- | :--- | :--- |
+| **TriPay** | **Framework (Mod A)** | `AddTriPayFramework` — Kendi uygulamanız, TriPay DB yok (**Önerilen**). Core, Services, Infrastructure ve Persistence birleşimidir. |
+| **TriPay.Hosted** | **Hosted (Mod C)** | `AddTriPayHosted` — MSSQL + checkout + operatör paneli. TriPay paketine ek olarak Data (DB) katmanını içerir. |
+
+> **Not:** `TriPay.Core`, `TriPay.Data`, `TriPay.Infrastructure` ve `TriPay.Persistence` artık bağımsız paketler olarak yayınlanmamaktadır; ana paketlerin içine gömülmüştür.
 
 ## Tüketici örneği
 
 ```bash
-dotnet add package TriPay.Framework --version 1.0.0
+dotnet add package TriPay --version 1.0.0
 ```
 
 ```csharp
+// Program.cs
 builder.Services.AddTriPayFramework(builder.Configuration);
 ```
 
@@ -37,7 +40,6 @@ chmod +x build/pack-and-push.sh
 Çıktı: `artifacts/nupkgs/`
 
 Her pakette:
-
 - Kök **README.md** (nuget.org’da görünür) — web, GitHub, kılavuz linkleri  
 - **docs/** klasörü — `TriPay_Kullanim_Kilavuzu.md`, `TriPay_Program_cs_ve_DI.md`, mod rehberleri, `INDEX.md`
 
@@ -51,8 +53,6 @@ Repository secret: **`NUGET_API_KEY`** (nuget.org API anahtarı).
 | **CI** → `nuget-pack` job | Pull request | Yalnızca pack doğrulama (**push yok**) |
 | **NuGet Publish (manuel)** | Actions → Run workflow | İsteğe bağlı patch/minor/major |
 
-Sürüm commit mesajındaki `[skip ci]` ile yalnızca `TriPay.NuGet.Version.props` güncellenir; bu commit için CI yeniden çalışmaz (sonsuz döngü önlenir).
-
 ## Yerel nuget.org push
 
 ```bash
@@ -64,12 +64,7 @@ veya `/Users/mehmet/Project/maggsoft/nuget-api-key.txt` (tek satır, repoya ekle
 
 ## Yayın sırası
 
-1. TriPay.Core  
-2. TriPay (Services)  
-3. TriPay.Data  
-4. TriPay.Infrastructure  
-5. TriPay.Persistence  
-6. TriPay.Framework (meta)  
-7. TriPay.Hosted (meta)  
+1. **TriPay** (Framework)
+2. **TriPay.Hosted** (Hosted)
 
 Script bu sırayı kullanır.

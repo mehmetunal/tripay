@@ -1,21 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Meta paket: TriPay MSSQL + checkout + operatör — AddTriPayHosted -->
+  <!-- TriPay Hosted Modu (Mod C) — TriPay MSSQL + checkout + operatör -->
   <Import Project="..\..\TriPay.NuGet.Version.props" />
   <PropertyGroup>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
     <IsPackable>true</IsPackable>
-    <IncludeBuildOutput>false</IncludeBuildOutput>
-    <SuppressDependenciesWhenPacking>false</SuppressDependenciesWhenPacking>
     <PackageId>TriPay.Hosted</PackageId>
     <Authors>Maggsoft; TriPay</Authors>
     <Company>Maggsoft</Company>
     <Product>TriPay</Product>
-    <Description>TriPay Hosted modu (.NET 8, 9, 10+) — TriPay MSSQL, checkout ve AddTriPayHosted. Maggsoft alt ürünü.</Description>
-    <PackageTags>tripay;payment;hosted;saas</PackageTags>
+    <Description>TriPay Hosted Modu (Mod C) — TriPay MSSQL veritabanı, checkout servisi ve operatör paneli desteği içerir. .NET 8, 9, 10+.</Description>
+    <PackageTags>tripay;payment;hosted;saas;mssql</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://tripay.com.tr</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mehmetunal/tripay.git</RepositoryUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageReleaseNotes>Kullanım kılavuzu: https://tripay.com.tr/docs — Tam markdown seti paket içi docs/ klasöründe.</PackageReleaseNotes>
+    <PackageReleaseNotes>Kullanım kılavuzu: https://tripay.com.tr/docs veya https://github.com/mehmetunal/tripay/blob/main/docs/TriPay_Kullanim_Kilavuzu.md</PackageReleaseNotes>
     <PackageIcon>icon.png</PackageIcon>
     <IncludeSymbols>false</IncludeSymbols>
   </PropertyGroup>
@@ -28,7 +27,18 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="TriPay.Framework" Version="$(TriPayPackageVersion)" />
-    <PackageReference Include="TriPay.Data" Version="$(TriPayPackageVersion)" />
+    <ProjectReference Include="..\..\..\TriPay.Services\TriPay.Services.csproj" />
+    <ProjectReference Include="..\..\..\TriPay.Data\TriPay.Data.csproj" PrivateAssets="all" />
   </ItemGroup>
+
+  <!-- Bundling TriPay.Data.dll into the Hosted package -->
+  <PropertyGroup>
+    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
+  </PropertyGroup>
+  <Target Name="CopyProjectReferencesToPackage" DependsOnTargets="ResolveReferences">
+    <ItemGroup>
+      <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference'))" 
+                            Condition="'%(Filename)' == 'TriPay.Data'" />
+    </ItemGroup>
+  </Target>
 </Project>

@@ -83,14 +83,9 @@ else
 fi
 
 LIBRARIES=(
-  "TriPay.Core/TriPay.Core.csproj"
   "TriPay.Services/TriPay.Services.csproj"
-  "TriPay.Data/TriPay.Data.csproj"
-  "TriPay.Infrastructure/TriPay.Infrastructure.csproj"
-  "TriPay.Persistence/TriPay.Persistence.csproj"
 )
 META=(
-  "build/nuget/TriPay.Framework/TriPay.Framework.csproj"
   "build/nuget/TriPay.Hosted/TriPay.Hosted.csproj"
 )
 

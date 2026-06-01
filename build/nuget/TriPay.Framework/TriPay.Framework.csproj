@@ -2,7 +2,7 @@
   <!-- Meta paket: üye işyeri / kendi uygulamanız — AddTriPayFramework -->
   <Import Project="..\..\TriPay.NuGet.Version.props" />
   <PropertyGroup>
-    <IsPackable>true</IsPackable>
+    <IsPackable>false</IsPackable>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <SuppressDependenciesWhenPacking>false</SuppressDependenciesWhenPacking>
     <PackageId>TriPay.Framework</PackageId>

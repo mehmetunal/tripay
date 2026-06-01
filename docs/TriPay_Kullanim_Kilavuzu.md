@@ -75,14 +75,14 @@ TriPay; banka ve ödeme kuruluşu sanal POS’larını tek arayüzde birleştire
 > **Program.cs kodu ve extension açıklaması:** [TriPay_Program_cs_ve_DI.md](./TriPay_Program_cs_ve_DI.md)
 
 
-| Kod        | Mod                  | TriPay MSSQL | DI girişi                                             | Ana API                   | KVKK veri riski (TriPay) |
-| ---------- | -------------------- | ------------ | ----------------------------------------------------- | ------------------------- | ------------------------ |
-| **A**      | Framework (NuGet)    | Hayır        | `AddTriPayFramework()`                                | `IPaymentGatewayService`  | **Yok** — önerilen       |
-| **A+**     | Framework + Redis    | Hayır        | `AddTriPayFramework()`                                | Aynı                      | Yok (geçici 3D state)    |
-| **C**      | Hosted tam           | Evet         | `AddTriPayHosted()`                                   | `IPaymentCheckoutService` | Yapılandırmaya bağlı     |
-| **C‑Lite** | Hosted, log kapalı   | Evet (özet)  | `AddTriPayHosted()` + `PersistTransactionLogs: false` | Checkout                  | Düşük                    |
-| **B**      | HttpClient API       | Sizde yok    | HTTP client                                           | REST (planlanan)          | Sunucuda TriPay          |
-| **D**      | Hosted ödeme sayfası | Evet         | TriPay.Web URL                                        | Tarayıcı redirect         | TriPay host              |
+| Kod        | Mod                  | NuGet Paketi         | TriPay MSSQL | DI girişi                                             | Ana API                   |
+| ---------- | -------------------- | -------------------- | ------------ | ----------------------------------------------------- | ------------------------- |
+| **A**      | Framework (NuGet)    | `TriPay`             | Hayır        | `AddTriPayFramework()`                                | `IPaymentGatewayService`  |
+| **A+**     | Framework + Redis    | `TriPay`             | Hayır        | `AddTriPayFramework()`                                | Aynı                      |
+| **C**      | Hosted tam           | `TriPay.Hosted`      | Evet         | `AddTriPayHosted()`                                   | `IPaymentCheckoutService` |
+| **C‑Lite** | Hosted, log kapalı   | `TriPay.Hosted`      | Evet (özet)  | `AddTriPayHosted()` + `PersistTransactionLogs: false` | Checkout                  |
+| **B**      | HttpClient API       | — (REST)             | Sizde yok    | HTTP client                                           | REST (planlanan)          |
+| **D**      | Hosted ödeme sayfası | `TriPay.Hosted`      | Evet         | TriPay.Web URL                                        | Tarayıcı redirect         |
 
 
 **En düşük risk (sizin isteğiniz):** Mod **A** — banka bilgisi sizde, TriPay işlem/log tutmaz.
@@ -91,6 +91,7 @@ TriPay; banka ve ödeme kuruluşu sanal POS’larını tek arayüzde birleştire
 
 ### 2.1. Mod A — Framework (NuGet / DLL) — önerilen
 
+> **NuGet Paketi:** `dotnet add package TriPay`  
 > **Tam doküman:** [TriPay_Framework_Modu.md](./TriPay_Framework_Modu.md)
 
 Üye işyeri kendi .NET uygulamasında TriPay kütüphanesini çağırır. Banka credential ve sipariş kaydı **tamamen sizin** sisteminizdedir.
@@ -192,6 +193,7 @@ flowchart LR
 
 ### 2.3. Mod C — Hosted (TriPay operatörü / demo web)
 
+> **NuGet Paketi:** `dotnet add package TriPay.Hosted`  
 > **Tam doküman:** [TriPay_Hosted_Modu.md](./TriPay_Hosted_Modu.md) — Bölüm 1 (Hosted Tam)
 
 ```text
@@ -240,6 +242,7 @@ flowchart TB
 
 ### 2.4. Mod C‑Lite — Hosted, KVKK hafif profil
 
+> **NuGet Paketi:** `dotnet add package TriPay.Hosted`  
 > **Tam doküman:** [TriPay_Hosted_Modu.md](./TriPay_Hosted_Modu.md) — Bölüm 2 (Hosted C‑Lite)
 
 ```text

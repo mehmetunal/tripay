@@ -1,12 +1,26 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\TriPay.Core\TriPay.Core.csproj" />
+    <ProjectReference Include="..\TriPay.Core\TriPay.Core.csproj" PrivateAssets="all" />
+    <ProjectReference Include="..\TriPay.Infrastructure\TriPay.Infrastructure.csproj" PrivateAssets="all" />
+    <ProjectReference Include="..\TriPay.Persistence\TriPay.Persistence.csproj" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Newtonsoft.Json" />
   </ItemGroup>
+
+  <!-- Bundling internal project DLLs into the main TriPay package -->
+  <PropertyGroup>
+    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
+  </PropertyGroup>
+  <Target Name="CopyProjectReferencesToPackage" DependsOnTargets="ResolveReferences">
+    <ItemGroup>
+      <!-- TriPay (Framework) paketi için Data.dll hariç diğerlerini dahil et -->
+      <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference'))" 
+                            Condition="'%(Filename)' != 'TriPay.Data'" />
+    </ItemGroup>
+  </Target>
 
 </Project>
