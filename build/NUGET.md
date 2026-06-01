@@ -41,20 +41,17 @@ Her pakette:
 - Kök **README.md** (nuget.org’da görünür) — web, GitHub, kılavuz linkleri  
 - **docs/** klasörü — `TriPay_Kullanim_Kilavuzu.md`, `TriPay_Program_cs_ve_DI.md`, mod rehberleri, `INDEX.md`
 
-## GitHub Actions (önerilen)
+## GitHub Actions
 
 Repository secret: **`NUGET_API_KEY`** (nuget.org API anahtarı).
 
-Workflow: `.github/workflows/nuget-publish.yml`
+| Workflow | Ne zaman? | Ne yapar? |
+| :--- | :--- | :--- |
+| **CI** → `nuget-publish` job | `main` push (testler geçince) | Sürüm +1 → **pack** → **nuget.org push** → sürüm commit |
+| **CI** → `nuget-pack-verify` | Pull request | Yalnızca pack doğrulama (**push yok**) |
+| **NuGet Publish (manuel)** | Actions → Run workflow | İsteğe bağlı patch/minor/major |
 
-| Tetikleyici | Davranış |
-| :--- | :--- |
-| **push → `main`** | İlgili dosyalar değiştiyse patch artırır, pack + push, sürümü repoya commit eder |
-| **workflow_dispatch** | Manuel; patch / minor / major seçilebilir |
-
-`build/TriPay.NuGet.Version.props` yalnızca commit edildiğinde workflow **tekrar çalışmaz** (sonsuz döngü önlenir).
-
-PR’larda paket derlemesi: `.github/workflows/ci.yml` → `--pack-only` (push yok).
+Sürüm commit mesajındaki `[skip ci]` ile yalnızca `TriPay.NuGet.Version.props` güncellenir; bu commit için CI yeniden çalışmaz (sonsuz döngü önlenir).
 
 ## Yerel nuget.org push
 

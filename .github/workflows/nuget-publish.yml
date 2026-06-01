@@ -1,6 +1,6 @@
-# TriPay NuGet — pack, sürüm artırma, nuget.org push
-# Secret: NUGET_API_KEY (Repository secrets)
-name: NuGet Publish
+# Manuel NuGet yayını (patch / minor / major seçimi)
+# Otomatik yayın: CI workflow → main push → nuget-publish job
+name: NuGet Publish (manuel)
 
 on:
   workflow_dispatch:
@@ -19,59 +19,45 @@ on:
         required: false
         type: boolean
         default: false
-  push:
-    branches: [main]
-    paths:
-      - "TriPay.Core/**"
-      - "TriPay.Services/**"
-      - "TriPay.Data/**"
-      - "TriPay.Infrastructure/**"
-      - "TriPay.Persistence/**"
-      - "build/**"
-      - "docs/**"
-      - "Directory.Build.props"
-      - "Directory.Packages.props"
-      - "nuget.config"
-      - ".github/workflows/nuget-publish.yml"
-    paths-ignore:
-      - "build/TriPay.NuGet.Version.props"
 
 permissions:
   contents: write
 
 concurrency:
-  group: nuget-publish-${{ github.ref }}
+  group: nuget-publish-manual
   cancel-in-progress: false
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: |
             8.0.x
             9.0.x
             10.0.x
 
-      - name: Pack and push to nuget.org
+      - name: NuGet pack
         env:
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
-          TRI_PAY_VERSION_BUMP: ${{ github.event_name == 'workflow_dispatch' && inputs.version_bump || 'patch' }}
+          TRI_PAY_VERSION_BUMP: ${{ inputs.version_bump }}
         run: |
           set -euo pipefail
-          args=()
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.skip_bump }}" == "true" ]]; then
+          args=(--no-push)
+          if [[ "${{ inputs.skip_bump }}" == "true" ]]; then
             args+=(--no-bump)
           fi
           chmod +x build/pack-and-push.sh build/bump-nuget-version.sh
           ./build/pack-and-push.sh "${args[@]}"
+
+      - name: nuget.org push
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: ./build/pack-and-push.sh --push-only
 
       - name: Sürüm dosyasını repoya geri yaz
         run: |
@@ -80,7 +66,6 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add build/TriPay.NuGet.Version.props
           if git diff --staged --quiet; then
-            echo "Sürüm dosyasında değişiklik yok (skip_bump?)."
             exit 0
           fi
           ver=$(sed -n 's/.*<TriPayPackageVersion>\([^<]*\).*/\1/p' build/TriPay.NuGet.Version.props | head -n1 | tr -d '[:space:]')
@@ -89,6 +74,5 @@ jobs:
 
       - name: Özet
         run: |
-          ver=$(sed -n 's/.*<TriPayPackageVersion>\([^<]*\).*/\1/p' build/TriPay.NuGet.Version.props | head -n1)
+          ver=$(sed -n 's/.*<TriPayPackageVersion>\([^<]*\).*/\1/p' build/TriPay.NuGet.Version.props | head -n1 | tr -d '[:space:]')
           echo "### Yayınlanan sürüm: \`${ver}\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- nuget.org: TriPay, TriPay.Framework, TriPay.Hosted ve bağımlılıklar" >> "$GITHUB_STEP_SUMMARY"
