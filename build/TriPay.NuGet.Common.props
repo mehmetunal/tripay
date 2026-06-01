@@ -1,0 +1,27 @@
+<Project>
+  <Import Project="$(MSBuildThisFileDirectory)TriPay.NuGet.Version.props" />
+
+  <PropertyGroup Label="TriPay NuGet — ortak meta veri">
+    <IsPackable>true</IsPackable>
+    <Authors>Maggsoft; TriPay</Authors>
+    <Company>Maggsoft</Company>
+    <Product>TriPay</Product>
+    <Copyright>Copyright © Maggsoft $(Year)</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://tripay.com.tr</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/mehmetunal/tripay.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReleaseNotes>https://tripay.com.tr/docs — Kullanım kılavuzu ve entegrasyon dokümanları paket içi docs/ klasöründe.</PackageReleaseNotes>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)icon.png" Pack="true" PackagePath="\" Condition="Exists('$(MSBuildThisFileDirectory)icon.png')" />
+  </ItemGroup>
+</Project>

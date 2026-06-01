@@ -23,6 +23,10 @@ appsettings.*.local.json
 secrets.json
 .env
 .env.*
+nuget-api-key.txt
+
+## NuGet pack çıktısı
+artifacts/
 
 ## Logs
 *.log

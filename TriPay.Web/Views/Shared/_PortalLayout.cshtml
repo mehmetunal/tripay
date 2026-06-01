@@ -19,7 +19,9 @@
     </header>
     <main>@RenderBody()</main>
     <footer class="border-t border-slate-200 py-8 text-center text-sm text-ink-500">
-        © @DateTime.Now.Year TriPay · <a href="/Contact" class="text-brand-700 hover:underline">İletişim</a>
+        © @DateTime.Now.Year @SiteLinks.CompanyName · TriPay ·
+        <a href="@SiteLinks.CompanyUrl" class="text-brand-700 hover:underline" target="_blank" rel="noopener">maggsoft.com.tr</a>
+        · <a href="/Contact" class="text-brand-700 hover:underline">İletişim</a>
     </footer>
 </body>
 </html>

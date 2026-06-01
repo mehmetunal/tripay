@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Meta paket: TriPay MSSQL + checkout + operatör — AddTriPayHosted -->
+  <Import Project="..\..\TriPay.NuGet.Version.props" />
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>false</SuppressDependenciesWhenPacking>
+    <PackageId>TriPay.Hosted</PackageId>
+    <Authors>Maggsoft; TriPay</Authors>
+    <Company>Maggsoft</Company>
+    <Product>TriPay</Product>
+    <Description>TriPay Hosted modu (.NET 8, 9, 10+) — TriPay MSSQL, checkout ve AddTriPayHosted. Maggsoft alt ürünü.</Description>
+    <PackageTags>tripay;payment;hosted;saas</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://tripay.com.tr</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/mehmetunal/tripay.git</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReleaseNotes>Kullanım kılavuzu: https://tripay.com.tr/docs — Tam markdown seti paket içi docs/ klasöründe.</PackageReleaseNotes>
+    <PackageIcon>icon.png</PackageIcon>
+    <IncludeSymbols>false</IncludeSymbols>
+  </PropertyGroup>
+
+  <Import Project="..\..\TriPay.NuGet.Docs.props" />
+
+  <ItemGroup>
+    <None Include="..\..\icon.png" Pack="true" PackagePath="\" />
+    <None Include="..\..\..\docs\nuget\TriPay.Hosted.md" Pack="true" PackagePath="\README.md" Link="README.md" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="TriPay.Framework" Version="$(TriPayPackageVersion)" />
+    <PackageReference Include="TriPay.Data" Version="$(TriPayPackageVersion)" />
+  </ItemGroup>
+</Project>

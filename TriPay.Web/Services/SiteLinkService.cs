@@ -10,6 +10,8 @@ public sealed class SiteLinkService(IOptions<TriPayWebOptions> options) : ISiteL
     public string PayDemoUrl => _opts.PayDemoUrl;
     public string AdminPanelUrl => _opts.AdminPanelUrl;
     public string ContactEmail => _opts.ContactEmail;
+    public string CompanyName => _opts.CompanyName;
+    public string CompanyUrl => _opts.CompanyUrl;
 
     public string Root => "/";
     public string DocsPath => "/docs";

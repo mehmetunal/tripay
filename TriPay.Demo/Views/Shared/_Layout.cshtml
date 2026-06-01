@@ -19,7 +19,7 @@
 <header>
     <nav class="navbar navbar-expand-sm demo-navbar @(ViewData["CheckoutPage"] as bool? == true ? "mb-0" : "mb-3")">
         <div class="container-fluid px-3 px-lg-4">
-            <a class="navbar-brand" href="https://tripay.com.tr" target="_blank" rel="noopener">TriPay</a>
+            <a class="navbar-brand" href="/" title="TriPay — Maggsoft alt ürünü">TriPay</a>
             <span class="badge badge-framework ms-2 align-middle">Framework demo</span>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#demoNav"
                     aria-controls="demoNav" aria-expanded="false" aria-label="Menü">
@@ -51,8 +51,8 @@ else
 {
     <footer class="border-top footer text-muted">
         <div class="container py-3">
-            &copy; @DateTime.Now.Year -
-            <a href="https://tripay.com.tr" target="_blank" rel="noopener">tripay.com.tr</a>
+            &copy; @DateTime.Now.Year TriPay ·
+            <a href="https://maggsoft.com.tr" target="_blank" rel="noopener">Maggsoft</a> alt ürünü
         </div>
     </footer>
 }

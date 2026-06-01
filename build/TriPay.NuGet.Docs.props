@@ -1,0 +1,27 @@
+<Project>
+  <!-- Tüm TriPay NuGet paketlerine markdown dokümantasyon ekler (paket içi docs/ klasörü) -->
+  <ItemGroup Label="TriPay paket dokümantasyonu">
+    <None Include="$(MSBuildThisFileDirectory)..\docs\nuget\INDEX.md"
+          Pack="true" PackagePath="docs\" Link="docs\INDEX.md" />
+    <None Include="$(MSBuildThisFileDirectory)..\docs\TriPay_Kullanim_Kilavuzu.md"
+          Pack="true" PackagePath="docs\" Link="docs\TriPay_Kullanim_Kilavuzu.md" />
+    <None Include="$(MSBuildThisFileDirectory)..\docs\TriPay_Program_cs_ve_DI.md"
+          Pack="true" PackagePath="docs\" Link="docs\TriPay_Program_cs_ve_DI.md" />
+    <None Include="$(MSBuildThisFileDirectory)..\docs\TriPay_Framework_Modu.md"
+          Pack="true" PackagePath="docs\" Link="docs\TriPay_Framework_Modu.md" />
+    <None Include="$(MSBuildThisFileDirectory)..\docs\TriPay_Hosted_Modu.md"
+          Pack="true" PackagePath="docs\" Link="docs\TriPay_Hosted_Modu.md" />
+    <None Include="$(MSBuildThisFileDirectory)..\docs\TriPay_Proje_Dokumani.md"
+          Pack="true" PackagePath="docs\" Link="docs\TriPay_Proje_Dokumani.md" />
+    <None Include="$(MSBuildThisFileDirectory)..\docs\TriPay_Kapsam_ve_Entegrasyon_Modelleri.md"
+          Pack="true" PackagePath="docs\" Link="docs\TriPay_Kapsam_ve_Entegrasyon_Modelleri.md" />
+    <None Include="$(MSBuildThisFileDirectory)..\docs\TriPay_Guvenlik_ve_Altrapi_Dokumani.md"
+          Pack="true" PackagePath="docs\" Link="docs\TriPay_Guvenlik_ve_Altrapi_Dokumani.md" />
+    <None Include="$(MSBuildThisFileDirectory)..\docs\TriPay_AddTriPay_Dusuk_Seviye.md"
+          Pack="true" PackagePath="docs\" Link="docs\TriPay_AddTriPay_Dusuk_Seviye.md" />
+    <None Include="$(MSBuildThisFileDirectory)..\docs\TriPay_Admin_ve_Veritabani.md"
+          Pack="true" PackagePath="docs\" Link="docs\TriPay_Admin_ve_Veritabani.md" />
+    <None Include="$(MSBuildThisFileDirectory)..\docs\TriPay_Test_Rehberi.md"
+          Pack="true" PackagePath="docs\" Link="docs\TriPay_Test_Rehberi.md" />
+  </ItemGroup>
+</Project>

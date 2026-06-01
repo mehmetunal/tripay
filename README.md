@@ -38,14 +38,14 @@ dotnet test
 
 Yapı ve kurallar: [TriPay_Test_Rehberi.md](./docs/TriPay_Test_Rehberi.md)
 
-## Hızlı başlangıç (NuGet / DLL)
+## Hızlı başlangıç (NuGet)
 
 ```bash
-# NuGet (yayın sonrası)
-dotnet add package TriPay --version 1.0.0   # sürüm: build/TriPay.NuGet.props
+# Framework modu (önerilen — kendi uygulamanız, TriPay DB yok)
+dotnet add package TriPay.Framework --version 1.0.0
 
-# Monorepo referansı
-dotnet add reference ../tripay/TriPay.Services/TriPay.Services.csproj
+# Hosted modu (TriPay MSSQL + checkout)
+dotnet add package TriPay.Hosted --version 1.0.0
 ```
 
 ```csharp
@@ -62,7 +62,9 @@ var result = await _payment.InitializePaymentAsync(new PaymentGatewayInitializeR
 });
 ```
 
-Detay: [Program.cs ve DI](./docs/TriPay_Program_cs_ve_DI.md) · [Kullanım kılavuzu](./docs/TriPay_Kullanim_Kilavuzu.md)
+Detay: [Program.cs ve DI](./docs/TriPay_Program_cs_ve_DI.md) · [Kullanım kılavuzu](./docs/TriPay_Kullanim_Kilavuzu.md) · [NuGet yayınlama](./build/NUGET.md)
+
+**TriPay**, [Maggsoft](https://maggsoft.com.tr) alt ürünüdür.
 
 ## Demo uygulama (MVC)
 

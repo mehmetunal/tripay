@@ -7,7 +7,11 @@
 @await Html.PartialAsync("_PageHero")
 <section class="mx-auto max-w-3xl px-4 py-16 prose-doc sm:px-6 lg:px-8">
     <h2 class="text-xl font-bold text-ink-950">Veri sorumlusu</h2>
-    <p>İletişim formu ve kurumsal iletişim kanalları üzerinden toplanan kişisel veriler, talebin cevaplanması amacıyla işlenir.</p>
+    <p>
+        TriPay markası altındaki kurumsal web sitesi ve iletişim kanalları kapsamında veri sorumlusu
+        <a href="@SiteLinks.CompanyUrl" target="_blank" rel="noopener">@SiteLinks.CompanyName</a>’dur (TriPay, Maggsoft alt ürünüdür).
+        İletişim formu aracılığıyla toplanan kişisel veriler, talebin cevaplanması amacıyla işlenir.
+    </p>
     <h2>İşlenen veriler</h2>
     <p>Ad soyad, e-posta, şirket unvanı ve mesaj içeriği; isteğe bağlı olarak proje detayları.</p>
     <h2>Framework modu</h2>

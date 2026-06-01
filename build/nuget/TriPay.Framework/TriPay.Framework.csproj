@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Meta paket: üye işyeri / kendi uygulamanız — AddTriPayFramework -->
+  <Import Project="..\..\TriPay.NuGet.Version.props" />
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <SuppressDependenciesWhenPacking>false</SuppressDependenciesWhenPacking>
+    <PackageId>TriPay.Framework</PackageId>
+    <Authors>Maggsoft; TriPay</Authors>
+    <Company>Maggsoft</Company>
+    <Product>TriPay</Product>
+    <Description>TriPay Framework modu (.NET 8, 9, 10+) — kendi checkout; AddTriPayFramework. TriPay MSSQL zorunlu değildir. Maggsoft alt ürünü.</Description>
+    <PackageTags>tripay;payment;framework;virtual-pos</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://tripay.com.tr</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/mehmetunal/tripay.git</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReleaseNotes>Kullanım kılavuzu: https://tripay.com.tr/docs — Tam markdown seti paket içi docs/ klasöründe.</PackageReleaseNotes>
+    <PackageIcon>icon.png</PackageIcon>
+    <IncludeSymbols>false</IncludeSymbols>
+  </PropertyGroup>
+
+  <Import Project="..\..\TriPay.NuGet.Docs.props" />
+
+  <ItemGroup>
+    <None Include="..\..\icon.png" Pack="true" PackagePath="\" />
+    <None Include="..\..\..\docs\nuget\TriPay.Framework.md" Pack="true" PackagePath="\README.md" Link="README.md" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="TriPay" Version="$(TriPayPackageVersion)" />
+    <PackageReference Include="TriPay.Infrastructure" Version="$(TriPayPackageVersion)" />
+    <PackageReference Include="TriPay.Persistence" Version="$(TriPayPackageVersion)" />
+  </ItemGroup>
+</Project>

@@ -18,7 +18,14 @@
     <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
 
-  <!-- NuGet paket meta verisi: yalnızca TriPay.Services (PackageId: TriPay) -->
-  <Import Project="$(MSBuildThisFileDirectory)build\TriPay.NuGet.props"
-          Condition="'$(MSBuildProjectName)' == 'TriPay.Services'" />
+  <!-- NuGet: kütüphane projeleri -->
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'TriPay.Core' Or '$(MSBuildProjectName)' == 'TriPay.Services' Or '$(MSBuildProjectName)' == 'TriPay.Data' Or '$(MSBuildProjectName)' == 'TriPay.Infrastructure' Or '$(MSBuildProjectName)' == 'TriPay.Persistence'">
+    <IsTriPayNuGetLibrary>true</IsTriPayNuGetLibrary>
+  </PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)build\TriPay.NuGet.Common.props"
+          Condition="'$(IsTriPayNuGetLibrary)' == 'true'" />
+  <Import Project="$(MSBuildThisFileDirectory)build\TriPay.NuGet.PackageIds.props"
+          Condition="'$(IsTriPayNuGetLibrary)' == 'true'" />
+  <Import Project="$(MSBuildThisFileDirectory)build\TriPay.NuGet.Docs.props"
+          Condition="'$(IsTriPayNuGetLibrary)' == 'true'" />
 </Project>

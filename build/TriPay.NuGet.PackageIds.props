@@ -1,0 +1,53 @@
+<Project>
+  <!-- Kütüphane projeleri: PackageId ve README -->
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'TriPay.Core'">
+    <PackageId>TriPay.Core</PackageId>
+    <Description>TriPay çekirdek sözleşmeleri, gateway sabitleri ve ortak modeller. .NET 8, 9, 10 ve üzeri.</Description>
+    <PackageTags>tripay;payment;core</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'TriPay.Services'">
+    <PackageId>TriPay</PackageId>
+    <Description>TriPay ödeme motoru — sanal POS sağlayıcıları ve IPaymentGatewayService (AddTriPay). .NET 8+. Framework/Hosted için TriPay.Framework veya TriPay.Hosted.</Description>
+    <PackageTags>tripay;payment;virtual-pos;iyzico;vakifbank;vakifpays</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'TriPay.Data'">
+    <PackageId>TriPay.Data</PackageId>
+    <Description>TriPay EF Core, FluentMigrator ve Identity — Hosted mod ve operatör paneli için veritabanı katmanı.</Description>
+    <PackageTags>tripay;payment;efcore;mssql</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'TriPay.Infrastructure'">
+    <PackageId>TriPay.Infrastructure</PackageId>
+    <Description>TriPay altyapı — Redis 3D state, RabbitMQ, gateway metadata (AddTriPayRedis).</Description>
+    <PackageTags>tripay;payment;redis;rabbitmq</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(MSBuildProjectName)' == 'TriPay.Persistence'">
+    <PackageId>TriPay.Persistence</PackageId>
+    <Description>TriPay DI uzantıları — AddTriPayFramework ve AddTriPayHosted. Genelde TriPay.Framework / TriPay.Hosted meta paketleri ile tüketilir.</Description>
+    <PackageTags>tripay;payment;dependency-injection</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(MSBuildProjectName)' == 'TriPay.Core'">
+    <None Include="$(MSBuildThisFileDirectory)..\docs\nuget\TriPay.Core.md" Pack="true" PackagePath="\README.md" Link="README.md" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(MSBuildProjectName)' == 'TriPay.Services'">
+    <None Include="$(MSBuildThisFileDirectory)..\docs\nuget\TriPay.md" Pack="true" PackagePath="\README.md" Link="README.md" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(MSBuildProjectName)' == 'TriPay.Data'">
+    <None Include="$(MSBuildThisFileDirectory)..\docs\nuget\TriPay.Data.md" Pack="true" PackagePath="\README.md" Link="README.md" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(MSBuildProjectName)' == 'TriPay.Infrastructure'">
+    <None Include="$(MSBuildThisFileDirectory)..\docs\nuget\TriPay.Infrastructure.md" Pack="true" PackagePath="\README.md" Link="README.md" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(MSBuildProjectName)' == 'TriPay.Persistence'">
+    <None Include="$(MSBuildThisFileDirectory)..\docs\nuget\TriPay.Persistence.md" Pack="true" PackagePath="\README.md" Link="README.md" />
+  </ItemGroup>
+</Project>

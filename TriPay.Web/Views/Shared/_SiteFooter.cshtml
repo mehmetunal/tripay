@@ -6,6 +6,11 @@
                 Türkiye’deki sanal POS ve ödeme kuruluşlarını tek platformda birleştiren ödeme altyapısı.
                 Banka sözleşmeniz ve müşteri veriniz sizde kalır; TriPay öngörülebilir entegrasyon sağlar.
             </p>
+            <p class="mt-3 text-sm text-slate-500">
+                TriPay,
+                <a href="@SiteLinks.CompanyUrl" class="font-medium text-brand-400 hover:text-brand-300" target="_blank" rel="noopener">@SiteLinks.CompanyName</a>
+                alt ürünüdür.
+            </p>
             <p class="mt-4 text-sm">
                 <a href="mailto:@SiteLinks.ContactEmail" class="font-medium text-brand-400 hover:text-brand-300">@SiteLinks.ContactEmail</a>
             </p>
@@ -34,12 +39,13 @@
                 <li><a asp-area="" asp-controller="Corporate" asp-action="About" class="hover:text-white">Hakkımızda</a></li>
                 <li><a asp-area="" asp-controller="Security" asp-action="Index" class="hover:text-white">Güvenlik</a></li>
                 <li><a asp-area="" asp-controller="Contact" asp-action="Index" class="hover:text-white">İletişim ve demo</a></li>
+                <li><a href="@SiteLinks.CompanyUrl" class="hover:text-white" target="_blank" rel="noopener">@SiteLinks.CompanyName</a></li>
             </ul>
         </div>
     </div>
     <div class="border-t border-slate-800">
         <div class="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-6 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-            <span>© @DateTime.Now.Year TriPay. Tüm hakları saklıdır.</span>
+            <span>© @DateTime.Now.Year @SiteLinks.CompanyName · TriPay. Tüm hakları saklıdır.</span>
             <div class="flex flex-wrap gap-4">
                 <a asp-area="" asp-controller="Legal" asp-action="Kvkk" class="hover:text-slate-300">KVKK</a>
                 <a asp-area="" asp-controller="Legal" asp-action="Privacy" class="hover:text-slate-300">Gizlilik</a>

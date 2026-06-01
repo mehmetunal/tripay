@@ -1,0 +1,44 @@
+# PR ve main: derleme + test (NuGet yayını nuget-publish.yml)
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Restore
+        run: dotnet restore TriPay.sln
+
+      - name: Build
+        run: dotnet build TriPay.sln -c Release --no-restore
+
+      - name: Test
+        run: dotnet test TriPay.sln -c Release --no-build --verbosity normal
+
+  nuget-pack-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
+
+      - name: NuGet pack (push yok)
+        run: |
+          chmod +x build/pack-and-push.sh
+          ./build/pack-and-push.sh --pack-only
