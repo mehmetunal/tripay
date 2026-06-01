@@ -37,6 +37,8 @@ jobs:
         run: dotnet build TriPay.sln -c Release --no-restore -p:RunTestsOnBuild=false
 
       - name: Test
+        env:
+          ASPNETCORE_ENVIRONMENT: Testing
         run: dotnet test TriPay.sln -c Release --no-build --verbosity normal
 
   nuget-pack-verify:

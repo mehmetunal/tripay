@@ -1,18 +1,20 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace TriPay.Tests.Integration;
 
-/// <summary>Web entegrasyon testleri — Redis bellek içi modda.</summary>
+/// <summary>Demo web entegrasyon testleri — Redis/RabbitMQ kapalı (bellek içi).</summary>
 public sealed class TriPayWebApplicationFactory : WebApplicationFactory<Program>
 {
-    /// <summary>Test ortamında Redis devre dışı (InMemory cache).</summary>
+    /// <inheritdoc />
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
+        builder.UseEnvironment("Testing");
+
         builder.ConfigureAppConfiguration((_, config) =>
         {
+            // appsettings.json'dan sonra eklenir; test değerleri kazanır
             config.AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["TriPay:Redis:Enabled"] = "false",
