@@ -16,7 +16,6 @@
   <ItemGroup>
     <ProjectReference Include="..\TriPay.Core\TriPay.Core.csproj" />
     <ProjectReference Include="..\TriPay.Data\TriPay.Data.csproj" />
-    <ProjectReference Include="..\TriPay.Services\TriPay.Services.csproj" />
   </ItemGroup>
 
 </Project>

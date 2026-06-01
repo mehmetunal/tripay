@@ -1,4 +1,4 @@
-namespace TriPay.Services.Configuration;
+namespace TriPay.Core.Gateways;
 
 /// <summary>Gateway ayarlarını (appsettings TriPay:Gateways veya ileride veritabanı) sağlar.</summary>
 public interface IGatewaySettingsProvider

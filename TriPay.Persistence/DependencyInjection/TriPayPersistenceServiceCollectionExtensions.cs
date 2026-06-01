@@ -1,7 +1,9 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using TriPay.Core.Gateways;
 using TriPay.Core.Options;
 using TriPay.Persistence.Checkout;
+using TriPay.Persistence.Gateways;
 using TriPay.Services.Checkout;
 
 namespace TriPay.Persistence.DependencyInjection;
@@ -22,7 +24,12 @@ public static class TriPayPersistenceServiceCollectionExtensions
             ?? new TriPayPersistenceOptions();
 
         if (persistence.Enabled)
+        {
             services.AddScoped<IPaymentCheckoutService, PaymentCheckoutService>();
+            
+            // Hosted modda credential'lar DB metadata ile birleştirilir.
+            services.AddScoped<IGatewaySettingsProvider, DbEnrichedGatewaySettingsProvider>();
+        }
 
         return services;
     }

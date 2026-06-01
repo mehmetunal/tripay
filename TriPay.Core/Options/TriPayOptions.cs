@@ -1,7 +1,6 @@
-using TriPay.Core.Options;
-using TriPay.Services;
+using TriPay.Core.Gateways;
 
-namespace TriPay.Services.Configuration;
+namespace TriPay.Core.Options;
 
 /// <summary>appsettings.json içindeki TriPay kök bölümünün bağlandığı seçenek sınıfıdır.</summary>
 public sealed class TriPayOptions

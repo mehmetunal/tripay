@@ -1,5 +1,6 @@
 using TriPay.Core.Common;
 using TriPay.Core.Idempotency;
+using TriPay.Core.Gateways;
 using TriPay.Services.Interfaces;
 using TriPay.Services.Models;
 

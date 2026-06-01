@@ -3,7 +3,6 @@
   <ItemGroup>
     <ProjectReference Include="..\TriPay.Core\TriPay.Core.csproj" PrivateAssets="all" />
     <ProjectReference Include="..\TriPay.Infrastructure\TriPay.Infrastructure.csproj" PrivateAssets="all" />
-    <ProjectReference Include="..\TriPay.Persistence\TriPay.Persistence.csproj" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

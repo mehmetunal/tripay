@@ -1,4 +1,6 @@
 using Microsoft.Extensions.Options;
+using TriPay.Core.Gateways;
+using TriPay.Core.Options;
 
 namespace TriPay.Services.Configuration;
 

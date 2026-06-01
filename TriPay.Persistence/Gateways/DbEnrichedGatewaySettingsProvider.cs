@@ -1,7 +1,8 @@
 using TriPay.Core.Gateways;
+using TriPay.Infrastructure.Gateways;
 using TriPay.Services.Configuration;
 
-namespace TriPay.Infrastructure.Gateways;
+namespace TriPay.Persistence.Gateways;
 
 /// <summary>
 /// appsettings credential'ları + veritabanı URL/teknik ayarlarını birleştirir.

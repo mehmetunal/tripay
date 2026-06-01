@@ -1,6 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using TriPay.Services.Configuration;
+using TriPay.Core.Gateways;
+using TriPay.Core.Options;
 using TriPay.Services.Interfaces;
 using TriPay.Services.Providers.Iyzico;
 using TriPay.Services.Providers.Vakifbank;

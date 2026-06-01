@@ -5,7 +5,6 @@ using TriPay.Infrastructure.Configuration;
 using TriPay.Infrastructure.Gateways;
 using TriPay.Infrastructure.Messaging;
 using TriPay.Infrastructure.Workers;
-using TriPay.Services.Configuration;
 
 namespace TriPay.Infrastructure.DependencyInjection;
 
@@ -17,9 +16,7 @@ public static class TriPayInfrastructureServiceCollectionExtensions
     {
         services.AddTriPayRedis(configuration);
 
-        services.AddSingleton<ConfigurationGatewaySettingsProvider>();
         services.AddScoped<IGatewayMetadataService, RedisCachedGatewayMetadataService>();
-        services.AddScoped<IGatewaySettingsProvider, DbEnrichedGatewaySettingsProvider>();
 
         services.Configure<TriPayRabbitMqOptions>(configuration.GetSection(TriPayRabbitMqOptions.SectionName));
         services.AddSingleton<RabbitMqOutboxPublisher>();

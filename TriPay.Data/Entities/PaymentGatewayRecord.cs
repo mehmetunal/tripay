@@ -1,3 +1,5 @@
+using TriPay.Core.Gateways;
+
 namespace TriPay.Data.Entities;
 
 /// <summary>Ödeme kanalı tanımı (iyzico, Vakıfbank vb.).</summary>

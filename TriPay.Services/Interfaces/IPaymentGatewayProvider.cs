@@ -1,4 +1,5 @@
 using TriPay.Core.Common;
+using TriPay.Core.Gateways;
 using TriPay.Services.Models;
 
 namespace TriPay.Services.Interfaces;

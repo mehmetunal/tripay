@@ -28,6 +28,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\TriPay.Services\TriPay.Services.csproj" />
+    <ProjectReference Include="..\..\..\TriPay.Persistence\TriPay.Persistence.csproj" />
     <ProjectReference Include="..\..\..\TriPay.Data\TriPay.Data.csproj" PrivateAssets="all" />
   </ItemGroup>
 
@@ -38,7 +39,7 @@
   <Target Name="CopyProjectReferencesToPackage" DependsOnTargets="ResolveReferences">
     <ItemGroup>
       <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference'))" 
-                            Condition="'%(Filename)' == 'TriPay.Data'" />
+                            Condition="'%(Filename)' == 'TriPay.Data' Or '%(Filename)' == 'TriPay.Persistence'" />
     </ItemGroup>
   </Target>
 </Project>

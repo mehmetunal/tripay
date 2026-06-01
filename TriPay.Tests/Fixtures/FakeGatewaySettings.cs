@@ -1,4 +1,5 @@
-using TriPay.Services.Configuration;
+using TriPay.Core.Gateways;
+using TriPay.Core.Options;
 using TriPay.Services.Interfaces;
 
 namespace TriPay.Tests.Fixtures;

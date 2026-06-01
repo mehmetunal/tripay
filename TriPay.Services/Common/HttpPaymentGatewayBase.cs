@@ -2,7 +2,8 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using TriPay.Services.Configuration;
+using TriPay.Core.Gateways;
+using TriPay.Core.Options;
 using TriPay.Services.Diagnostics;
 using TriPay.Services.Models;
 

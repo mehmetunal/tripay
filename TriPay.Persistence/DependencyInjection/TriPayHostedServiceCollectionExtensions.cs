@@ -1,11 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using TriPay.Core.Gateways;
-using TriPay.Core.Options;
 using TriPay.Data.DependencyInjection;
 using TriPay.Infrastructure.DependencyInjection;
-using TriPay.Infrastructure.Gateways;
-using TriPay.Services.Configuration;
 using TriPay.Services.DependencyInjection;
 
 namespace TriPay.Persistence.DependencyInjection;
@@ -23,28 +19,6 @@ public static class TriPayHostedServiceCollectionExtensions
         services.AddTriPayInfrastructure(configuration);
         services.AddTriPay(configuration);
         services.AddTriPayPersistence(configuration);
-        return services;
-    }
-
-    /// <summary>
-    /// Framework modu: provider'lar + Redis; TriPay MSSQL ve checkout <strong>yok</strong>.
-    /// Banka bilgileri üye işyeri <c>appsettings</c> / Vault'tan gelir.
-    /// </summary>
-    public static IServiceCollection AddTriPayFramework(this IServiceCollection services, IConfiguration configuration)
-    {
-        services.AddTriPay(configuration);
-        services.AddTriPayRedis(configuration);
-        // Vakıfbank provider ctor; Hosted MSSQL metadata olmadan çözülemez — bellek içi varsayılanlar.
-        services.AddSingleton<IGatewayMetadataService>(_ => InMemoryGatewayMetadataService.CreateWithVakifbankDefaults());
-        services.AddSingleton<ConfigurationGatewaySettingsProvider>();
-        services.AddSingleton<IGatewaySettingsProvider>(sp =>
-            sp.GetRequiredService<ConfigurationGatewaySettingsProvider>());
-        services.Configure<TriPayPersistenceOptions>(o =>
-        {
-            o.Enabled = false;
-            o.PersistTransactionLogs = false;
-            o.EnableOutbox = false;
-        });
         return services;
     }
 }

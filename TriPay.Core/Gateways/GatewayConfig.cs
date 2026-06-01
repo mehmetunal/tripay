@@ -1,4 +1,4 @@
-namespace TriPay.Services.Configuration;
+namespace TriPay.Core.Gateways;
 
 /// <summary>Tek bir ödeme kanalının appsettings veya veritabanından okunan yapılandırmasıdır.</summary>
 public sealed class GatewayConfig

@@ -3,7 +3,8 @@ using TriPay.Services;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using TriPay.Core.Common;
-using TriPay.Services.Configuration;
+using TriPay.Core.Gateways;
+using TriPay.Core.Options;
 using TriPay.Services.Models;
 using TriPay.Services.Diagnostics;
 using TriPay.Services.Providers.VakifPays.Helpers;
@@ -111,7 +112,7 @@ public sealed class VakifPaysGatewayProvider : HttpPaymentGatewayBase
         if (!await InitializeVakifPaysSettingsAsync())
             return Result<PaymentGatewayInstallmentResponseDto>.Failure("VakıfPayS ayarları yüklenemedi.");
 
-        var rawCard = string.IsNullOrWhiteSpace(request.CardNumber) ? request.BinNumber : request.CardNumber;
+        var rawCard = string.IsNullOrWhiteSpace(request.CardNumber) ? (request.BinNumber ?? "") : request.CardNumber;
         var digits = VakifPaysHttpHelper.DigitsOnly(rawCard);
         if (digits.Length < 6)
             return Result<PaymentGatewayInstallmentResponseDto>.Failure("Geçersiz kart numarası.");

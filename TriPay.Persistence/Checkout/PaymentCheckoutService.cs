@@ -5,13 +5,14 @@ using TriPay.Core.Redis;
 using TriPay.Data.Constants;
 using TriPay.Data.Entities;
 using TriPay.Data.Repositories;
+using TriPay.Core.Gateways;
+using TriPay.Core.Options;
 using TriPay.Services;
 using TriPay.Services.Checkout;
 using TriPay.Services.Interfaces;
 using TriPay.Services.Messaging;
 using TriPay.Services.Models;
 using TriPay.Services.Providers.VakifPays.Models;
-using TriPay.Core.Options;
 using TriPay.Services.Security;
 using Microsoft.Extensions.Options;
 

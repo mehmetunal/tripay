@@ -1,4 +1,4 @@
-namespace TriPay.Services;
+namespace TriPay.Core.Gateways;
 
 /// <summary>
 /// Kayıtlı ödeme gateway kodları. Magic string kullanılmaz; Factory ve DTO atamalarında bu sabitler kullanılır.
