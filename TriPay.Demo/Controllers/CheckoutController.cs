@@ -6,8 +6,6 @@ using TriPay.Demo.Services;
 using TriPay.Core.Gateways;
 using TriPay.Core.Options;
 using TriPay.Services;
-using TriPay.Core.Gateways;
-using TriPay.Core.Options;
 using TriPay.Services.Diagnostics;
 using TriPay.Services.Providers.VakifPays.Models;
 

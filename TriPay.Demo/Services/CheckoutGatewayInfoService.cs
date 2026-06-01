@@ -2,8 +2,6 @@ using Microsoft.Extensions.Options;
 using TriPay.Core.Gateways;
 using TriPay.Core.Options;
 using TriPay.Services;
-using TriPay.Core.Gateways;
-using TriPay.Core.Options;
 
 namespace TriPay.Demo.Services;
 

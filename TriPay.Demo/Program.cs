@@ -1,7 +1,7 @@
 // TriPay demo: Framework modu (AddTriPayFramework) — ödeme verisi üye işyeri uygulamasında kalır.
 using TriPay.Core.Redis;
 using TriPay.Demo.Services;
-using TriPay.Persistence.DependencyInjection;
+using TriPay.Services.DependencyInjection;
 using TriPay.Services.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
