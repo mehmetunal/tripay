@@ -11,6 +11,9 @@ def get_env_or_exit(name: str) -> str:
     value = os.getenv(name)
     if value:
         return value
+    # PR_NUMBER opsiyonel olabilir push durumunda
+    if name == "PR_NUMBER":
+        return ""
     print(f"❌ Hata: {name} ortam değişkeni bulunamadı.")
     sys.exit(1)
 
@@ -31,7 +34,7 @@ def read_diff(path: str) -> str:
 
 
 def call_gemini(api_key: str, system_prompt: str, git_diff: str) -> dict[str, Any]:
-    model_name = "gemini-2.0-flash"  # trimango'da 2.5 yazılmıştı ama 2.0 daha güncel/doğru olabilir. Kullanıcı aynısını istediği için 2.0-flash kullanıyorum.
+    model_name = "gemini-2.0-flash"
     url = (
         f"https://generativelanguage.googleapis.com/v1beta/models/"
         f"{model_name}:generateContent?key={api_key}"
@@ -101,6 +104,28 @@ def post_inline_comment(
     return False
 
 
+def post_commit_comment(
+    api_url: str,
+    repo: str,
+    commit_sha: str,
+    headers: dict[str, str],
+    file_path: str,
+    line: int,
+    body: str,
+) -> bool:
+    url = f"{api_url}/repos/{repo}/commits/{commit_sha}/comments"
+    payload = {
+        "body": body,
+        "path": file_path,
+        "line": line,
+    }
+    response = requests.post(url, headers=headers, json=payload, timeout=30)
+    if response.status_code == 201:
+        return True
+    print(f"⚠️ Commit yorumu eklenemedi ({file_path}:{line}): {response.status_code} - {response.text}")
+    return False
+
+
 def post_pr_summary(api_url: str, repo: str, pr_number: str, headers: dict[str, str], body: str) -> None:
     url = f"{api_url}/repos/{repo}/issues/{pr_number}/comments"
     response = requests.post(url, headers=headers, json={"body": body}, timeout=30)
@@ -108,12 +133,21 @@ def post_pr_summary(api_url: str, repo: str, pr_number: str, headers: dict[str, 
         print(f"⚠️ PR özeti eklenemedi: {response.status_code} - {response.text}")
 
 
+def post_commit_summary(api_url: str, repo: str, commit_sha: str, headers: dict[str, str], body: str) -> None:
+    url = f"{api_url}/repos/{repo}/commits/{commit_sha}/comments"
+    response = requests.post(url, headers=headers, json={"body": body}, timeout=30)
+    if response.status_code != 201:
+        print(f"⚠️ Commit özeti eklenemedi: {response.status_code} - {response.text}")
+
+
 def main() -> None:
     ai_api_key = get_env_or_exit("AI_API_KEY")
     github_token = get_env_or_exit("GITHUB_TOKEN")
-    pr_number = get_env_or_exit("PR_NUMBER")
+    pr_number = os.getenv("PR_NUMBER", "")
     repository = get_env_or_exit("REPOSITORY")
     github_api_url = os.getenv("GITHUB_API_URL", "https://api.github.com")
+    event_name = os.getenv("EVENT_NAME", "push")
+    commit_sha = os.getenv("COMMIT_SHA", "")
 
     git_diff = read_diff("pr_diff.txt")
     max_comments = 15
@@ -154,7 +188,6 @@ Kurallar:
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
     }
-    commit_id = get_pr_head_sha(github_api_url, repository, pr_number, gh_headers)
 
     severity_map = {
         "critical": "🚨 KRİTİK",
@@ -164,6 +197,13 @@ Kurallar:
     }
     blocking = False
     posted_count = 0
+
+    is_pr = event_name == "pull_request" and pr_number
+    target_commit_id = ""
+    if is_pr:
+        target_commit_id = get_pr_head_sha(github_api_url, repository, pr_number, gh_headers)
+    else:
+        target_commit_id = commit_sha
 
     for item in comments[:max_comments]:
         file_path = item.get("file")
@@ -176,16 +216,30 @@ Kurallar:
             continue
 
         comment_body = f"### {severity_map.get(severity, 'ℹ️ BİLGİ')}: {title}\n\n{body}"
-        added = post_inline_comment(
-            github_api_url,
-            repository,
-            pr_number,
-            gh_headers,
-            commit_id,
-            str(file_path),
-            line,
-            comment_body,
-        )
+        
+        added = False
+        if is_pr:
+            added = post_inline_comment(
+                github_api_url,
+                repository,
+                pr_number,
+                gh_headers,
+                target_commit_id,
+                str(file_path),
+                line,
+                comment_body,
+            )
+        elif target_commit_id:
+            added = post_commit_comment(
+                github_api_url,
+                repository,
+                target_commit_id,
+                gh_headers,
+                str(file_path),
+                line,
+                comment_body,
+            )
+
         if added:
             posted_count += 1
 
@@ -195,10 +249,17 @@ Kurallar:
     result_text = (
         f"## AI Code Review Özeti\n\n"
         f"**Özet:** {summary}\n\n"
-        f"- Eklenen satır içi yorum: {posted_count}\n"
+        f"- Eklenen yorum: {posted_count}\n"
         f"- Bloklayıcı hata (major/critical): {'Evet' if blocking else 'Hayır'}\n"
     )
-    post_pr_summary(github_api_url, repository, pr_number, gh_headers, result_text)
+
+    if is_pr:
+        post_pr_summary(github_api_url, repository, pr_number, gh_headers, result_text)
+    elif target_commit_id:
+        post_commit_summary(github_api_url, repository, target_commit_id, gh_headers, result_text)
+
+    print(f"🤖 Özet: {summary}")
+    print(f"📊 Yorum Sayısı: {posted_count}")
 
     if blocking:
         print("❌ Bloklayıcı hata tespit edildi, workflow fail ediliyor.")

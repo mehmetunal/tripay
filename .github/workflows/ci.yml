@@ -47,7 +47,6 @@ jobs:
 
   code-quality:
     name: Analyze Code Quality
-    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
@@ -65,10 +64,16 @@ jobs:
       - name: Install Dependencies
         run: pip install requests
 
-      - name: Prepare PR Diff
+      - name: Prepare Diff
         run: |
-          git fetch origin "${{ github.base_ref }}" --depth=1
-          git diff --unified=3 "origin/${{ github.base_ref }}...HEAD" > pr_diff.txt
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            git fetch origin "${{ github.base_ref }}" --depth=1
+            git diff --unified=3 "origin/${{ github.base_ref }}...HEAD" > pr_diff.txt
+          else
+            # Push durumunda son commit'in diff'ini al (veya son iki commit arası)
+            git diff --unified=3 HEAD~1 HEAD > pr_diff.txt
+          fi
+          echo "Diff boyutu (byte): $(wc -c < pr_diff.txt)"
 
       - name: Run AI Reviewer Script
         env:
@@ -77,6 +82,8 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           REPOSITORY: ${{ github.repository }}
           GITHUB_API_URL: ${{ github.api_url }}
+          EVENT_NAME: ${{ github.event_name }}
+          COMMIT_SHA: ${{ github.sha }}
         run: python .github/scripts/ai_reviewer.py
 
   # PR ve main: tek job; main'de ek adımlarla push + sürüm commit
