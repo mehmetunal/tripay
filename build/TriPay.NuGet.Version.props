@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup Label="TriPay NuGet sürümü (tek kaynak)">
-    <TriPayPackageVersion>1.0.4</TriPayPackageVersion>
+    <TriPayPackageVersion>1.0.5</TriPayPackageVersion>
     <Version>$(TriPayPackageVersion)</Version>
   </PropertyGroup>
 </Project>
