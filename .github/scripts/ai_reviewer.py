@@ -34,7 +34,8 @@ def read_diff(path: str) -> str:
 
 
 def call_gemini(api_key: str, system_prompt: str, git_diff: str) -> dict[str, Any]:
-    model_name = "gemini-2.0-flash"
+    # gemini-2.0-flash free tier limitleri çok düşük olabiliyor, 1.5-flash daha geniş kotalı.
+    model_name = "gemini-1.5-flash"
     url = (
         f"https://generativelanguage.googleapis.com/v1beta/models/"
         f"{model_name}:generateContent?key={api_key}"
@@ -49,7 +50,7 @@ def call_gemini(api_key: str, system_prompt: str, git_diff: str) -> dict[str, An
         },
     }
 
-    delays = [1, 2, 4]
+    delays = [5, 10, 20] # 429 hataları için bekleme sürelerini artırdık
     last_error = None
     for idx, delay in enumerate(delays, start=1):
         try:
@@ -58,13 +59,23 @@ def call_gemini(api_key: str, system_prompt: str, git_diff: str) -> dict[str, An
                 data = response.json()
                 raw = data["candidates"][0]["content"]["parts"][0]["text"].strip()
                 return json.loads(raw)
+            
+            if response.status_code == 429:
+                print(f"⚠️ Gemini Kota Aşımı (429). {delay} saniye sonra tekrar denenecek... ({idx}/{len(delays)})")
+                time.sleep(delay)
+                last_error = "Quota Exceeded (429)"
+                continue
 
             last_error = f"{response.status_code} - {response.text}"
         except Exception as ex:
             last_error = str(ex)
 
         if idx < len(delays):
-            time.sleep(delay)
+            time.sleep(1)
+
+    if "429" in str(last_error) or "Quota" in str(last_error):
+        print(f"ℹ️ Gemini kotası tamamen dolmuş durumda. Build'i bloklamamak için inceleme atlanıyor.")
+        return {"summary": "Gemini kota aşımı nedeniyle inceleme yapılamadı.", "comments": []}
 
     print(f"❌ Gemini çağrısı başarısız: {last_error}")
     sys.exit(1)
