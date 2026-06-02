@@ -35,7 +35,8 @@ def read_diff(path: str) -> str:
 
 def call_gemini(api_key: str, system_prompt: str, git_diff: str) -> dict[str, Any]:
     # Kota limitlerine takılmamak için denenecek modeller sırasıyla
-    models_to_try = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
+    # gemini-1.5-flash-8b genellikle en yüksek kotaya sahiptir.
+    models_to_try = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-1.5-pro"]
     
     payload = {
         "contents": [{"parts": [{"text": f"İncelenecek unified diff:\n\n{git_diff}"}]}],
@@ -76,15 +77,22 @@ def call_gemini(api_key: str, system_prompt: str, git_diff: str) -> dict[str, An
                         print(f"   {model_name} için denemeler bitti, sıradaki modele geçiliyor.")
                         break # Sıradaki modele geç
 
+                if response.status_code == 404:
+                    print(f"⚠️ {model_name} modeli bulunamadı (404). Sıradaki modele geçiliyor.")
+                    last_error = f"Model {model_name} not found (404)"
+                    break
+
                 last_error = f"{response.status_code} - {response.text}"
-                break # Diğer hatalarda (400, 401 vb.) retry yapma, sıradaki modele geçmeyi dene
+                print(f"⚠️ {model_name} hatası: {last_error}. Sıradaki modele geçiliyor.")
+                break # Diğer hatalarda sıradaki modele geçmeyi dene
             except Exception as ex:
                 last_error = str(ex)
+                print(f"⚠️ {model_name} beklenmedik hata: {last_error}")
                 break
 
-    if "429" in str(last_error) or "Quota" in str(last_error):
-        print(f"ℹ️ Tüm Gemini modellerinin kotası dolmuş durumda. Build'i bloklamamak için inceleme atlanıyor.")
-        return {"summary": "Tüm Gemini modellerinde kota aşımı nedeniyle inceleme yapılamadı.", "comments": []}
+    if any(err in str(last_error) for err in ["429", "Quota", "404", "not found"]):
+        print(f"ℹ️ Uygun bir Gemini modeli bulunamadı veya kotalar dolmuş durumda. Build'i bloklamamak için inceleme atlanıyor.")
+        return {"summary": "Gemini modelleri erişilemez veya kota aşımı nedeniyle inceleme yapılamadı.", "comments": []}
 
     print(f"❌ Gemini çağrısı başarısız: {last_error}")
     sys.exit(1)
