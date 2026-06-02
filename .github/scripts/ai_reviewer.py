@@ -34,13 +34,9 @@ def read_diff(path: str) -> str:
 
 
 def call_gemini(api_key: str, system_prompt: str, git_diff: str) -> dict[str, Any]:
-    # gemini-2.0-flash free tier limitleri çok düşük olabiliyor, 1.5-flash daha geniş kotalı.
-    model_name = "gemini-1.5-flash"
-    url = (
-        f"https://generativelanguage.googleapis.com/v1beta/models/"
-        f"{model_name}:generateContent?key={api_key}"
-    )
-
+    # Kota limitlerine takılmamak için denenecek modeller sırasıyla
+    models_to_try = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
+    
     payload = {
         "contents": [{"parts": [{"text": f"İncelenecek unified diff:\n\n{git_diff}"}]}],
         "systemInstruction": {"parts": [{"text": system_prompt}]},
@@ -50,32 +46,45 @@ def call_gemini(api_key: str, system_prompt: str, git_diff: str) -> dict[str, An
         },
     }
 
-    delays = [5, 10, 20] # 429 hataları için bekleme sürelerini artırdık
     last_error = None
-    for idx, delay in enumerate(delays, start=1):
-        try:
-            response = requests.post(url, json=payload, timeout=120)
-            if response.status_code == 200:
-                data = response.json()
-                raw = data["candidates"][0]["content"]["parts"][0]["text"].strip()
-                return json.loads(raw)
-            
-            if response.status_code == 429:
-                print(f"⚠️ Gemini Kota Aşımı (429). {delay} saniye sonra tekrar denenecek... ({idx}/{len(delays)})")
-                time.sleep(delay)
-                last_error = "Quota Exceeded (429)"
-                continue
+    
+    for model_name in models_to_try:
+        print(f"🤖 {model_name} modeli ile inceleme deneniyor...")
+        url = (
+            f"https://generativelanguage.googleapis.com/v1beta/models/"
+            f"{model_name}:generateContent?key={api_key}"
+        )
+        
+        delays = [5, 10] # Her model için 429 durumunda kısa retry
+        for idx, delay in enumerate(delays, start=1):
+            try:
+                response = requests.post(url, json=payload, timeout=120)
+                if response.status_code == 200:
+                    data = response.json()
+                    raw = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                    print(f"✅ {model_name} ile başarılı sonuç alındı.")
+                    return json.loads(raw)
+                
+                if response.status_code == 429:
+                    print(f"⚠️ {model_name} Kota Aşımı (429).")
+                    last_error = f"Quota Exceeded (429) for {model_name}"
+                    if idx < len(delays):
+                        print(f"   {delay} saniye bekleniyor...")
+                        time.sleep(delay)
+                        continue
+                    else:
+                        print(f"   {model_name} için denemeler bitti, sıradaki modele geçiliyor.")
+                        break # Sıradaki modele geç
 
-            last_error = f"{response.status_code} - {response.text}"
-        except Exception as ex:
-            last_error = str(ex)
-
-        if idx < len(delays):
-            time.sleep(1)
+                last_error = f"{response.status_code} - {response.text}"
+                break # Diğer hatalarda (400, 401 vb.) retry yapma, sıradaki modele geçmeyi dene
+            except Exception as ex:
+                last_error = str(ex)
+                break
 
     if "429" in str(last_error) or "Quota" in str(last_error):
-        print(f"ℹ️ Gemini kotası tamamen dolmuş durumda. Build'i bloklamamak için inceleme atlanıyor.")
-        return {"summary": "Gemini kota aşımı nedeniyle inceleme yapılamadı.", "comments": []}
+        print(f"ℹ️ Tüm Gemini modellerinin kotası dolmuş durumda. Build'i bloklamamak için inceleme atlanıyor.")
+        return {"summary": "Tüm Gemini modellerinde kota aşımı nedeniyle inceleme yapılamadı.", "comments": []}
 
     print(f"❌ Gemini çağrısı başarısız: {last_error}")
     sys.exit(1)
