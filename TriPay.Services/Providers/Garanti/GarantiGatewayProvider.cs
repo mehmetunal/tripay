@@ -10,7 +10,11 @@ using TriPay.Services.Providers.Nestpay.Helpers;
 namespace TriPay.Services.Providers.Garanti;
 
 /// <summary>Garanti BBVA GVPS XML sanal POS entegrasyonu.</summary>
-public sealed class GarantiGatewayProvider : HttpPaymentGatewayBase
+public sealed class GarantiGatewayProvider(
+    IGatewaySettingsProvider settingsProvider,
+    IHttpClientFactory httpClientFactory,
+    ILogger<GarantiGatewayProvider> logger)
+    : HttpPaymentGatewayBase(settingsProvider, httpClientFactory, logger)
 {
     private const string ApiUrlTest = "https://sanalposprovtest.garantibbva.com.tr/VPServlet";
     private const string ApiUrlLive = "https://sanalposprov.garanti.com.tr/VPServlet";
@@ -27,15 +31,6 @@ public sealed class GarantiGatewayProvider : HttpPaymentGatewayBase
     {
         ["TRY"] = 949, ["USD"] = 840, ["EUR"] = 978, ["GBP"] = 826
     };
-
-    /// <summary>Garanti provider örneği oluşturur.</summary>
-    public GarantiGatewayProvider(
-        IGatewaySettingsProvider settingsProvider,
-        IHttpClientFactory httpClientFactory,
-        ILogger<GarantiGatewayProvider> logger)
-        : base(settingsProvider, httpClientFactory, logger)
-    {
-    }
 
     /// <inheritdoc />
     public override string GatewayName => PaymentGatewayNames.Garanti;
@@ -139,7 +134,7 @@ public sealed class GarantiGatewayProvider : HttpPaymentGatewayBase
         {
             Success = true,
             Message = "3D doğrulama başarılı",
-            OrderNumber = orderId,
+            OrderNumber = orderId ?? string.Empty,
             PaymentStatus = "PENDING"
         }));
     }
@@ -204,11 +199,11 @@ public sealed class GarantiGatewayProvider : HttpPaymentGatewayBase
             var xml = NestpayXmlHelper.ToXml(xmlParams, "GVPSRequest");
             var apiUrl = _isTestMode ? ApiUrlTest : ApiUrlLive;
             var responseXml = await MakeRequestAsyncRaw(apiUrl, HttpMethod.Post, xml, null, "application/xml");
-            var gvps = ParseGvpsResponse(responseXml);
-            if (!string.Equals(gvps.Code, "00", StringComparison.Ordinal))
-                return Result<PaymentGatewayAuth3DSResponseDto>.Failure(gvps.ErrorMessage ?? "Ödeme tamamlanamadı.");
+            var (code, errorMessage, retrefNum) = ParseGvpsResponse(responseXml);
+            if (!string.Equals(code, "00", StringComparison.Ordinal))
+                return Result<PaymentGatewayAuth3DSResponseDto>.Failure(errorMessage ?? "Ödeme tamamlanamadı.");
 
-            var retRef = gvps.RetrefNum ?? orderId;
+            var retRef = retrefNum ?? orderId;
             return Result<PaymentGatewayAuth3DSResponseDto>.Success(new PaymentGatewayAuth3DSResponseDto
             {
                 Success = true,
@@ -287,11 +282,11 @@ public sealed class GarantiGatewayProvider : HttpPaymentGatewayBase
         => CurrencyCodes.TryGetValue(currency, out var code) ? code : 949;
 
     private static string Pad2(string value)
-        => new string(value.Where(char.IsDigit).ToArray()).PadLeft(2, '0')[^2..];
+        => new string([.. value.Where(char.IsDigit)]).PadLeft(2, '0')[^2..];
 
     private static string ExpiryYear2(string year)
     {
-        var y = new string(year.Where(char.IsDigit).ToArray());
+        var y = new string([.. year.Where(char.IsDigit)]);
         return y.Length >= 4 ? y[^2..] : y.PadLeft(2, '0');
     }
 

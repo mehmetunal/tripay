@@ -9,7 +9,11 @@ using TriPay.Services.Providers.Nestpay.Helpers;
 namespace TriPay.Services.Providers.Denizbank;
 
 /// <summary>Denizbank inter-vpos 3DPay sanal POS entegrasyonu.</summary>
-public sealed class DenizbankGatewayProvider : HttpPaymentGatewayBase
+public sealed class DenizbankGatewayProvider(
+    IGatewaySettingsProvider settingsProvider,
+    IHttpClientFactory httpClientFactory,
+    ILogger<DenizbankGatewayProvider> logger)
+    : HttpPaymentGatewayBase(settingsProvider, httpClientFactory, logger)
 {
     private const string ApiUrlTest = "https://test.inter-vpos.com.tr/mpi/Default.aspx";
     private const string ApiUrlLive = "https://inter-vpos.com.tr/mpi/Default.aspx";
@@ -24,15 +28,6 @@ public sealed class DenizbankGatewayProvider : HttpPaymentGatewayBase
     {
         ["TRY"] = "949", ["USD"] = "840", ["EUR"] = "978", ["GBP"] = "826"
     };
-
-    /// <summary>Denizbank provider örneği oluşturur.</summary>
-    public DenizbankGatewayProvider(
-        IGatewaySettingsProvider settingsProvider,
-        IHttpClientFactory httpClientFactory,
-        ILogger<DenizbankGatewayProvider> logger)
-        : base(settingsProvider, httpClientFactory, logger)
-    {
-    }
 
     /// <inheritdoc />
     public override string GatewayName => PaymentGatewayNames.Denizbank;
@@ -127,7 +122,7 @@ public sealed class DenizbankGatewayProvider : HttpPaymentGatewayBase
         {
             Success = true,
             Message = "3D doğrulama başarılı",
-            OrderNumber = orderId,
+            OrderNumber = orderId ?? string.Empty,
             PaymentStatus = "PENDING"
         }));
     }
@@ -257,8 +252,8 @@ public sealed class DenizbankGatewayProvider : HttpPaymentGatewayBase
 
     private static string FormatExpiry(string month, string year)
     {
-        var m = new string(month.Where(char.IsDigit).ToArray()).PadLeft(2, '0');
-        var y = new string(year.Where(char.IsDigit).ToArray());
+        var m = new string([.. month.Where(char.IsDigit)]).PadLeft(2, '0');
+        var y = new string([.. year.Where(char.IsDigit)]);
         if (y.Length >= 4) y = y[^2..];
         return m + y.PadLeft(2, '0');
     }

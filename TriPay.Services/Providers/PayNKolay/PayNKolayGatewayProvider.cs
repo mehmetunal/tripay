@@ -11,7 +11,11 @@ using TriPay.Services.Providers.Common;
 namespace TriPay.Services.Providers.PayNKolay;
 
 /// <summary>PayNKolay form POST + SHA512 hashDatav2 sanal POS entegrasyonu.</summary>
-public sealed class PayNKolayGatewayProvider : HttpPaymentGatewayBase
+public sealed class PayNKolayGatewayProvider(
+    IGatewaySettingsProvider settingsProvider,
+    IHttpClientFactory httpClientFactory,
+    ILogger<PayNKolayGatewayProvider> logger)
+    : HttpPaymentGatewayBase(settingsProvider, httpClientFactory, logger)
 {
     private const string ApiUrlTest = "https://paynkolaytest.nkolayislem.com.tr";
     private const string ApiUrlLive = "https://paynkolay.nkolayislem.com.tr";
@@ -19,14 +23,6 @@ public sealed class PayNKolayGatewayProvider : HttpPaymentGatewayBase
     private string? _sx;
     private string? _storeKey;
     private bool _isTestMode;
-
-    public PayNKolayGatewayProvider(
-        IGatewaySettingsProvider settingsProvider,
-        IHttpClientFactory httpClientFactory,
-        ILogger<PayNKolayGatewayProvider> logger)
-        : base(settingsProvider, httpClientFactory, logger)
-    {
-    }
 
     public override string GatewayName => PaymentGatewayNames.PayNKolay;
     public override string DisplayName => "PayNKolay";
@@ -81,7 +77,7 @@ public sealed class PayNKolayGatewayProvider : HttpPaymentGatewayBase
                 {
                     Success = true,
                     Message = "3D ödeme başlatıldı",
-                    RedirectHtml = CleanHtml(html.ToString()!),
+                    RedirectHtml = CleanHtml(html?.ToString() ?? string.Empty),
                     PaymentId = card.OrderNumber,
                     ConversationId = card.OrderNumber
                 });

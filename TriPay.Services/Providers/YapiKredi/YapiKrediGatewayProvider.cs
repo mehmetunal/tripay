@@ -9,7 +9,11 @@ using TriPay.Services.Providers.Common;
 namespace TriPay.Services.Providers.YapiKredi;
 
 /// <summary>Yapı Kredi Posnet XML sanal POS entegrasyonu.</summary>
-public sealed class YapiKrediGatewayProvider : HttpPaymentGatewayBase
+public sealed class YapiKrediGatewayProvider(
+    IGatewaySettingsProvider settingsProvider,
+    IHttpClientFactory httpClientFactory,
+    ILogger<YapiKrediGatewayProvider> logger)
+    : HttpPaymentGatewayBase(settingsProvider, httpClientFactory, logger)
 {
     private const string ApiUrlTest = "https://setmpos.ykb.com/PosnetWebService/XML";
     private const string ApiUrlLive = "https://posnet.yapikredi.com.tr/PosnetWebService/XML";
@@ -21,15 +25,6 @@ public sealed class YapiKrediGatewayProvider : HttpPaymentGatewayBase
     private string? _posnetId;
     private string? _storeKey;
     private bool _isTestMode;
-
-    /// <summary>Yapı Kredi provider örneği oluşturur.</summary>
-    public YapiKrediGatewayProvider(
-        IGatewaySettingsProvider settingsProvider,
-        IHttpClientFactory httpClientFactory,
-        ILogger<YapiKrediGatewayProvider> logger)
-        : base(settingsProvider, httpClientFactory, logger)
-    {
-    }
 
     /// <inheritdoc />
     public override string GatewayName => PaymentGatewayNames.YapiKredi;
@@ -138,7 +133,7 @@ public sealed class YapiKrediGatewayProvider : HttpPaymentGatewayBase
         {
             Success = true,
             Message = "3D doğrulama başarılı",
-            OrderNumber = xid,
+            OrderNumber = xid ?? string.Empty,
             PaymentStatus = "PENDING"
         }));
     }
@@ -323,11 +318,11 @@ public sealed class YapiKrediGatewayProvider : HttpPaymentGatewayBase
     }
 
     private static string Pad2(string value)
-        => new string(value.Where(char.IsDigit).ToArray()).PadLeft(2, '0')[^2..];
+        => new string([.. value.Where(char.IsDigit)]).PadLeft(2, '0')[^2..];
 
     private static string ExpiryYear2(string year)
     {
-        var y = new string(year.Where(char.IsDigit).ToArray());
+        var y = new string([.. year.Where(char.IsDigit)]);
         return y.Length >= 4 ? y[^2..] : y.PadLeft(2, '0');
     }
 

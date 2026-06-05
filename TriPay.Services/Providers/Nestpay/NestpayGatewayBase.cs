@@ -13,10 +13,13 @@ namespace TriPay.Services.Providers.Nestpay;
 /// Nestpay/EST protokolünü kullanan bankalar için ortak sanal POS provider tabanı.
 /// Şablon B ayarları: MerchantId, Username, Password, StoreKey.
 /// </summary>
-public abstract class NestpayGatewayBase : HttpPaymentGatewayBase
+public abstract class NestpayGatewayBase(
+    NestpayEndpointConfig endpoints,
+    IGatewaySettingsProvider settingsProvider,
+    IHttpClientFactory httpClientFactory,
+    ILogger logger)
+    : HttpPaymentGatewayBase(settingsProvider, httpClientFactory, logger)
 {
-    private readonly NestpayEndpointConfig _endpoints;
-
     private string? _merchantId;
     private string? _username;
     private string? _password;
@@ -30,17 +33,6 @@ public abstract class NestpayGatewayBase : HttpPaymentGatewayBase
         ["EUR"] = "978",
         ["GBP"] = "826"
     };
-
-    /// <summary>Endpoint yapılandırması ve bağımlılıklarla Nestpay taban sınıfını başlatır.</summary>
-    protected NestpayGatewayBase(
-        NestpayEndpointConfig endpoints,
-        IGatewaySettingsProvider settingsProvider,
-        IHttpClientFactory httpClientFactory,
-        ILogger logger)
-        : base(settingsProvider, httpClientFactory, logger)
-    {
-        _endpoints = endpoints;
-    }
 
     /// <inheritdoc />
     public override async Task<Result<PaymentGatewayInitializeResponseDto>> InitializePaymentAsync(
@@ -85,7 +77,7 @@ public abstract class NestpayGatewayBase : HttpPaymentGatewayBase
 
             formParams["hash"] = NestpayHashHelper.ComputeVer3Hash(formParams, _storeKey!);
 
-            var threeDUrl = _endpoints.Resolve3DUrl(_isTestMode);
+            var threeDUrl = endpoints.Resolve3DUrl(_isTestMode);
             PaymentDiagnostic.LogOutbound3DForm(GatewayName, threeDUrl, formParams, "Nestpay EST 3D başlatma");
 
             var responseHtml = await MakeFormRequestAsync(threeDUrl, formParams);
@@ -142,7 +134,7 @@ public abstract class NestpayGatewayBase : HttpPaymentGatewayBase
         {
             Success = true,
             Message = "3D doğrulama başarılı",
-            OrderNumber = orderNumber,
+            OrderNumber = orderNumber ?? string.Empty,
             PaymentStatus = "PENDING"
         }));
     }
@@ -187,7 +179,7 @@ public abstract class NestpayGatewayBase : HttpPaymentGatewayBase
             };
 
             var xml = NestpayXmlHelper.ToXml(xmlParams);
-            var apiUrl = _endpoints.ResolveApiUrl(_isTestMode);
+            var apiUrl = endpoints.ResolveApiUrl(_isTestMode);
             var responseXml = await PostXmlAsync(apiUrl, xml);
             var parsed = NestpayXmlHelper.ParseResponse(responseXml);
 
@@ -241,7 +233,7 @@ public abstract class NestpayGatewayBase : HttpPaymentGatewayBase
                 xmlParams["Total"] = NestpayXmlHelper.FormatAmount(amount.Value);
 
             var xml = NestpayXmlHelper.ToXml(xmlParams);
-            var apiUrl = _endpoints.ResolveApiUrl(_isTestMode);
+            var apiUrl = endpoints.ResolveApiUrl(_isTestMode);
             var responseXml = await PostXmlAsync(apiUrl, xml);
             var parsed = NestpayXmlHelper.ParseResponse(responseXml);
 
@@ -284,7 +276,7 @@ public abstract class NestpayGatewayBase : HttpPaymentGatewayBase
             };
 
             var xml = NestpayXmlHelper.ToXml(xmlParams);
-            var apiUrl = _endpoints.ResolveApiUrl(_isTestMode);
+            var apiUrl = endpoints.ResolveApiUrl(_isTestMode);
             var responseXml = await PostXmlAsync(apiUrl, xml);
             var parsed = NestpayXmlHelper.ParseResponse(responseXml);
 
@@ -374,7 +366,7 @@ public abstract class NestpayGatewayBase : HttpPaymentGatewayBase
 
     private static string ParseExpiryPart(string value, int length)
     {
-        var digits = new string(value.Where(char.IsDigit).ToArray());
+        var digits = new string([.. value.Where(char.IsDigit)]);
         if (digits.Length >= length)
             return digits[^length..];
         return digits.PadLeft(length, '0');
@@ -382,7 +374,7 @@ public abstract class NestpayGatewayBase : HttpPaymentGatewayBase
 
     private static string ParseExpiryYear(string year)
     {
-        var digits = new string(year.Where(char.IsDigit).ToArray());
+        var digits = new string([.. year.Where(char.IsDigit)]);
         if (digits.Length >= 4)
             return digits[^2..];
         if (digits.Length == 2)

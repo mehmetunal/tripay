@@ -10,25 +10,17 @@ using TriPay.Services.Providers.CcPayment.Helpers;
 namespace TriPay.Services.Providers.CcPayment;
 
 /// <summary>Sipay tipi CCPayment REST API taban sınıfı.</summary>
-public abstract class CcPaymentGatewayBase : HttpPaymentGatewayBase
+public abstract class CcPaymentGatewayBase(
+    CcPaymentEndpointConfig endpoints,
+    IGatewaySettingsProvider settingsProvider,
+    IHttpClientFactory httpClientFactory,
+    ILogger logger)
+    : HttpPaymentGatewayBase(settingsProvider, httpClientFactory, logger)
 {
-    private readonly CcPaymentEndpointConfig _endpoints;
-
     private string? _appId;
     private string? _appSecret;
     private string? _merchantKey;
     private bool _isTestMode;
-
-    /// <summary>Endpoint yapılandırması ile CCPayment taban sınıfını başlatır.</summary>
-    protected CcPaymentGatewayBase(
-        CcPaymentEndpointConfig endpoints,
-        IGatewaySettingsProvider settingsProvider,
-        IHttpClientFactory httpClientFactory,
-        ILogger logger)
-        : base(settingsProvider, httpClientFactory, logger)
-    {
-        _endpoints = endpoints;
-    }
 
     /// <inheritdoc />
     public override async Task<Result<PaymentGatewayInitializeResponseDto>> InitializePaymentAsync(
@@ -76,7 +68,7 @@ public abstract class CcPaymentGatewayBase : HttpPaymentGatewayBase
                 ["return_url"] = card.ReturnUrl
             };
 
-            var baseUrl = _endpoints.Resolve(_isTestMode);
+            var baseUrl = endpoints.Resolve(_isTestMode);
             var url = $"{baseUrl}/api/paySmart3D";
             PaymentDiagnostic.LogOutboundHttpPost(GatewayName, url, JsonSerializer.Serialize(body), "application/json", "(3D başlatma)");
 
@@ -128,7 +120,7 @@ public abstract class CcPaymentGatewayBase : HttpPaymentGatewayBase
         {
             Success = true,
             Message = "3D doğrulama başarılı",
-            OrderNumber = invoiceId,
+            OrderNumber = invoiceId ?? string.Empty,
             PaymentStatus = "PENDING"
         });
     }
@@ -172,7 +164,7 @@ public abstract class CcPaymentGatewayBase : HttpPaymentGatewayBase
                 ["hash_key"] = CcPaymentHashHelper.GenerateCompleteHash(_merchantKey!, invoiceId!, orderId, "complete", _appSecret!)
             };
 
-            var baseUrl = _endpoints.Resolve(_isTestMode);
+            var baseUrl = endpoints.Resolve(_isTestMode);
             var url = $"{baseUrl}/payment/complete";
             var responseJson = await PostJsonWithBearerAsync(url, body, token);
             using var doc = JsonDocument.Parse(responseJson);
@@ -230,7 +222,7 @@ public abstract class CcPaymentGatewayBase : HttpPaymentGatewayBase
 
     private async Task<string?> GetTokenAsync()
     {
-        var baseUrl = _endpoints.Resolve(_isTestMode);
+        var baseUrl = endpoints.Resolve(_isTestMode);
         var body = new Dictionary<string, string>
         {
             ["app_id"] = _appId!,

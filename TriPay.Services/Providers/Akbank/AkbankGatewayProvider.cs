@@ -12,7 +12,11 @@ using TriPay.Services.Providers.Nestpay.Helpers;
 namespace TriPay.Services.Providers.Akbank;
 
 /// <summary>Akbank native JSON API sanal POS entegrasyonu.</summary>
-public sealed class AkbankGatewayProvider : HttpPaymentGatewayBase
+public sealed class AkbankGatewayProvider(
+    IGatewaySettingsProvider settingsProvider,
+    IHttpClientFactory httpClientFactory,
+    ILogger<AkbankGatewayProvider> logger)
+    : HttpPaymentGatewayBase(settingsProvider, httpClientFactory, logger)
 {
     private const string ApiUrlTest = "https://apipre.akbank.com/api/v1/payment/virtualpos/transaction/process";
     private const string ApiUrlLive = "https://api.akbank.com/api/v1/payment/virtualpos/transaction/process";
@@ -33,14 +37,11 @@ public sealed class AkbankGatewayProvider : HttpPaymentGatewayBase
         ["GBP"] = 826
     };
 
-    /// <summary>Akbank provider örneği oluşturur.</summary>
-    public AkbankGatewayProvider(
-        IGatewaySettingsProvider settingsProvider,
-        IHttpClientFactory httpClientFactory,
-        ILogger<AkbankGatewayProvider> logger)
-        : base(settingsProvider, httpClientFactory, logger)
+    private static readonly JsonSerializerOptions SerializeOptions = new()
     {
-    }
+        PropertyNamingPolicy = null,
+        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+    };
 
     /// <inheritdoc />
     public override string GatewayName => PaymentGatewayNames.Akbank;
@@ -149,7 +150,7 @@ public sealed class AkbankGatewayProvider : HttpPaymentGatewayBase
         {
             Success = true,
             Message = "3D doğrulama başarılı",
-            OrderNumber = orderId,
+            OrderNumber = orderId ?? string.Empty,
             PaymentStatus = "PENDING"
         }));
     }
@@ -333,11 +334,7 @@ public sealed class AkbankGatewayProvider : HttpPaymentGatewayBase
 
     private async Task<JsonDocument?> PostJsonAsync(Dictionary<string, object> body)
     {
-        var json = JsonSerializer.Serialize(body, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = null,
-            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
-        });
+        var json = JsonSerializer.Serialize(body, SerializeOptions);
 
         var url = _isTestMode ? ApiUrlTest : ApiUrlLive;
         var headers = new Dictionary<string, string>
@@ -366,8 +363,8 @@ public sealed class AkbankGatewayProvider : HttpPaymentGatewayBase
 
     private static string FormatExpiry(string month, string year)
     {
-        var m = new string(month.Where(char.IsDigit).ToArray()).PadLeft(2, '0');
-        var y = new string(year.Where(char.IsDigit).ToArray());
+        var m = new string([.. month.Where(char.IsDigit)]).PadLeft(2, '0');
+        var y = new string([.. year.Where(char.IsDigit)]);
         if (y.Length >= 4) y = y[^2..];
         return m + y.PadLeft(2, '0');
     }

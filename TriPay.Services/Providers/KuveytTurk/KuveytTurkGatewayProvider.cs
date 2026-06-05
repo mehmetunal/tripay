@@ -11,7 +11,11 @@ using TriPay.Services.Providers.Nestpay.Helpers;
 namespace TriPay.Services.Providers.KuveytTurk;
 
 /// <summary>Kuveyt Türk BOA XML sanal POS entegrasyonu.</summary>
-public sealed class KuveytTurkGatewayProvider : HttpPaymentGatewayBase
+public sealed class KuveytTurkGatewayProvider(
+    IGatewaySettingsProvider settingsProvider,
+    IHttpClientFactory httpClientFactory,
+    ILogger<KuveytTurkGatewayProvider> logger)
+    : HttpPaymentGatewayBase(settingsProvider, httpClientFactory, logger)
 {
     private const string ThreeDPayGateTest = "https://boatest.kuveytturk.com.tr/boa.virtualpos.services/Home/ThreeDModelPayGate";
     private const string ThreeDPayGateLive = "https://sanalpos.kuveytturk.com.tr/ServiceGateWay/Home/ThreeDModelPayGate";
@@ -28,15 +32,6 @@ public sealed class KuveytTurkGatewayProvider : HttpPaymentGatewayBase
     {
         ["TRY"] = 949, ["USD"] = 840, ["EUR"] = 978, ["GBP"] = 826
     };
-
-    /// <summary>Kuveyt Türk provider örneği oluşturur.</summary>
-    public KuveytTurkGatewayProvider(
-        IGatewaySettingsProvider settingsProvider,
-        IHttpClientFactory httpClientFactory,
-        ILogger<KuveytTurkGatewayProvider> logger)
-        : base(settingsProvider, httpClientFactory, logger)
-    {
-    }
 
     /// <inheritdoc />
     public override string GatewayName => PaymentGatewayNames.KuveytTurk;
@@ -153,7 +148,7 @@ public sealed class KuveytTurkGatewayProvider : HttpPaymentGatewayBase
         {
             Success = true,
             Message = "3D doğrulama başarılı",
-            OrderNumber = orderId,
+            OrderNumber = orderId ?? string.Empty,
             PaymentStatus = "PENDING"
         }));
     }
@@ -293,17 +288,17 @@ public sealed class KuveytTurkGatewayProvider : HttpPaymentGatewayBase
         => CurrencyCodes.TryGetValue(currency, out var code) ? code : 949;
 
     private static string Pad2(string value)
-        => new string(value.Where(char.IsDigit).ToArray()).PadLeft(2, '0')[^2..];
+        => new string([.. value.Where(char.IsDigit)]).PadLeft(2, '0')[^2..];
 
     private static string ExpiryYear2(string year)
     {
-        var y = new string(year.Where(char.IsDigit).ToArray());
+        var y = new string([.. year.Where(char.IsDigit)]);
         return y.Length >= 4 ? y[^2..] : y.PadLeft(2, '0');
     }
 
     private static string NormalizePhone(string phone)
     {
-        var digits = new string(phone.Where(char.IsDigit).ToArray());
+        var digits = new string([.. phone.Where(char.IsDigit)]);
         return digits.Length > 10 ? digits[^10..] : digits;
     }
 }

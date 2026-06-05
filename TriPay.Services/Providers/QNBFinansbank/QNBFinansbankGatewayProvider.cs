@@ -9,7 +9,11 @@ using TriPay.Services.Providers.Nestpay.Helpers;
 namespace TriPay.Services.Providers.QNBFinansbank;
 
 /// <summary>QNB Finansbank Gateway 3DPay sanal POS entegrasyonu.</summary>
-public sealed class QNBFinansbankGatewayProvider : HttpPaymentGatewayBase
+public sealed class QNBFinansbankGatewayProvider(
+    IGatewaySettingsProvider settingsProvider,
+    IHttpClientFactory httpClientFactory,
+    ILogger<QNBFinansbankGatewayProvider> logger)
+    : HttpPaymentGatewayBase(settingsProvider, httpClientFactory, logger)
 {
     private const string ApiUrlTest = "https://vpostest.qnbfinansbank.com/Gateway/Default.aspx";
     private const string ApiUrlLive = "https://vpos.qnbfinansbank.com/Gateway/Default.aspx";
@@ -25,15 +29,6 @@ public sealed class QNBFinansbankGatewayProvider : HttpPaymentGatewayBase
     {
         ["TRY"] = "949", ["USD"] = "840", ["EUR"] = "978", ["GBP"] = "826"
     };
-
-    /// <summary>QNB Finansbank provider örneği oluşturur.</summary>
-    public QNBFinansbankGatewayProvider(
-        IGatewaySettingsProvider settingsProvider,
-        IHttpClientFactory httpClientFactory,
-        ILogger<QNBFinansbankGatewayProvider> logger)
-        : base(settingsProvider, httpClientFactory, logger)
-    {
-    }
 
     /// <inheritdoc />
     public override string GatewayName => PaymentGatewayNames.QNBFinansbank;
@@ -131,7 +126,7 @@ public sealed class QNBFinansbankGatewayProvider : HttpPaymentGatewayBase
         {
             Success = true,
             Message = "3D doğrulama başarılı",
-            OrderNumber = orderId,
+            OrderNumber = orderId ?? string.Empty,
             PaymentStatus = "PENDING"
         }));
     }
@@ -260,8 +255,8 @@ public sealed class QNBFinansbankGatewayProvider : HttpPaymentGatewayBase
 
     private static string FormatExpiry(string month, string year)
     {
-        var m = new string(month.Where(char.IsDigit).ToArray()).PadLeft(2, '0');
-        var y = new string(year.Where(char.IsDigit).ToArray());
+        var m = new string([.. month.Where(char.IsDigit)]).PadLeft(2, '0');
+        var y = new string([.. year.Where(char.IsDigit)]);
         if (y.Length >= 4) y = y[^2..];
         return m + y.PadLeft(2, '0');
     }

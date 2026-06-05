@@ -11,7 +11,11 @@ using TriPay.Services.Providers.Common;
 namespace TriPay.Services.Providers.Ahlpay;
 
 /// <summary>Ahlpay token + SHA512 hash tabanlı sanal POS entegrasyonu.</summary>
-public sealed class AhlpayGatewayProvider : HttpPaymentGatewayBase
+public sealed class AhlpayGatewayProvider(
+    IGatewaySettingsProvider settingsProvider,
+    IHttpClientFactory httpClientFactory,
+    ILogger<AhlpayGatewayProvider> logger)
+    : HttpPaymentGatewayBase(settingsProvider, httpClientFactory, logger)
 {
     private const string ApiUrlTest = "https://testahlsanalpos.ahlpay.com.tr";
     private const string ApiUrlLive = "https://ahlsanalpos.ahlpay.com.tr";
@@ -23,13 +27,7 @@ public sealed class AhlpayGatewayProvider : HttpPaymentGatewayBase
     private string? _password;
     private bool _isTestMode;
 
-    public AhlpayGatewayProvider(
-        IGatewaySettingsProvider settingsProvider,
-        IHttpClientFactory httpClientFactory,
-        ILogger<AhlpayGatewayProvider> logger)
-        : base(settingsProvider, httpClientFactory, logger)
-    {
-    }
+    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
 
     public override string GatewayName => PaymentGatewayNames.Ahlpay;
     public override string DisplayName => "Ahlpay";
@@ -83,7 +81,7 @@ public sealed class AhlpayGatewayProvider : HttpPaymentGatewayBase
             if (dic.TryGetValue("isSuccess", out var ok) && ok is JsonElement el && el.GetBoolean()
                 && dic.TryGetValue("data", out var dataEl))
             {
-                var html = dataEl.ToString();
+                var html = dataEl?.ToString() ?? string.Empty;
                 return Result<PaymentGatewayInitializeResponseDto>.Success(new PaymentGatewayInitializeResponseDto
                 {
                     Success = true,
@@ -222,8 +220,10 @@ public sealed class AhlpayGatewayProvider : HttpPaymentGatewayBase
         if (dic.TryGetValue("isSuccess", out var ok) && ok is JsonElement el && el.GetBoolean()
             && dic.TryGetValue("data", out var data))
         {
-            var tokenJson = data!.ToString();
-            return JsonSerializer.Deserialize<AhlpayToken>(tokenJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            var tokenJson = data?.ToString();
+            if (string.IsNullOrWhiteSpace(tokenJson))
+                return null;
+            return JsonSerializer.Deserialize<AhlpayToken>(tokenJson, JsonOptions);
         }
 
         return null;

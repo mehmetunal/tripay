@@ -72,7 +72,24 @@ jobs:
           git commit -m "chore(nuget): sürüm ${ver} [skip ci]"
           git push
 
+      - name: GitHub Release oluştur / güncelle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          chmod +x build/github-release-notes.sh
+          ver=$(sed -n 's/.*<TriPayPackageVersion>\([^<]*\).*/\1/p' build/TriPay.NuGet.Version.props | head -n1 | tr -d '[:space:]')
+          tag="v${ver}"
+          notes_file="$(mktemp)"
+          ./build/github-release-notes.sh "$ver" > "$notes_file"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release edit "$tag" --title "TriPay ${ver}" --notes-file "$notes_file"
+          else
+            gh release create "$tag" --title "TriPay ${ver}" --notes-file "$notes_file"
+          fi
+
       - name: Özet
         run: |
           ver=$(sed -n 's/.*<TriPayPackageVersion>\([^<]*\).*/\1/p' build/TriPay.NuGet.Version.props | head -n1 | tr -d '[:space:]')
           echo "### Yayınlanan sürüm: \`${ver}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "### GitHub Release: \`v${ver}\` (NuGet kurulum notları dahil)" >> "$GITHUB_STEP_SUMMARY"

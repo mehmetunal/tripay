@@ -13,7 +13,11 @@ using TriPay.Services.Providers.VakifPays.Models;
 namespace TriPay.Services.Providers.Tami;
 
 /// <summary>Tami JSON API + JWK imza tabanlı sanal POS entegrasyonu.</summary>
-public sealed class TamiGatewayProvider : HttpPaymentGatewayBase
+public sealed class TamiGatewayProvider(
+    IGatewaySettingsProvider settingsProvider,
+    IHttpClientFactory httpClientFactory,
+    ILogger<TamiGatewayProvider> logger)
+    : HttpPaymentGatewayBase(settingsProvider, httpClientFactory, logger)
 {
     private const string ApiUrlTest = "https://sandbox-paymentapi.tami.com.tr";
     private const string ApiUrlLive = "https://paymentapi.tami.com.tr";
@@ -23,14 +27,6 @@ public sealed class TamiGatewayProvider : HttpPaymentGatewayBase
     private string? _merchantPassword;
     private string? _storeKey;
     private bool _isTestMode;
-
-    public TamiGatewayProvider(
-        IGatewaySettingsProvider settingsProvider,
-        IHttpClientFactory httpClientFactory,
-        ILogger<TamiGatewayProvider> logger)
-        : base(settingsProvider, httpClientFactory, logger)
-    {
-    }
 
     public override string GatewayName => PaymentGatewayNames.Tami;
     public override string DisplayName => "Tami";
@@ -54,7 +50,7 @@ public sealed class TamiGatewayProvider : HttpPaymentGatewayBase
             if (dic.TryGetValue("success", out var ok) && ok is JsonElement el && el.GetBoolean()
                 && dic.TryGetValue("threeDSHtmlContent", out var htmlB64))
             {
-                var html = Encoding.UTF8.GetString(Convert.FromBase64String(htmlB64.ToString()!));
+                var html = Encoding.UTF8.GetString(Convert.FromBase64String(htmlB64?.ToString() ?? string.Empty));
                 return Result<PaymentGatewayInitializeResponseDto>.Success(new PaymentGatewayInitializeResponseDto
                 {
                     Success = true,

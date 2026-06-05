@@ -10,7 +10,11 @@ using TriPay.Services.Providers.Common;
 namespace TriPay.Services.Providers.ParamPos;
 
 /// <summary>ParamPos SOAP XML sanal POS entegrasyonu.</summary>
-public sealed class ParamPosGatewayProvider : HttpPaymentGatewayBase
+public sealed class ParamPosGatewayProvider(
+    IGatewaySettingsProvider settingsProvider,
+    IHttpClientFactory httpClientFactory,
+    ILogger<ParamPosGatewayProvider> logger)
+    : HttpPaymentGatewayBase(settingsProvider, httpClientFactory, logger)
 {
     private const string ApiUrlTest = "https://testposws.param.com.tr/turkpos.ws/service_turkpos_prod.asmx";
     private const string ApiUrlLive = "https://posws.param.com.tr/turkpos.ws/service_turkpos_prod.asmx";
@@ -20,14 +24,6 @@ public sealed class ParamPosGatewayProvider : HttpPaymentGatewayBase
     private string? _clientPassword;
     private string? _guid;
     private bool _isTestMode;
-
-    public ParamPosGatewayProvider(
-        IGatewaySettingsProvider settingsProvider,
-        IHttpClientFactory httpClientFactory,
-        ILogger<ParamPosGatewayProvider> logger)
-        : base(settingsProvider, httpClientFactory, logger)
-    {
-    }
 
     public override string GatewayName => PaymentGatewayNames.ParamPos;
     public override string DisplayName => "ParamPos";
@@ -71,7 +67,7 @@ public sealed class ParamPosGatewayProvider : HttpPaymentGatewayBase
                 </TP_WMD_UCD>
                 """;
 
-            var envelope = WrapSoapEnvelope("TP_WMD_UCD", soapBody);
+            var envelope = WrapSoapEnvelope(soapBody);
             var url = _isTestMode ? ApiUrlTest : ApiUrlLive;
             var responseXml = await MakeRequestAsyncRaw(url, HttpMethod.Post, envelope, null, "text/xml; charset=utf-8");
             var parsed = ParseSoapResult(responseXml, "TP_WMD_UCDResult");
@@ -115,7 +111,7 @@ public sealed class ParamPosGatewayProvider : HttpPaymentGatewayBase
         {
             Success = true,
             Message = "3D doğrulama başarılı",
-            OrderNumber = orderId,
+            OrderNumber = orderId ?? string.Empty,
             PaymentStatus = "PENDING"
         }));
     }
@@ -150,7 +146,7 @@ public sealed class ParamPosGatewayProvider : HttpPaymentGatewayBase
                 </TP_WMD_Pay>
                 """;
 
-            var envelope = WrapSoapEnvelope("TP_WMD_Pay", soapBody);
+            var envelope = WrapSoapEnvelope(soapBody);
             var url = _isTestMode ? ApiUrlTest : ApiUrlLive;
             var responseXml = await MakeRequestAsyncRaw(url, HttpMethod.Post, envelope, null, "text/xml; charset=utf-8");
             var parsed = ParseSoapResult(responseXml, "TP_WMD_PayResult");
@@ -197,7 +193,7 @@ public sealed class ParamPosGatewayProvider : HttpPaymentGatewayBase
         return (mdStatus, orderId, orderId, ok ? "PENDING" : "FAILED", mdStatus, null);
     }
 
-    private static string WrapSoapEnvelope(string action, string body)
+    private static string WrapSoapEnvelope(string body)
         => $"""
             <?xml version="1.0" encoding="utf-8"?>
             <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -252,5 +248,5 @@ public sealed class ParamPosGatewayProvider : HttpPaymentGatewayBase
         => config.Settings.TryGetValue(key, out var value) ? value : null;
 
     private static string Pad2(string value)
-        => new string(value.Where(char.IsDigit).ToArray()).PadLeft(2, '0')[^2..];
+        => new string([.. value.Where(char.IsDigit)]).PadLeft(2, '0')[^2..];
 }

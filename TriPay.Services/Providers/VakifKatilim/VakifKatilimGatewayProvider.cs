@@ -9,7 +9,11 @@ using TriPay.Services.Providers.Nestpay.Helpers;
 namespace TriPay.Services.Providers.VakifKatilim;
 
 /// <summary>Vakıf Katılım BOA XML sanal POS entegrasyonu.</summary>
-public sealed class VakifKatilimGatewayProvider : HttpPaymentGatewayBase
+public sealed class VakifKatilimGatewayProvider(
+    IGatewaySettingsProvider settingsProvider,
+    IHttpClientFactory httpClientFactory,
+    ILogger<VakifKatilimGatewayProvider> logger)
+    : HttpPaymentGatewayBase(settingsProvider, httpClientFactory, logger)
 {
     private const string ThreeDPayGateLive = "https://boa.vakifkatilim.com.tr/VirtualPOS.Gateway/Home/ThreeDModelPayGate";
     private const string ProvisionGateLive = "https://boa.vakifkatilim.com.tr/VirtualPOS.Gateway/Home/ThreeDModelProvisionGate";
@@ -24,15 +28,6 @@ public sealed class VakifKatilimGatewayProvider : HttpPaymentGatewayBase
     {
         ["TRY"] = 949, ["USD"] = 840, ["EUR"] = 978, ["GBP"] = 826
     };
-
-    /// <summary>Vakıf Katılım provider örneği oluşturur.</summary>
-    public VakifKatilimGatewayProvider(
-        IGatewaySettingsProvider settingsProvider,
-        IHttpClientFactory httpClientFactory,
-        ILogger<VakifKatilimGatewayProvider> logger)
-        : base(settingsProvider, httpClientFactory, logger)
-    {
-    }
 
     /// <inheritdoc />
     public override string GatewayName => PaymentGatewayNames.VakifKatilim;
@@ -126,7 +121,7 @@ public sealed class VakifKatilimGatewayProvider : HttpPaymentGatewayBase
         {
             Success = true,
             Message = "3D doğrulama başarılı",
-            OrderNumber = orderId,
+            OrderNumber = orderId ?? string.Empty,
             PaymentStatus = "PENDING"
         }));
     }
@@ -260,11 +255,11 @@ public sealed class VakifKatilimGatewayProvider : HttpPaymentGatewayBase
         => CurrencyCodes.TryGetValue(currency, out var code) ? code : 949;
 
     private static string Pad2(string value)
-        => new string(value.Where(char.IsDigit).ToArray()).PadLeft(2, '0')[^2..];
+        => new string([.. value.Where(char.IsDigit)]).PadLeft(2, '0')[^2..];
 
     private static string ExpiryYear2(string year)
     {
-        var y = new string(year.Where(char.IsDigit).ToArray());
+        var y = new string([.. year.Where(char.IsDigit)]);
         return y.Length >= 4 ? y[^2..] : y.PadLeft(2, '0');
     }
 }
