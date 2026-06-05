@@ -3,7 +3,7 @@ using System.Text;
 using TriPay.Services;
 using TriPay.Services.Models;
 using TriPay.Services.Providers.VakifPays;
-using TriPay.Services.Providers.VakifPays.Helpers;
+using TriPay.Services.Providers.Common;
 using TriPay.Tests.Fixtures;
 
 namespace TriPay.Tests.Unit.VakifPays;
@@ -96,7 +96,7 @@ public sealed class VakifPaysGatewayProviderTests
     [Fact]
     public void AutoPostHtml_EncodeEder()
     {
-        var html = VakifPaysAutoPostHtmlBuilder.Build("https://bank.test/pay?a=1&b=2", new Dictionary<string, string>
+        var html = PaymentAutoPostHtmlBuilder.Build("https://bank.test/pay?a=1&b=2", new Dictionary<string, string>
         {
             ["cardOwner"] = "A' <B>"
         });

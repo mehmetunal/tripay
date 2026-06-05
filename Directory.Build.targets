@@ -1,6 +1,7 @@
 <Project>
   <!--
-    TriPay.Tests derlendikten sonra tüm testleri çalıştırır.
+    TriPay.Tests derlendikten sonra tüm testleri çalıştırır; başarısız test build'i düşürür.
+    Solution: dotnet build TriPay.sln
     Kapatmak için: dotnet build -p:RunTestsOnBuild=false
   -->
   <PropertyGroup>
@@ -12,7 +13,7 @@
           Condition="'$(IsTestProject)' == 'true'
                      AND '$(RunTestsOnBuild)' == 'true'
                      AND '$(DesignTimeBuild)' != 'true'">
-    <Message Importance="high" Text="TriPay: $(MSBuildProjectName) — testler çalıştırılıyor..." />
+    <Message Importance="high" Text="TriPay: $(MSBuildProjectName) — testler çalıştırılıyor (başarısız test = build hatası)..." />
     <Exec Command="dotnet test &quot;$(MSBuildProjectFullPath)&quot; --no-build --verbosity minimal"
           WorkingDirectory="$(MSBuildProjectDirectory)" />
   </Target>

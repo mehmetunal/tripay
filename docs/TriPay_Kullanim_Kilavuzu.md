@@ -529,12 +529,24 @@ Türkiye'de her sanal POS / ödeme kuruluşu **farklı kimlik bilgisi** ve **far
 
 | Grup                         | Tipik alanlar                                                                | Örnek kanallar                               |
 | ---------------------------- | ---------------------------------------------------------------------------- | -------------------------------------------- |
-| **A — REST API Key**         | `ApiKey`, `SecretKey`, `IsTestMode`                                          | Iyzico, Sipay, ParamPos, Paynet, Vepara, …   |
-| **B — Nestpay / EST 3D**     | `MerchantId`, `TerminalId`, `Username`, `Password`, `StoreKey`               | Akbank, İş Bankası, Halkbank, Ziraat, YKB, … |
-| **C — Garanti PROV**         | `MerchantId`, `TerminalId`, `ProvUserId`, `ProvPassword`, `StoreKey`         | Garanti BBVA                                 |
+| **A — REST API Key**         | `ApiKey`, `SecretKey`                                                        | Iyzico                                       |
+| **B — Nestpay / EST 3D**     | `MerchantId`, `Username`, `Password`, `StoreKey`                             | Halkbank, İş Bankası, Ziraat, Cardplus, …    |
+| **C — Garanti PROV**         | `MerchantId`, `TerminalId`, `ProvPassword`, `StoreKey`                       | Garanti BBVA                                 |
 | **D — Vakıfbank MPI + VPOS** | `MerchantId`, `MerchantPassword`, `TerminalNo`, URL'ler, `InstallmentCounts` | Vakıfbank                                    |
 | **E — VakıfPayS REST**       | `Merchant`, `MerchantUser`, `MerchantPassword`                               | VakıfPayS                                    |
-| **F — PayTR**                | `MerchantId`, `MerchantKey`, `MerchantSalt`                                  | PayTR                                        |
+| **F — PayTR**                | `MerchantId`, `MerchantKey`, `MerchantSalt`                                  | PayTR (backlog)                              |
+| **G — Payten API v2**        | `MerchantId`, `MerchantUser`, `MerchantPassword`                             | Paratika, PaytenMsu, ZiraatPay               |
+| **H — CCPayment REST**       | `AppId`/`ApiKey`, `AppSecret`/`SecretKey`, `MerchantKey`                    | Sipay, QNBpay, PayBull, Vepara, HalkOde, …   |
+| **I — Akbank native**        | `Username` (merchantSafeId), `Password` (terminalSafeId), `StoreKey`         | Akbank                                       |
+| **J — inter-vpos / Gateway** | `MerchantId`, `Username`, `Password`, `StoreKey`                             | Denizbank, QNB Finansbank                    |
+| **K — Posnet XML**           | `MerchantId`, `TerminalId`, `Password` (posnetId), `StoreKey`                | Yapı Kredi                                   |
+| **L — BOA XML**              | `MerchantId`, `Username`, `Password`, `StoreKey`/`CustomerId`                | Kuveyt Türk, Vakıf Katılım                   |
+| **M — ParamPos SOAP**        | `ClientCode`, `ClientUsername`, `ClientPassword`, `Guid`                     | ParamPos                                     |
+| **N — Ahlpay token**         | `MerchantId`, `MerchantUser`, `MerchantPassword`, `StoreKey`                 | Ahlpay                                       |
+| **O — Moka PaymentDealer**   | `DealerCode`/`MerchantId`, `Username`, `Password`                            | Moka                                         |
+| **P — Tami JWK**             | `MerchantId`, `MerchantUser`, `MerchantPassword`, `StoreKey`                 | Tami                                         |
+| **Q — PayNKolay**            | `MerchantId` (sx), `StoreKey`                                                | PayNKolay                                    |
+| **R — Paynet Basic**         | `MerchantPassword` (Basic auth API anahtarı)                                   | Paynet                                       |
 
 
 TriPay'de **tek tip dış config** hedeflenir; provider içinde kanala özel alanlar `Settings` sözlüğünden okunur:
@@ -672,7 +684,7 @@ Vakıfbank 3D state için Redis, **`AddTriPayFramework`** veya **`AddTriPayHoste
 
 ---
 
-### 7.7. Config şablonları (A–F)
+### 7.7. Config şablonları (A–R)
 
 #### Şablon A — API Key + Secret
 
@@ -766,6 +778,193 @@ Vakıfbank 3D state için Redis, **`AddTriPayFramework`** veya **`AddTriPayHoste
 }
 ```
 
+#### Şablon G — Payten API v2 (Paratika, Payten MSU, ZiraatPay)
+
+```json
+"Paratika": {
+  "Enabled": true,
+  "IsTestMode": true,
+  "Settings": {
+    "MerchantId": "MERCHANT_CODE",
+    "MerchantUser": "api@firma.com",
+    "MerchantPassword": "***"
+  }
+}
+```
+
+> `PaytenMsu` ve `ZiraatPay` aynı şablonu kullanır; yalnızca `Gateways` anahtarı değişir.
+
+#### Şablon H — CCPayment REST (Sipay, QNBpay, PayBull, …)
+
+```json
+"Sipay": {
+  "Enabled": true,
+  "IsTestMode": true,
+  "Settings": {
+    "AppId": "ccpayment-app-id",
+    "AppSecret": "ccpayment-app-secret",
+    "MerchantKey": "merchant-key"
+  }
+}
+```
+
+> Alternatif anahtar adları: `ApiKey`/`SecretKey` veya `Username`/`Password` + `MerchantKey`/`MerchantId`.
+
+#### Şablon I — Akbank native JSON + HMAC
+
+```json
+"Akbank": {
+  "Enabled": true,
+  "IsTestMode": true,
+  "Settings": {
+    "Username": "merchantSafeId",
+    "Password": "terminalSafeId",
+    "StoreKey": "hmac_store_key"
+  }
+}
+```
+
+#### Şablon J — Denizbank / QNB Finansbank 3DPay
+
+```json
+"Denizbank": {
+  "Enabled": true,
+  "IsTestMode": true,
+  "Settings": {
+    "MerchantId": "shop_code",
+    "Username": "user_code",
+    "Password": "***",
+    "StoreKey": "3d_store_key"
+  }
+}
+```
+
+> `QNBFinansbank` aynı şablonu kullanır; isteğe bağlı `MbrId` eklenebilir.
+
+#### Şablon K — Yapı Kredi Posnet XML
+
+```json
+"YapiKredi": {
+  "Enabled": true,
+  "IsTestMode": true,
+  "Settings": {
+    "MerchantId": "mid",
+    "TerminalId": "tid",
+    "Password": "posnet_id",
+    "StoreKey": "enc_key"
+  }
+}
+```
+
+#### Şablon L — Kuveyt Türk / Vakıf Katılım BOA XML
+
+```json
+"KuveytTurk": {
+  "Enabled": true,
+  "IsTestMode": true,
+  "Settings": {
+    "MerchantId": "merchant_id",
+    "Username": "api_user",
+    "Password": "***",
+    "StoreKey": "customer_id"
+  }
+}
+```
+
+> `VakifKatilim` aynı şablonu kullanır (`StoreKey` veya `CustomerId`).
+
+#### Şablon M — ParamPos SOAP
+
+```json
+"ParamPos": {
+  "Enabled": true,
+  "IsTestMode": true,
+  "Settings": {
+    "ClientCode": "client_code",
+    "ClientUsername": "ws_user",
+    "ClientPassword": "***",
+    "Guid": "guid_degeri"
+  }
+}
+```
+
+> Alternatif: `MerchantId`, `Username`, `Password`, `StoreKey`.
+
+#### Şablon N — Ahlpay (token + SHA512 hash)
+
+```json
+"Ahlpay": {
+  "Enabled": true,
+  "IsTestMode": true,
+  "Settings": {
+    "MerchantId": "member_id",
+    "MerchantUser": "merchant@firma.com",
+    "MerchantPassword": "***",
+    "StoreKey": "hash_secret"
+  }
+}
+```
+
+#### Şablon O — Moka PaymentDealer
+
+```json
+"Moka": {
+  "Enabled": true,
+  "IsTestMode": true,
+  "Settings": {
+    "DealerCode": "dealer_code",
+    "Username": "api_user",
+    "Password": "***"
+  }
+}
+```
+
+> Alternatif: `MerchantId`, `MerchantUser`, `MerchantPassword`.
+
+#### Şablon P — Tami (JSON + JWK imza)
+
+```json
+"Tami": {
+  "Enabled": true,
+  "IsTestMode": true,
+  "Settings": {
+    "MerchantId": "merchant_id",
+    "MerchantUser": "api_user",
+    "MerchantPassword": "kid|base64Secret",
+    "StoreKey": "pg_auth_store_key"
+  }
+}
+```
+
+> `MerchantPassword` pipe (`|`) ile ayrılmış `kid` ve Base64 URL secret içerir.
+
+#### Şablon Q — PayNKolay (form POST + hashDatav2)
+
+```json
+"PayNKolay": {
+  "Enabled": true,
+  "IsTestMode": true,
+  "Settings": {
+    "MerchantId": "sx_degeri",
+    "StoreKey": "hash_secret"
+  }
+}
+```
+
+#### Şablon R — Paynet (JSON + Basic auth)
+
+```json
+"Paynet": {
+  "Enabled": true,
+  "IsTestMode": true,
+  "Settings": {
+    "MerchantPassword": "basic_auth_api_key"
+  }
+}
+```
+
+> Alternatif: `ApiKey` veya `SecretKey`.
+
 ---
 
 ### 7.8. Olması gerekenler — Kullanılabilir Sanal POS config örnekleri (§6)
@@ -777,77 +976,75 @@ Tam liste: [§6 proje dokümanı](./TriPay_Proje_Dokumani.md#6-olması-gerekenle
 
 | Sanal POS | `PaymentGatewayNames` | Şablon | Durum      |
 | --------- | --------------------- | ------ | ---------- |
-| Iyzico    | `Iyzico`              | A      | TODO P1    |
-| Vakıfbank | `Vakifbank`           | D      | TODO P2    |
+| Iyzico    | `Iyzico`              | A      | **Mevcut** |
+| Vakıfbank | `Vakifbank`           | D      | **Mevcut** |
 | VakıfPayS | `VakifPays`           | E      | **Mevcut** |
 
 
 Iyzico test: `https://sandbox-api.iyzipay.com` · Prod: `https://api.iyzipay.com`
 
-#### Bankalar (planlanan)
+#### Bankalar
 
 
-| Sanal POS            | `PaymentGatewayNames` | Şablon |
-| -------------------- | --------------------- | ------ |
-| Akbank               | `Akbank`              | B      |
-| Akbank Nestpay       | `AkbankNestpay`       | B      |
-| Alternatif Bank      | `AlternatifBank`      | B      |
-| Anadolubank          | `Anadolubank`         | B      |
-| Denizbank            | `Denizbank`           | B      |
-| QNB Finansbank       | `QNBFinansbank`       | B      |
-| Finansbank Nestpay   | `FinansbankNestpay`   | B      |
-| Garanti BBVA         | `Garanti`             | C      |
-| Halkbank             | `Halkbank`            | B      |
-| ING Bank             | `ING`                 | B      |
-| İş Bankası           | `IsBankasi`           | B      |
-| Şekerbank            | `Sekerbank`           | B      |
-| Türk Ekonomi Bankası | `TurkEkonomiBankasi`  | B      |
-| Türkiye Finans       | `TurkiyeFinans`       | B      |
-| Yapı Kredi Bankası   | `YapiKredi`           | B      |
-| Ziraat Bankası       | `Ziraat`              | B      |
-| Kuveyt Türk          | `KuveytTurk`          | B      |
-| Vakıf Katılım        | `VakifKatilim`        | B      |
+| Sanal POS            | `PaymentGatewayNames` | Şablon | Durum      |
+| -------------------- | --------------------- | ------ | ---------- |
+| Akbank               | `Akbank`              | I      | **Mevcut** |
+| Akbank Nestpay       | `AkbankNestpay`       | B      | **Mevcut** |
+| Alternatif Bank      | `AlternatifBank`      | B      | **Mevcut** |
+| Anadolubank          | `Anadolubank`         | B      | **Mevcut** |
+| Denizbank            | `Denizbank`           | J      | **Mevcut** |
+| QNB Finansbank       | `QNBFinansbank`       | J      | **Mevcut** |
+| Finansbank Nestpay   | `FinansbankNestpay`   | B      | **Mevcut** |
+| Garanti BBVA         | `Garanti`             | C      | **Mevcut** |
+| Halkbank             | `Halkbank`            | B      | **Mevcut** |
+| ING Bank             | `ING`                 | B      | **Mevcut** |
+| İş Bankası           | `IsBankasi`           | B      | **Mevcut** |
+| Şekerbank            | `Sekerbank`           | B      | **Mevcut** |
+| Türk Ekonomi Bankası | `TurkEkonomiBankasi`  | B      | **Mevcut** |
+| Türkiye Finans       | `TurkiyeFinans`       | B      | **Mevcut** |
+| Yapı Kredi Bankası   | `YapiKredi`           | K      | **Mevcut** |
+| Ziraat Bankası       | `Ziraat`              | B      | **Mevcut** |
+| Kuveyt Türk          | `KuveytTurk`          | L      | **Mevcut** |
+| Vakıf Katılım        | `VakifKatilim`        | L      | **Mevcut** |
 
 
 Nestpay bankalarında §7.7 **Şablon B** kullanılır; yalnızca `Gateways` anahtarı (`"Halkbank"`, `"Ziraat"`, …) değişir.
 
-#### Ödeme kuruluşları (planlanan)
+#### Ödeme kuruluşları
 
 
-| Sanal POS    | `PaymentGatewayNames` | Şablon |
-| ------------ | --------------------- | ------ |
-| Cardplus     | `Cardplus`            | A      |
-| Paratika     | `Paratika`            | A      |
-| Payten - MSU | `PaytenMsu`           | A      |
-| Sipay        | `Sipay`               | A      |
-| QNBpay       | `QNBpay`              | A      |
-| ParamPos     | `ParamPos`            | A      |
-| PayBull      | `PayBull`             | A      |
-| Parolapara   | `Parolapara`          | A      |
-| IQmoney      | `IQmoney`             | A      |
-| Ahlpay       | `Ahlpay`              | A      |
-| Moka         | `Moka`                | A*     |
-| Vepara       | `Vepara`              | A      |
-| ZiraatPay    | `ZiraatPay`           | A      |
-| Tami         | `Tami`                | A      |
-| HalkÖde      | `HalkOde`             | A      |
-| PayNKolay    | `PayNKolay`           | A      |
-| Paynet       | `Paynet`              | A      |
-| PayTR        | `PayTR`               | F      |
+| Sanal POS    | `PaymentGatewayNames` | Şablon | Durum      |
+| ------------ | --------------------- | ------ | ---------- |
+| Cardplus     | `Cardplus`            | B      | **Mevcut** |
+| Paratika     | `Paratika`            | G      | **Mevcut** |
+| Payten - MSU | `PaytenMsu`           | G      | **Mevcut** |
+| Sipay        | `Sipay`               | H      | **Mevcut** |
+| QNBpay       | `QNBpay`              | H      | **Mevcut** |
+| ParamPos     | `ParamPos`            | M      | **Mevcut** |
+| PayBull      | `PayBull`             | H      | **Mevcut** |
+| Parolapara   | `Parolapara`          | H      | **Mevcut** |
+| IQmoney      | `IQmoney`             | H      | **Mevcut** |
+| Ahlpay       | `Ahlpay`              | N      | **Mevcut** |
+| Moka         | `Moka`                | O      | **Mevcut** |
+| Vepara       | `Vepara`              | H      | **Mevcut** |
+| ZiraatPay    | `ZiraatPay`           | G      | **Mevcut** |
+| Tami         | `Tami`                | P      | **Mevcut** |
+| HalkÖde      | `HalkOde`             | H      | **Mevcut** |
+| PayNKolay    | `PayNKolay`           | Q      | **Mevcut** |
+| Paynet       | `Paynet`              | R      | **Mevcut** |
+| PayTR        | `PayTR`               | F      | backlog    |
 
 
- Moka: kuruluş dokümanına göre `DealerCode`, `Username`, `Password` eklenebilir.
-
-**Sipay tipi örnek:**
+**CCPayment tipi örnek (Şablon H):**
 
 ```json
 "Sipay": {
   "Enabled": false,
   "IsTestMode": true,
   "Settings": {
-    "MerchantId": "SP_MERCHANT",
-    "ApiKey": "sipay-api-key",
-    "SecretKey": "sipay-secret"
+    "AppId": "ccpayment-app-id",
+    "AppSecret": "ccpayment-app-secret",
+    "MerchantKey": "merchant-key"
   }
 }
 ```

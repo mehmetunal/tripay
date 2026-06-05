@@ -1,9 +1,10 @@
 using Microsoft.Extensions.Logging;
+using TriPay.Core.Common;
 using TriPay.Core.Gateways;
 using TriPay.Services.Interfaces;
 using TriPay.Services.Models;
 
-namespace TriPay.Core.Common;
+namespace TriPay.Services.Common;
 
 /// <summary>Tüm sanal POS provider'larının ortak sözleşme ve log altyapısını sağlayan soyut taban sınıftır.</summary>
 public abstract class PaymentGatewayBase : IPaymentGatewayProvider

@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Commit öncesi zorunlu test doğrulaması. Atlamak için: SKIP_TESTS=1 git commit ...
+set -euo pipefail
+
+if [[ "${SKIP_TESTS:-}" == "1" ]]; then
+  echo "TriPay: SKIP_TESTS=1 — testler atlandı (önerilmez)."
+  exit 0
+fi
+
+ROOT="$(git rev-parse --show-toplevel)"
+exec "$ROOT/scripts/verify-tests.sh"

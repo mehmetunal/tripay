@@ -1,6 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <InternalsVisibleTo Include="TriPay.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\TriPay.Core\TriPay.Core.csproj" PrivateAssets="all" />
     <ProjectReference Include="..\TriPay.Infrastructure\TriPay.Infrastructure.csproj" PrivateAssets="all" />
   </ItemGroup>

@@ -1,15 +1,8 @@
-using System.Globalization;
-using Newtonsoft.Json;
+namespace TriPay.Services.Providers.Common;
 
-namespace TriPay.Services.Providers.VakifPays.Helpers;
-
-/// <summary>VakıfPayS form ve JSON yardımcıları.</summary>
-public static class VakifPaysHttpHelper
+/// <summary>Kart numarası ve son kullanma tarihi normalizasyon yardımcıları.</summary>
+public static class PaymentCardHelper
 {
-    /// <summary>Decimal tutarı VakıfPayS formatına çevirir.</summary>
-    public static string ToAmount(decimal amount)
-        => amount.ToString("N2", CultureInfo.GetCultureInfo("tr-TR")).Replace(".", "").Replace(",", ".");
-
     /// <summary>Metindeki yalnızca rakamları döndürür.</summary>
     public static string DigitsOnly(string input)
         => new((input ?? string.Empty).Where(char.IsDigit).ToArray());
@@ -30,8 +23,4 @@ public static class VakifPaysHttpHelper
         if (digits.Length == 4) return digits;
         return DateTime.UtcNow.Year.ToString();
     }
-
-    /// <summary>JSON yanıt gövdesini sözlüğe çevirir.</summary>
-    public static Dictionary<string, object> ParseJsonDictionary(string raw)
-        => JsonConvert.DeserializeObject<Dictionary<string, object>>(raw) ?? new Dictionary<string, object>();
 }

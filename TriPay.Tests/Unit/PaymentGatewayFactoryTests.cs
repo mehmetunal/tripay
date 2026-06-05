@@ -1,4 +1,7 @@
+using Microsoft.Extensions.DependencyInjection;
+using TriPay.Core.Gateways;
 using TriPay.Services;
+using TriPay.Services.DependencyInjection;
 using TriPay.Tests.Fixtures;
 
 namespace TriPay.Tests.Unit;
@@ -7,15 +10,18 @@ namespace TriPay.Tests.Unit;
 public sealed class PaymentGatewayFactoryTests
 {
     [Fact]
-    public void GetAllAvailableGateways_UcMvpProvider()
+    public void GetAllAvailableGateways_38Provider()
     {
-        using var sp = TestServiceProviderFactory.CreatePaymentServices();
+        using var sp = CreateFullFactoryServices();
         var factory = sp.GetRequiredService<PaymentGatewayFactory>();
         var names = factory.GetAllAvailableGateways();
 
+        Assert.Equal(38, names.Count);
         Assert.Contains(PaymentGatewayNames.VakifPays, names);
         Assert.Contains(PaymentGatewayNames.Iyzico, names);
         Assert.Contains(PaymentGatewayNames.Vakifbank, names);
+        Assert.Contains(PaymentGatewayNames.Paratika, names);
+        Assert.Contains(PaymentGatewayNames.Sipay, names);
     }
 
     [Fact]
@@ -40,9 +46,47 @@ public sealed class PaymentGatewayFactoryTests
     [Fact]
     public void GetSystemActiveGatewayNames_AktifProviderlar()
     {
-        using var sp = TestServiceProviderFactory.CreatePaymentServices();
+        using var sp = CreateFullFactoryServices();
         var factory = sp.GetRequiredService<PaymentGatewayFactory>();
         var active = factory.GetSystemActiveGatewayNames();
-        Assert.NotEmpty(active);
+        Assert.Equal(38, active.Count);
+    }
+
+    [Theory]
+    [InlineData(PaymentGatewayNames.Garanti)]
+    [InlineData(PaymentGatewayNames.Paratika)]
+    [InlineData(PaymentGatewayNames.IsBankasi)]
+    [InlineData(PaymentGatewayNames.Sipay)]
+    public async Task GetGatewayProviderAsync_KayitliGateway_ProviderDondurur(string gatewayName)
+    {
+        using var sp = CreateFullFactoryServices(configure: services =>
+        {
+            services.Configure<TriPay.Core.Options.TriPayOptions>(o =>
+            {
+                o.Gateways = GatewayProviderTestCatalog.All.ToDictionary(
+                    x => x.GatewayName,
+                    x => new GatewayConfig
+                    {
+                        Enabled = true,
+                        IsTestMode = true,
+                        Settings = new Dictionary<string, string>(x.Settings)
+                    },
+                    StringComparer.OrdinalIgnoreCase);
+            });
+        });
+
+        var factory = sp.GetRequiredService<PaymentGatewayFactory>();
+        var provider = await factory.GetGatewayProviderAsync(gatewayName);
+        Assert.NotNull(provider);
+        Assert.Equal(gatewayName, provider!.GatewayName, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static ServiceProvider CreateFullFactoryServices(Action<IServiceCollection>? configure = null)
+    {
+        return TestServiceProviderFactory.CreatePaymentServices(services =>
+        {
+            services.AddPaymentGatewayProviders();
+            configure?.Invoke(services);
+        });
     }
 }

@@ -145,9 +145,26 @@ jobs:
           git commit -m "chore(nuget): sürüm ${ver} [skip ci]"
           git push
 
+      - name: GitHub Release oluştur (main)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          ver=$(sed -n 's/.*<TriPayPackageVersion>\([^<]*\).*/\1/p' build/TriPay.NuGet.Version.props | head -n1 | tr -d '[:space:]')
+          tag="v${ver}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release ${tag} zaten mevcut, atlanıyor."
+            exit 0
+          fi
+          gh release create "$tag" \
+            --title "TriPay ${ver}" \
+            --generate-notes
+
       - name: Özet (main)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           ver=$(sed -n 's/.*<TriPayPackageVersion>\([^<]*\).*/\1/p' build/TriPay.NuGet.Version.props | head -n1 | tr -d '[:space:]')
           echo "### nuget.org yayınlandı: \`${ver}\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "TriPay, TriPay.Framework, TriPay.Hosted ve bağımlılıklar" >> "$GITHUB_STEP_SUMMARY"
+          echo "### GitHub Release: \`v${ver}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "TriPay, TriPay.Hosted ve bağımlılıklar" >> "$GITHUB_STEP_SUMMARY"

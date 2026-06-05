@@ -6,9 +6,6 @@ using TriPay.Infrastructure.DependencyInjection;
 using TriPay.Infrastructure.Gateways;
 using TriPay.Services.Configuration;
 using TriPay.Services.Interfaces;
-using TriPay.Services.Providers.Iyzico;
-using TriPay.Services.Providers.Vakifbank;
-using TriPay.Services.Providers.VakifPays;
 
 namespace TriPay.Services.DependencyInjection;
 
@@ -31,9 +28,7 @@ public static class PaymentGatewayServiceCollectionExtensions
         services.AddHttpClient();
 
         services.AddScoped<PaymentGatewayFactory>();
-        services.AddScoped<VakifPaysGatewayProvider>();
-        services.AddScoped<IyzicoGatewayProvider>();
-        services.AddScoped<VakifbankGatewayProvider>();
+        services.AddPaymentGatewayProviders();
         services.AddScoped<IPaymentGatewayService, PaymentGatewayService>();
         
         services.AddSingleton<ConfigurationGatewaySettingsProvider>();

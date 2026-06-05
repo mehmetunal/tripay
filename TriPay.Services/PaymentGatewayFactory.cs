@@ -2,10 +2,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using TriPay.Core.Gateways;
 using TriPay.Core.Options;
+using TriPay.Services.DependencyInjection;
 using TriPay.Services.Interfaces;
-using TriPay.Services.Providers.Iyzico;
-using TriPay.Services.Providers.Vakifbank;
-using TriPay.Services.Providers.VakifPays;
 
 namespace TriPay.Services;
 
@@ -14,12 +12,9 @@ public class PaymentGatewayFactory
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly IOptionsMonitor<TriPayOptions> _options;
-    private readonly Dictionary<string, Type> _providers = new(StringComparer.OrdinalIgnoreCase)
-    {
-        [PaymentGatewayNames.VakifPays] = typeof(VakifPaysGatewayProvider),
-        [PaymentGatewayNames.Iyzico] = typeof(IyzicoGatewayProvider),
-        [PaymentGatewayNames.Vakifbank] = typeof(VakifbankGatewayProvider)
-    };
+    private readonly Dictionary<string, Type> _providers =
+        PaymentGatewayProviderRegistration.ProviderTypes.ToDictionary(
+            kv => kv.Key, kv => kv.Value, StringComparer.OrdinalIgnoreCase);
 
     /// <summary>DI ve yapılandırma seçenekleri ile fabrika örneği oluşturur.</summary>
     public PaymentGatewayFactory(IServiceProvider serviceProvider, IOptionsMonitor<TriPayOptions> options)

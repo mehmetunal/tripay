@@ -672,7 +672,7 @@ TriPay'in **%100 adaptasyon** hedefi kapsamında desteklenmesi planlanan banka v
 ### 6.1. Öncelik TODO — MVP provider'lar (yapılacaklar)
 
 > **Canlı checklist:** [pwd.md](../pwd.md) (proje kökü — öncelik sırası ve checkbox’lar)  
-> **Dış config (`appsettings` örnekleri, tüm §6 kanalları):** [Kullanım Kılavuzu §7.7–7.12](./TriPay_Kullanim_Kilavuzu.md#77-çoklu-banka-yapılandırması-neden-farklı)
+> **Dış config (`appsettings` örnekleri, tüm §6 kanalları):** [Kullanım Kılavuzu §7.7 Config şablonları (A–R)](./TriPay_Kullanim_Kilavuzu.md#77-config-şablonları-ar)
 
 Aşağıdaki sıra **bağlayıcı önceliktir**. Yeni adaptörler Trimango `PaymentGateways/Providers` implementasyonlarından port edilir; TriPay’de `PaymentGatewayNames`, `PaymentGatewayFactory`, `AddTriPay()` DI kaydı ve gerekirse `{Kanal}Service` (HTTP) tamamlanır.
 

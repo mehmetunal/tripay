@@ -20,10 +20,12 @@ TriPay.Tests/
 ## Komutlar
 
 ```bash
-# Tüm testler (43)
+# Tüm testler
 dotnet test
+# veya
+./scripts/verify-tests.sh
 
-# Solution derleme = build + otomatik test (TriPay.Tests sonunda)
+# Solution derleme = build + otomatik test (TriPay.Tests sonunda; başarısız test build'i düşürür)
 dotnet build TriPay.sln
 
 # Test çalıştırmadan derleme
@@ -38,6 +40,24 @@ dotnet test --filter "Category=Integration"
 # Tek sınıf
 dotnet test --filter "FullyQualifiedName~VakifbankGatewayProviderTests"
 ```
+
+## Commit / push öncesi zorunlu testler
+
+Depoyu klonladıktan sonra bir kez:
+
+```bash
+chmod +x scripts/install-git-hooks.sh scripts/verify-tests.sh
+./scripts/install-git-hooks.sh
+```
+
+Bu komut `pre-commit` ve `pre-push` hook'larını kurar. **Testler geçmeden commit veya push yapılamaz.**
+
+| Hook | Ne zaman | Davranış |
+| :--- | :--- | :--- |
+| `pre-commit` | `git commit` | `dotnet test` çalıştırır; başarısızsa commit iptal |
+| `pre-push` | `git push` | Aynı doğrulama (commit atlanmışsa ikinci bariyer) |
+
+Acil atlama (önerilmez): `SKIP_TESTS=1 git commit ...` veya `SKIP_TESTS=1 git push ...`
 
 ## Yeni işlem eklerken checklist
 
